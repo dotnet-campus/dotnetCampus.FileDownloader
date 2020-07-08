@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using dotnetCampus.FileDownloader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSTest.Extensions.Contracts;
 
