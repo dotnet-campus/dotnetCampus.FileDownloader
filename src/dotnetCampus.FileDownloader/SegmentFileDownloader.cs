@@ -11,9 +11,10 @@ namespace dotnetCampus.FileDownloader
 {
     public class SegmentFileDownloader
     {
-        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger)
+        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger, IProgress<DownloadProgress> progress)
         {
             _logger = logger;
+            _progress = progress;
             Url = url;
             File = file;
 
@@ -32,13 +33,15 @@ namespace dotnetCampus.FileDownloader
         {
             _logger.LogInformation($"Start download Url={Url} File={File.FullName}");
 
-            (var response, var contentLength) = await GetContentLength();
+            var (response, contentLength) = await GetContentLength();
 
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
             FileWriter = new RandomFileWriter(FileStream);
 
             SegmentManager = new SegmentManager(contentLength);
+
+            _progress.Report(new DownloadProgress($"file length = {contentLength}", SegmentManager));
 
             var downloadSegment = SegmentManager.GetNewDownloadSegment();
 
@@ -69,6 +72,7 @@ namespace dotnetCampus.FileDownloader
         }
 
         private readonly ILogger<SegmentFileDownloader> _logger;
+        private readonly IProgress<DownloadProgress> _progress;
 
         private bool _isDisposing;
 
@@ -182,6 +186,8 @@ namespace dotnetCampus.FileDownloader
                         FileWriter.WriteAsync(downloadSegment.CurrentDownloadPoint, buffer, n);
 
                         downloadSegment.DownloadedLength += n;
+
+                        _progress.Report(new DownloadProgress(SegmentManager));
 
                         if (downloadSegment.Finished)
                         {

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace dotnetCampus.FileDownloader
 {
@@ -118,11 +119,29 @@ namespace dotnetCampus.FileDownloader
                     DownloadSegmentList.Insert(n, downloadSegment);
                 }
 
+                downloadSegment.Number = DownloadSegmentList.Count;
+
                 downloadSegment.SegmentManager = this;
             }
         }
 
-        public List<DownloadSegment> DownloadSegmentList { get; } = new List<DownloadSegment>();
+        public IReadOnlyList<DownloadSegment> GetDownloadSegmentList()
+        {
+            lock (_locker)
+            {
+                return DownloadSegmentList.ToList();
+            }
+        }
+
+        public long GetDownloadedLength()
+        {
+            lock (_locker)
+            {
+                return DownloadSegmentList.Sum(downloadSegment => downloadSegment.DownloadedLength);
+            }
+        }
+
+        private List<DownloadSegment> DownloadSegmentList { get; } = new List<DownloadSegment>();
         private readonly object _locker = new object();
 
 

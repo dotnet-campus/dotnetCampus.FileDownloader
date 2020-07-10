@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.Extensions.Logging;
@@ -27,9 +28,12 @@ namespace dotnetCampus.FileDownloader.Tool
 
                      var file = new FileInfo(@"File.txt");
 
-                     var segmentFileDownloader = new SegmentFileDownloader(url, file, logger);
+                     var progress = new Progress<DownloadProgress>();
+
+                     var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
                      await segmentFileDownloader.DownloadFile();
 #endif
+                     await Task.Delay(100);
                  });
         }
 
@@ -51,8 +55,66 @@ namespace dotnetCampus.FileDownloader.Tool
                 var file = new FileInfo(output);
                 var url = option.Url;
 
-                var segmentFileDownloader = new SegmentFileDownloader(url, file, logger);
+                var progress = new Progress<DownloadProgress>();
+
+                var obj = new object();
+                DownloadProgress downloadProgress = null;
+
+                progress.ProgressChanged += (sender, p) =>
+                {
+                    lock (obj)
+                    {
+                        downloadProgress = p;
+                    }
+                };
+
+                bool finished = false;
+                long lastLength = 0;
+                DateTime lastTime = DateTime.Now;
+
+                _ = Task.Run(async () =>
+                {
+                    while (!finished)
+                    {
+                        lock (obj)
+                        {
+                            if (downloadProgress == null)
+                            {
+                                continue;
+                            }
+
+                            Console.Clear();
+
+                            Console.WriteLine($"Download url = {option.Url}");
+                            Console.WriteLine($"Output = {output}");
+
+                            Console.WriteLine(
+                                $"Process {downloadProgress.DownloadedLength * 100.0 / downloadProgress.FileLength:0.00}");
+                            Console.WriteLine($"{downloadProgress.DownloadedLength}/{downloadProgress.FileLength}");
+                            Console.WriteLine();
+
+                            Console.WriteLine();
+
+                            Console.WriteLine($"{(downloadProgress.DownloadedLength - lastLength) * 1000.0 / (DateTime.Now - lastTime).TotalMilliseconds / 1024 / 1024:0.00} MB/s");
+
+                            lastLength = downloadProgress.DownloadedLength;
+                            lastTime = DateTime.Now;
+
+                            foreach (var downloadSegment in downloadProgress.GetDownloadSegmentList())
+                            {
+                                Console.WriteLine(downloadSegment);
+                            }
+                        }
+
+                        await Task.Delay(500);
+                    }
+                });
+
+                var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
+
                 await segmentFileDownloader.DownloadFile();
+
+                finished = true;
             }
             catch (Exception e)
             {
