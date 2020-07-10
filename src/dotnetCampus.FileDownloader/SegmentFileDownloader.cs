@@ -88,8 +88,23 @@ namespace dotnetCampus.FileDownloader
         {
             _logger.LogInformation("开始获取整个下载长度");
 
-            // 如果用户没有说停下，那么不断下载
+            var response = await GetWebResponseAsync();
 
+            if (response == null)
+            {
+                return default;
+            }
+
+            var contentLength = response.ContentLength;
+
+            _logger.LogInformation(
+                $"完成获取文件长度，文件长度 {contentLength} {contentLength / 1024}KB {contentLength / 1024.0 / 1024.0:0.00}MB");
+
+            return (response, contentLength);
+        }
+
+        private async Task<WebResponse> GetWebResponseAsync(Action<HttpWebRequest> action = null)
+        {
             for (var i = 0; !_isDisposing; i++)
             {
                 try
@@ -97,14 +112,12 @@ namespace dotnetCampus.FileDownloader
                     var url = Url;
                     var webRequest = (HttpWebRequest)WebRequest.Create(url);
                     webRequest.Method = "GET";
+
+                    action?.Invoke(webRequest);
+
                     var response = await webRequest.GetResponseAsync();
 
-                    var contentLength = response.ContentLength;
-
-                    _logger.LogInformation(
-                        $"完成获取文件长度，文件长度 {contentLength} {contentLength / 1024}KB {contentLength / 1024.0 / 1024.0:0.00}MB");
-
-                    return (response, contentLength);
+                    return response;
                 }
                 catch (Exception e)
                 {
@@ -115,7 +128,7 @@ namespace dotnetCampus.FileDownloader
                 await Task.Delay(TimeSpan.FromMilliseconds(100));
             }
 
-            return default;
+            return null;
         }
 
         /// <summary>
@@ -128,27 +141,10 @@ namespace dotnetCampus.FileDownloader
             _logger.LogInformation(
                 $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
-            for (var i = 0; !_isDisposing; i++)
-            {
-                try
-                {
-                    var webRequest = (HttpWebRequest)WebRequest.Create(Url);
-                    webRequest.Method = "GET";
+            // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
 
-                    // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
-                    webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
-
-                    var response = await webRequest.GetResponseAsync();
-                    return response;
-                }
-                catch (Exception e)
-                {
-                    _logger.LogInformation(
-                        $"第{i}次获取 WebResponse失败 {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint} {e}");
-                }
-            }
-
-            return null;
+            var response = await GetWebResponseAsync(webRequest => webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
+            return response;
         }
 
         private async Task DownloadTask()
@@ -249,13 +245,15 @@ namespace dotnetCampus.FileDownloader
 
         private async Task<bool> TryDownloadLast(long contentLength)
         {
-            var url = Url;
             // 尝试下载后部分，如果可以下载后续的 100 个字节，那么这个链接支持分段下载
             const int downloadLength = 100;
-            var webRequest = (HttpWebRequest)WebRequest.Create(url);
+
             var startPoint = contentLength - downloadLength;
-            webRequest.AddRange(startPoint, contentLength);
-            var responseLast = await webRequest.GetResponseAsync();
+
+            var responseLast = await GetWebResponseAsync(webRequest =>
+            {
+                webRequest.AddRange(startPoint, contentLength);
+            });
 
             if (responseLast.ContentLength == downloadLength)
             {
@@ -269,7 +267,6 @@ namespace dotnetCampus.FileDownloader
 
             return false;
         }
-
 
         private class DownloadData
         {

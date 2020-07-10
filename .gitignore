@@ -341,3 +341,4 @@ healthchecksdb
 .vscode
 *.apk
 *.unitypackage
+/src/dotnetCampus.FileDownloader.Tool/Properties/launchSettings.json

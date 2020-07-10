@@ -14,34 +14,41 @@ namespace dotnetCampus.FileDownloader.Tool
                  async _ =>
                  {
 #if DEBUG
-                    var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+                     var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
                      var logger = loggerFactory.CreateLogger<SegmentFileDownloader>();
 
-                    // https://www.speedtest.cn/
-                    var url =
-                         "https://speedtest1.gd.chinamobile.com.prod.hosts.ooklaserver.net:8080/download?size=25000000&r=0.2978374611691549";
+                     // https://www.speedtest.cn/
+                     var url =
+                          "https://speedtest1.gd.chinamobile.com.prod.hosts.ooklaserver.net:8080/download?size=25000000&r=0.2978374611691549";
                      url =
                          "https://download.jetbrains.8686c.com/resharper/ReSharperUltimate.2020.1.3/JetBrains.ReSharperUltimate.2020.1.3.exe";
-                    //var md5 = "7d6bbeb6617a7c0b7e615098fca1b167";// resharper
+                     //var md5 = "7d6bbeb6617a7c0b7e615098fca1b167";// resharper
 
-                    var file = new FileInfo(@"File.txt");
+                     var file = new FileInfo(@"File.txt");
 
                      var segmentFileDownloader = new SegmentFileDownloader(url, file, logger);
                      await segmentFileDownloader.DownloadFile();
 #endif
-                });
+                 });
         }
 
         private static async Task DownloadFileAsync(DownloadOption option)
         {
+            var output = option.Output;
+
+            output = Path.GetFullPath(output);
+
+            Console.WriteLine($"Download url = {option.Url}");
+            Console.WriteLine($"Output = {output}");
+
             try
             {
-                var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+                var loggerFactory = LoggerFactory.Create(builder => { });
 
                 var logger = loggerFactory.CreateLogger<SegmentFileDownloader>();
 
-                var file = new FileInfo(option.Output);
+                var file = new FileInfo(output);
                 var url = option.Url;
 
                 var segmentFileDownloader = new SegmentFileDownloader(url, file, logger);
