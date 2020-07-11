@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileDownloader.Tests", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnetCampus.FileDownloader.Tool", "src\dotnetCampus.FileDownloader.Tool\dotnetCampus.FileDownloader.Tool.csproj", "{2C64F6F3-B402-4C55-8EA0-6CA54D6FF40D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnetCampus.FileDownloader.WPF", "src\dotnetCampus.FileDownloader.WPF\dotnetCampus.FileDownloader.WPF.csproj", "{CFD20F25-FC16-4D13-9180-C2C5BB087B61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,18 @@ Global
 		{2C64F6F3-B402-4C55-8EA0-6CA54D6FF40D}.Release|x64.Build.0 = Release|Any CPU
 		{2C64F6F3-B402-4C55-8EA0-6CA54D6FF40D}.Release|x86.ActiveCfg = Release|Any CPU
 		{2C64F6F3-B402-4C55-8EA0-6CA54D6FF40D}.Release|x86.Build.0 = Release|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Debug|x64.Build.0 = Debug|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Debug|x86.Build.0 = Debug|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Release|x64.ActiveCfg = Release|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Release|x64.Build.0 = Release|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Release|x86.ActiveCfg = Release|Any CPU
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +81,7 @@ Global
 		{F7ED61F4-920C-49EB-8DC1-74B2BE6AF272} = {5D196596-756D-45C2-8A05-C8E4AB8A36E6}
 		{56F2ECDC-872E-438C-A0F0-172B852F48A7} = {59F8DA2B-0FD6-46B2-8DCC-60783DCE50B7}
 		{2C64F6F3-B402-4C55-8EA0-6CA54D6FF40D} = {5D196596-756D-45C2-8A05-C8E4AB8A36E6}
+		{CFD20F25-FC16-4D13-9180-C2C5BB087B61} = {5D196596-756D-45C2-8A05-C8E4AB8A36E6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1FF84866-C9B5-49AE-8545-2BA5F10C2B05}
