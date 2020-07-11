@@ -39,7 +39,7 @@ namespace dotnetCampus.FileDownloader.Tool
 
         private static async Task DownloadFileAsync(DownloadOption option)
         {
-            var output = option.Output;
+            var output = option.Output ?? "";
 
             output = Path.GetFullPath(output);
 
@@ -52,8 +52,6 @@ namespace dotnetCampus.FileDownloader.Tool
 
                 var logger = loggerFactory.CreateLogger<SegmentFileDownloader>();
 
-                var file = new FileInfo(output);
-                var url = option.Url;
 
                 var progress = new Progress<DownloadProgress>();
 
@@ -110,6 +108,8 @@ namespace dotnetCampus.FileDownloader.Tool
                     }
                 });
 
+                var file = new FileInfo(output);
+                var url = option.Url;
                 var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
 
                 await segmentFileDownloader.DownloadFile();
