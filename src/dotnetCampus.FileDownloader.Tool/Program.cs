@@ -52,7 +52,6 @@ namespace dotnetCampus.FileDownloader.Tool
 
                 var logger = loggerFactory.CreateLogger<SegmentFileDownloader>();
 
-
                 var progress = new Progress<DownloadProgress>();
 
                 var obj = new object();
