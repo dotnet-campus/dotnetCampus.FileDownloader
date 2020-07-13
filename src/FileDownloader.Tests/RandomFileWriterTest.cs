@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using dotnetCampus.FileDownloader;
@@ -65,7 +66,7 @@ namespace FileDownloader.Tests
 
                     foreach (var (startPoint, data) in list)
                     {
-                        randomFileWriter.WriteAsync(startPoint, data, count);
+                        _ = randomFileWriter.WriteAsync(startPoint, data);
                     }
                 }
 
@@ -108,7 +109,7 @@ namespace FileDownloader.Tests
 
                     foreach (var (startPoint, data) in list)
                     {
-                        randomFileWriter.WriteAsync(startPoint, data, count);
+                        _ = randomFileWriter.WriteAsync(startPoint, data);
                         str.Append(string.Join("", data.Select(temp => (char)temp)));
                     }
                 }

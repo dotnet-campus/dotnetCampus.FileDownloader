@@ -183,7 +183,8 @@ namespace dotnetCampus.FileDownloader
                         _logger.LogInformation(
                             $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
-                        FileWriter.WriteAsync(downloadSegment.CurrentDownloadPoint, buffer, n);
+                        var task = FileWriter.WriteAsync(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
+                        _ = task.ContinueWith(_ => SharedArrayPool.Return(buffer));
 
                         downloadSegment.DownloadedLength += n;
 
