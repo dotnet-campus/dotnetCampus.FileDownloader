@@ -133,6 +133,14 @@ namespace dotnetCampus.FileDownloader
                 {
                     throw;
                 }
+                catch (NotSupportedException)
+                {
+                    throw;
+                }
+                catch (ArgumentException)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
                     _logger.LogInformation($"第{i}次获取长度失败 {e}");
