@@ -80,7 +80,7 @@ namespace dotnetCampus.FileDownloader
         private readonly ILogger<SegmentFileDownloader> _logger;
         private readonly IProgress<DownloadProgress> _progress;
 
-        private bool _isDisposing;
+        private bool _isDisposed;
 
         private RandomFileWriter FileWriter { set; get; }
 
@@ -115,7 +115,7 @@ namespace dotnetCampus.FileDownloader
 
         private async Task<WebResponse> GetWebResponseAsync(Action<HttpWebRequest> action = null)
         {
-            for (var i = 0; !_isDisposing; i++)
+            for (var i = 0; !_isDisposed; i++)
             {
                 try
                 {
@@ -235,19 +235,19 @@ namespace dotnetCampus.FileDownloader
 
         private async Task FinishDownload()
         {
-            if (_isDisposing)
+            if (_isDisposed)
             {
                 return;
             }
 
             lock (FileDownloadTask)
             {
-                if (_isDisposing)
+                if (_isDisposed)
                 {
                     return;
                 }
 
-                _isDisposing = true;
+                _isDisposed = true;
             }
 
             await FileWriter.DisposeAsync();
