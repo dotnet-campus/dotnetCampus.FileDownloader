@@ -115,7 +115,9 @@ namespace dotnetCampus.FileDownloader.Tool
             }
             catch (Exception e)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(e);
+                Console.ResetColor();
             }
         }
     }
