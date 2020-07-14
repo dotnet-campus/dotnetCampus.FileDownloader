@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace dotnetCampus.FileDownloader.Tool
 {
@@ -18,11 +19,14 @@ namespace dotnetCampus.FileDownloader.Tool
                 number = number / 1024;
                 counter++;
 
-                if (counter >= maxCount)
+                if (counter == maxCount)
                 {
                     break;
                 }
             }
+
+            // long 最大长度是 8192PB
+            Debug.Assert(counter<= maxCount);
 
             var suffix = counter switch
             {
