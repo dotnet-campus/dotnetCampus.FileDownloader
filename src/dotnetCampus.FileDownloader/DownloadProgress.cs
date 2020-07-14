@@ -24,9 +24,13 @@ namespace dotnetCampus.FileDownloader
 
         private SegmentManager SegmentManager { get; }
 
-        public IReadOnlyList<DownloadSegment> GetDownloadSegmentList()
+        /// <summary>
+        /// 获取当前所有下载段
+        /// </summary>
+        /// <returns></returns>
+        public IReadOnlyList<DownloadSegment> GetCurrentDownloadSegmentList()
         {
-            return SegmentManager.GetDownloadSegmentList();
+            return SegmentManager.GetCurrentDownloadSegmentList();
         }
     }
 }

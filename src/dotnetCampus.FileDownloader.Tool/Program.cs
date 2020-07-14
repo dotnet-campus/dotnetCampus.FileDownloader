@@ -95,7 +95,7 @@ namespace dotnetCampus.FileDownloader.Tool
                             lastLength = downloadProgress.DownloadedLength;
                             lastTime = DateTime.Now;
 
-                            foreach (var downloadSegment in downloadProgress.GetDownloadSegmentList())
+                            foreach (var downloadSegment in downloadProgress.GetCurrentDownloadSegmentList())
                             {
                                 Console.WriteLine(downloadSegment);
                             }

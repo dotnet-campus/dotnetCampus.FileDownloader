@@ -125,7 +125,11 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        public IReadOnlyList<DownloadSegment> GetDownloadSegmentList()
+        /// <summary>
+        /// 获取当前所有下载段
+        /// </summary>
+        /// <returns></returns>
+        public IReadOnlyList<DownloadSegment> GetCurrentDownloadSegmentList()
         {
             lock (_locker)
             {
