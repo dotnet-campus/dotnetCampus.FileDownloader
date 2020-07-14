@@ -23,7 +23,7 @@ namespace dotnetCampus.FileDownloader
 
         public string Url { get; }
 
-        public FileInfo File { get; }
+        private FileInfo File { get; }
 
         /// <summary>
         /// 开始下载文件
