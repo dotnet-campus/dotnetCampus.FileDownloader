@@ -5,7 +5,7 @@ namespace dotnetCampus.FileDownloader.Tool
 {
     static class FileSizeFormatter
     {
-        public static string FormatSize(long bytes, string formatString = "{0:0.00}")
+        public static string FormatSize(long bytes, string formatString = "{0:0.00}{1}")
         {
             int counter = 0;
             double number = bytes;
@@ -26,9 +26,9 @@ namespace dotnetCampus.FileDownloader.Tool
             }
 
             // long 最大长度是 8192PB
-            Debug.Assert(counter<= maxCount);
+            Debug.Assert(counter <= maxCount);
 
-            var suffix = counter switch
+            var unit = counter switch
             {
                 0 => "B",
                 1 => "KB",
@@ -40,7 +40,7 @@ namespace dotnetCampus.FileDownloader.Tool
                 _ => throw new ArgumentException("骚年，你是不是忘了更新 maxCount 等级了")
             };
 
-            return $"{string.Format(formatString, number)}{suffix}";
+            return $"{string.Format(formatString, number, unit)}";
         }
     }
 }
