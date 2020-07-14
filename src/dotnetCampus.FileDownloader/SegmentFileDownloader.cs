@@ -11,18 +11,25 @@ namespace dotnetCampus.FileDownloader
 {
     public class SegmentFileDownloader
     {
-        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger)
+        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger, IProgress<DownloadProgress> progress)
         {
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentNullException(nameof(url));
+            }
+
             Url = url;
-            File = file;
+            File = file ?? throw new ArgumentNullException(nameof(file));
 
             logger.BeginScope("Url={url} File={file}", url, file);
         }
 
         public string Url { get; }
 
-        public FileInfo File { get; }
+        private FileInfo File { get; }
 
         /// <summary>
         /// 开始下载文件
@@ -32,13 +39,15 @@ namespace dotnetCampus.FileDownloader
         {
             _logger.LogInformation($"Start download Url={Url} File={File.FullName}");
 
-            (var response, var contentLength) = await GetContentLength();
+            var (response, contentLength) = await GetContentLength();
 
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
             FileWriter = new RandomFileWriter(FileStream);
 
             SegmentManager = new SegmentManager(contentLength);
+
+            _progress.Report(new DownloadProgress($"file length = {contentLength}", SegmentManager));
 
             var downloadSegment = SegmentManager.GetNewDownloadSegment();
 
@@ -69,8 +78,9 @@ namespace dotnetCampus.FileDownloader
         }
 
         private readonly ILogger<SegmentFileDownloader> _logger;
+        private readonly IProgress<DownloadProgress> _progress;
 
-        private bool _isDisposing;
+        private bool _isDisposed;
 
         private RandomFileWriter FileWriter { set; get; }
 
@@ -88,23 +98,48 @@ namespace dotnetCampus.FileDownloader
         {
             _logger.LogInformation("开始获取整个下载长度");
 
-            // 如果用户没有说停下，那么不断下载
+            var response = await GetWebResponseAsync();
 
-            for (var i = 0; !_isDisposing; i++)
+            if (response == null)
+            {
+                return default;
+            }
+
+            var contentLength = response.ContentLength;
+
+            _logger.LogInformation(
+                $"完成获取文件长度，文件长度 {contentLength} {contentLength / 1024}KB {contentLength / 1024.0 / 1024.0:0.00}MB");
+
+            return (response, contentLength);
+        }
+
+        private async Task<WebResponse> GetWebResponseAsync(Action<HttpWebRequest> action = null)
+        {
+            for (var i = 0; !_isDisposed; i++)
             {
                 try
                 {
                     var url = Url;
-                    var webRequest = (HttpWebRequest)WebRequest.Create(url);
+                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
                     webRequest.Method = "GET";
+
+                    action?.Invoke(webRequest);
+
                     var response = await webRequest.GetResponseAsync();
 
-                    var contentLength = response.ContentLength;
-
-                    _logger.LogInformation(
-                        $"完成获取文件长度，文件长度 {contentLength} {contentLength / 1024}KB {contentLength / 1024.0 / 1024.0:0.00}MB");
-
-                    return (response, contentLength);
+                    return response;
+                }
+                catch (InvalidCastException)
+                {
+                    throw;
+                }
+                catch (NotSupportedException)
+                {
+                    throw;
+                }
+                catch (ArgumentException)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
@@ -115,7 +150,7 @@ namespace dotnetCampus.FileDownloader
                 await Task.Delay(TimeSpan.FromMilliseconds(100));
             }
 
-            return default;
+            return null;
         }
 
         /// <summary>
@@ -128,27 +163,10 @@ namespace dotnetCampus.FileDownloader
             _logger.LogInformation(
                 $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
-            for (var i = 0; !_isDisposing; i++)
-            {
-                try
-                {
-                    var webRequest = (HttpWebRequest)WebRequest.Create(Url);
-                    webRequest.Method = "GET";
+            // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
 
-                    // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
-                    webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
-
-                    var response = await webRequest.GetResponseAsync();
-                    return response;
-                }
-                catch (Exception e)
-                {
-                    _logger.LogInformation(
-                        $"第{i}次获取 WebResponse失败 {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint} {e}");
-                }
-            }
-
-            return null;
+            var response = await GetWebResponseAsync(webRequest => webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
+            return response;
         }
 
         private async Task DownloadTask()
@@ -183,9 +201,12 @@ namespace dotnetCampus.FileDownloader
                         _logger.LogInformation(
                             $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
-                        FileWriter.WriteAsync(downloadSegment.CurrentDownloadPoint, buffer, n);
+                        var task = FileWriter.WriteAsync(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
+                        _ = task.ContinueWith(_ => SharedArrayPool.Return(buffer));
 
                         downloadSegment.DownloadedLength += n;
+
+                        _progress.Report(new DownloadProgress(SegmentManager));
 
                         if (downloadSegment.Finished)
                         {
@@ -226,19 +247,19 @@ namespace dotnetCampus.FileDownloader
 
         private async Task FinishDownload()
         {
-            if (_isDisposing)
+            if (_isDisposed)
             {
                 return;
             }
 
             lock (FileDownloadTask)
             {
-                if (_isDisposing)
+                if (_isDisposed)
                 {
                     return;
                 }
 
-                _isDisposing = true;
+                _isDisposed = true;
             }
 
             await FileWriter.DisposeAsync();
@@ -249,13 +270,15 @@ namespace dotnetCampus.FileDownloader
 
         private async Task<bool> TryDownloadLast(long contentLength)
         {
-            var url = Url;
             // 尝试下载后部分，如果可以下载后续的 100 个字节，那么这个链接支持分段下载
             const int downloadLength = 100;
-            var webRequest = (HttpWebRequest)WebRequest.Create(url);
+
             var startPoint = contentLength - downloadLength;
-            webRequest.AddRange(startPoint, contentLength);
-            var responseLast = await webRequest.GetResponseAsync();
+
+            var responseLast = await GetWebResponseAsync(webRequest =>
+            {
+                webRequest.AddRange(startPoint, contentLength);
+            });
 
             if (responseLast.ContentLength == downloadLength)
             {
@@ -269,7 +292,6 @@ namespace dotnetCampus.FileDownloader
 
             return false;
         }
-
 
         private class DownloadData
         {

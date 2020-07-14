@@ -1,12 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\dotnetCampus.FileDownloader\dotnetCampus.FileDownloader.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\dotnetCampus.FileDownloader\dotnetCampus.FileDownloader.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.5"></PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.5"></PackageReference>
+        <PackageReference Include="CommandLineParser" Version="2.8.0"></PackageReference>
+    </ItemGroup>
 
 </Project>

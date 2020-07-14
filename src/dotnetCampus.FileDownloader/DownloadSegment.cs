@@ -28,12 +28,14 @@ namespace dotnetCampus.FileDownloader
 
         public long StartPoint { get; }
 
+        public int Number { get; set; }
+
         /// <summary>
         /// 需要下载到的点
         /// </summary>
         public long RequirementDownloadPoint
         {
-            set
+            internal set
             {
                 _requirementDownloadPoint = value;
                 SegmentChanged?.Invoke(this, null);
@@ -43,7 +45,7 @@ namespace dotnetCampus.FileDownloader
 
         public override string ToString()
         {
-            return $"Start={StartPoint} Require={RequirementDownloadPoint} Download={DownloadedLength}/{RequirementDownloadPoint - StartPoint}";
+            return $"[{Number:00}] {DownloadedLength * 100.0 / (RequirementDownloadPoint - StartPoint):0.00} Start={StartPoint} Require={RequirementDownloadPoint} Download={DownloadedLength}/{RequirementDownloadPoint - StartPoint}";
         }
 
         /// <summary>
@@ -53,7 +55,7 @@ namespace dotnetCampus.FileDownloader
         public long DownloadedLength
         {
             get => _downloadedLength;
-            set
+            internal set
             {
                 // 不支持越下载内容越小
                 _downloadedLength = value;
