@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using dotnetCampus.Threading;
 
@@ -142,7 +143,7 @@ namespace dotnetCampus.FileDownloader
 
             if (Exception != null)
             {
-                throw Exception;
+                ExceptionDispatchInfo.Capture(Exception).Throw();
             }
             // 需要先判断 Exception 因为加入只进入一个任务，刚好这个任务炸了
             if (DownloadSegmentList.Count == 0)
