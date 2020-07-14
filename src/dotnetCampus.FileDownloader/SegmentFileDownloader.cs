@@ -120,7 +120,7 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     var url = Url;
-                    var webRequest = (HttpWebRequest)WebRequest.Create(url);
+                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
                     webRequest.Method = "GET";
 
                     action?.Invoke(webRequest);
@@ -128,6 +128,10 @@ namespace dotnetCampus.FileDownloader
                     var response = await webRequest.GetResponseAsync();
 
                     return response;
+                }
+                catch (InvalidCastException)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
