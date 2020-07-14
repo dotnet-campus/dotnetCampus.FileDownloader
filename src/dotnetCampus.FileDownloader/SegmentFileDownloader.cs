@@ -13,10 +13,16 @@ namespace dotnetCampus.FileDownloader
     {
         public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger, IProgress<DownloadProgress> progress)
         {
-            _logger = logger;
-            _progress = progress;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentNullException(nameof(url));
+            }
+
             Url = url;
-            File = file;
+            File = file ?? throw new ArgumentNullException(nameof(file));
 
             logger.BeginScope("Url={url} File={file}", url, file);
         }
