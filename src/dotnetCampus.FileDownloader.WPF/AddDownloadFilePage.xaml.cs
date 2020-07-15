@@ -22,5 +22,30 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             InitializeComponent();
         }
+
+        public static readonly DependencyProperty FilePathProperty = DependencyProperty.Register(
+            "FilePath", typeof(string), typeof(AddDownloadFilePage), new PropertyMetadata(default(string)));
+
+        public string FilePath
+        {
+            get { return (string)GetValue(FilePathProperty); }
+            set { SetValue(FilePathProperty, value); }
+        }
+
+        public static readonly DependencyProperty UrlProperty = DependencyProperty.Register(
+            "Url", typeof(string), typeof(AddDownloadFilePage), new PropertyMetadata(default(string)));
+
+        public string Url
+        {
+            get { return (string)GetValue(UrlProperty); }
+            set { SetValue(UrlProperty, value); }
+        }
+
+        public event EventHandler DownloadClick;
+
+        private void DownloadButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            DownloadClick?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

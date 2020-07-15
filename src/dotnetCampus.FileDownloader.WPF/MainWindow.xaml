@@ -181,7 +181,7 @@
     </Window.Resources>
 
     <Grid>
-        <Grid IsEnabled="False">
+        <Grid x:Name="MainGrid" IsEnabled="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition></RowDefinition>
@@ -204,9 +204,9 @@
             </Grid>
         </Grid>
 
-        <local:ContentDialog Title="下载" Width="450" Height="300">
+        <local:ContentDialog x:Name="DownloadContentDialog" Title="下载" Width="450" Height="300">
             <local:ContentDialog.ContentElement>
-                <local:AddDownloadFilePage></local:AddDownloadFilePage>
+                <local:AddDownloadFilePage DownloadClick="AddDownloadFilePage_OnDownloadClick"></local:AddDownloadFilePage>
             </local:ContentDialog.ContentElement>
         </local:ContentDialog>
     </Grid>
