@@ -24,5 +24,23 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             InitializeComponent();
         }
+
+        private void AddFileDownload_OnClick(object sender, RoutedEventArgs e)
+        {
+            
+        }
+    }
+
+    public class DownloadFileInfo
+    {
+        public string FileName { get; set; }
+
+        public DateTime AddedTime { get; set; }
+
+        public string FileSize { get; set; }
+
+        public string DownloadProcess { get; set; }
+
+        public string DownloadSpeed { get; set; }
     }
 }
