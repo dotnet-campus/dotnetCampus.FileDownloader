@@ -33,7 +33,25 @@ namespace dotnetCampus.FileDownloader.WPF
         }
 
         public static readonly DependencyProperty UrlProperty = DependencyProperty.Register(
-            "Url", typeof(string), typeof(AddDownloadFilePage), new PropertyMetadata(default(string)));
+            "Url", typeof(string), typeof(AddDownloadFilePage), new PropertyMetadata(default(string),
+                (o, args) =>
+                {
+                    var addDownloadFilePage = (AddDownloadFilePage)o;
+                    var url = addDownloadFilePage.Url;
+
+                    if (string.IsNullOrEmpty(addDownloadFilePage.FilePath))
+                    {
+                        addDownloadFilePage.FilePath = GetFileName(url);
+                    }
+                }));
+
+        private static string GetFileName(string url)
+        {
+            Uri uri = new Uri(url);
+
+            var fileName = System.IO.Path.GetFileName(uri.AbsolutePath);
+            return Uri.UnescapeDataString(fileName);
+        }
 
         public string Url
         {

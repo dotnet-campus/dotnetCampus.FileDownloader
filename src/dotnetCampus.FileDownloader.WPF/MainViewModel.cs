@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using dotnetCampus.FileDownloader.Tool;
 using Microsoft.Extensions.Logging;
@@ -63,10 +64,14 @@ namespace dotnetCampus.FileDownloader.WPF
                 fileDownloadSpeedMonitor.Report(downloadProgress.DownloadedLength);
             };
 
+            _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
+
             var segmentFileDownloader = new SegmentFileDownloader(url, new FileInfo(file), logger, progress);
             await segmentFileDownloader.DownloadFile();
 
             downloadFileInfo.DownloadSpeed = "";
+
+            _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
         }
 
         private readonly ILoggerFactory _loggerFactory;
