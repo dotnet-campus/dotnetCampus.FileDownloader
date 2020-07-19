@@ -24,22 +24,19 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             InitializeComponent();
 
-            DataContext = ViewModel;
-
             ViewModel.Init();
         }
 
         private void AddFileDownload_OnClick(object sender, RoutedEventArgs e)
         {
-            
+
         }
 
         private void AddDownloadFilePage_OnDownloadClick(object? sender, EventArgs e)
         {
-            
+
         }
 
-        private MainViewModel ViewModel { get; }  = new MainViewModel();
-
+        public MainViewModel ViewModel { get; } = new MainViewModel();
     }
 }

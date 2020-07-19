@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotnetCampus.FileDownloader.WPF"
         mc:Ignorable="d"
-        Title="FileDownloader" Height="450" Width="800">
+        Title="FileDownloader" Height="450" Width="800" DataContext="{Binding RelativeSource={RelativeSource Self},Path=ViewModel}">
     <Window.Resources>
         <Style x:Key="GridViewColumnHeaderGripper" TargetType="Thumb">
             <Setter Property="Canvas.Right" Value="-9"/>
@@ -54,6 +54,8 @@
             </Setter>
         </Style>
 
+        <Thickness x:Key="DefaultControlPadding">10</Thickness>
+
         <Style x:Key="ListViewItemBaseStyle" TargetType="ListViewItem">
             <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -78,7 +80,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Foreground" Value="#565656"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -180,7 +182,7 @@
     </Window.Resources>
 
     <Grid>
-        <Grid x:Name="MainGrid" IsEnabled="False">
+        <Grid x:Name="MainGrid" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition></RowDefinition>
@@ -189,21 +191,21 @@
                 <Button Width="50" Content="+" Click="AddFileDownload_OnClick"></Button>
             </StackPanel>
             <Grid Grid.Row="1" Margin="10,10,10,10">
-                <ListView >
+                <ListView ItemsSource="{Binding Path=DownloadFileInfoList}">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Width="200" Header="文件名" />
-                            <GridViewColumn Width="100" Header="大小" />
-                            <GridViewColumn Width="100" Header="进度" />
-                            <GridViewColumn Width="100" Header="下载速度" />
-                            <GridViewColumn Width="200" Header="添加日期" />
+                            <GridViewColumn Width="200" Header="文件名" DisplayMemberBinding="{Binding FileName}" />
+                            <GridViewColumn Width="100" Header="大小" DisplayMemberBinding="{Binding FileSize}"/>
+                            <GridViewColumn Width="100" Header="进度" DisplayMemberBinding="{Binding DownloadProcess}"/>
+                            <GridViewColumn Width="100" Header="下载速度" DisplayMemberBinding="{Binding DownloadSpeed}"/>
+                            <GridViewColumn Width="200" Header="添加日期" DisplayMemberBinding="{Binding AddedTime}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>
             </Grid>
         </Grid>
 
-        <local:ContentDialog x:Name="DownloadContentDialog" Title="下载" Width="450" Height="300">
+        <local:ContentDialog x:Name="DownloadContentDialog" Visibility="Collapsed" Title="下载" Width="450" Height="300">
             <local:ContentDialog.ContentElement>
                 <local:AddDownloadFilePage DownloadClick="AddDownloadFilePage_OnDownloadClick"></local:AddDownloadFilePage>
             </local:ContentDialog.ContentElement>

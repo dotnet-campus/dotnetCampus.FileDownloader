@@ -90,7 +90,7 @@ namespace dotnetCampus.FileDownloader.Tool
                             Console.WriteLine($"{downloadProgress.DownloadedLength}/{downloadProgress.FileLength}");
                             Console.WriteLine();
 
-                            Console.WriteLine($"{(downloadProgress.DownloadedLength - lastLength) * 1000.0 / (DateTime.Now - lastTime).TotalMilliseconds / 1024 / 1024:0.00} MB/s");
+                            Console.WriteLine($"{ FileSizeFormatter.FormatSize((downloadProgress.DownloadedLength - lastLength) * 1000.0 / (DateTime.Now - lastTime).TotalMilliseconds)}/s");
 
                             lastLength = downloadProgress.DownloadedLength;
                             lastTime = DateTime.Now;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -14,7 +15,24 @@ namespace dotnetCampus.FileDownloader.WPF
 
             if (!File.Exists(file))
             {
-                return new List<DownloadFileInfo>();
+                var list = new List<DownloadFileInfo>();
+#if DEBUG
+                for (int i = 0; i < 100; i++)
+                {
+                    list.Add(new DownloadFileInfo()
+                    {
+                        FileName = "lindexi.data",
+                        AddedTime = DateTime.Now.ToString(),
+                        DownloadProcess = "100/100",
+                        DownloadSpeed = "10MB/s",
+                        DownloadUrl = "http://blog.lindexi.com",
+                        FilePath = @"C:\lindexi\lindexi.data",
+                        FileSize = "100 GB"
+                    });
+                }
+#endif
+
+                return list;
             }
 
             var text = await File.ReadAllTextAsync(file);
