@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows;
 using dotnetCampus.FileDownloader.Tool;
+using dotnetCampus.FileDownloader.WPF.Annotations;
 using Microsoft.Extensions.Logging;
 
 namespace dotnetCampus.FileDownloader.WPF
 {
-    public class MainViewModel
+    public class MainViewModel : INotifyPropertyChanged
     {
         public MainViewModel()
         {
@@ -30,8 +34,33 @@ namespace dotnetCampus.FileDownloader.WPF
 
         private DownloadFileManager DownloadFileManager { get; } = new DownloadFileManager();
 
-        public async void AddDownloadFile(string url, string file)
+        public string CurrentDownloadFilePath
         {
+            get => _currentDownloadFilePath;
+            set
+            {
+                if (value == _currentDownloadFilePath) return;
+                _currentDownloadFilePath = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string CurrentDownloadUrl
+        {
+            get => _currentDownloadUrl;
+            set
+            {
+                if (value == _currentDownloadUrl) return;
+                _currentDownloadUrl = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public async void AddDownloadFile()
+        {
+            var url = CurrentDownloadUrl;
+            var file = CurrentDownloadFilePath;
+
             var logger = _loggerFactory.CreateLogger<SegmentFileDownloader>();
             var progress = new Progress<DownloadProgress>();
 
@@ -75,6 +104,26 @@ namespace dotnetCampus.FileDownloader.WPF
         }
 
         private readonly ILoggerFactory _loggerFactory;
+        private string _currentDownloadFilePath;
+        private string _currentDownloadUrl;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            var dispatcher = Application.Current.Dispatcher;
+            if (dispatcher.CheckAccess())
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+            else
+            {
+                dispatcher.InvokeAsync(() =>
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                });
+            }
+        }
     }
 
     public class FileDownloadSpeedMonitor : IDisposable

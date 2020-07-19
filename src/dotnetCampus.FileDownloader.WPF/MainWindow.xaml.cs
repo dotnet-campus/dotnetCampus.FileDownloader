@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,6 +33,13 @@ namespace dotnetCampus.FileDownloader.WPF
         private void AddFileDownload_OnClick(object sender, RoutedEventArgs e)
         {
             ShowDownloadDialog();
+
+            var text = Clipboard.GetText();
+
+            if (Regex.IsMatch(text, @"^((https|http|ftp|rtsp|mms)?:\/\/)[^\s]+"))
+            {
+                ViewModel.CurrentDownloadUrl = text;
+            }
         }
 
         private void ShowDownloadDialog()
@@ -44,15 +52,14 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             MainGrid.IsEnabled = true;
             DownloadContentDialog.Visibility = Visibility.Hidden;
+
+            ViewModel.CurrentDownloadUrl = string.Empty;
+            ViewModel.CurrentDownloadFilePath = string.Empty;
         }
 
         private void AddDownloadFilePage_OnDownloadClick(object sender, EventArgs e)
         {
-            var addDownloadFilePage = (AddDownloadFilePage)sender;
-            var url = addDownloadFilePage.Url;
-            var file = addDownloadFilePage.FilePath;
-
-            ViewModel.AddDownloadFile(url, file);
+            ViewModel.AddDownloadFile();
 
             HideDownloadDialog();
         }

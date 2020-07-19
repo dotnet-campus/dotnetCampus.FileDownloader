@@ -38,15 +38,15 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public UIElement ContentElement
         {
-            get { return (UIElement) GetValue(ContentElementProperty); }
+            get { return (UIElement)GetValue(ContentElementProperty); }
             set { SetValue(ContentElementProperty, value); }
         }
-       
-        public event EventHandler Closed;
+
+        public event EventHandler Closed = null!;
 
         private void CloseButton_OnClick(object sender, RoutedEventArgs e)
         {
-            Closed?.Invoke(this, EventArgs.Empty);
+            Closed(this, EventArgs.Empty);
         }
     }
 }

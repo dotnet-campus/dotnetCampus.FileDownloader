@@ -208,8 +208,8 @@
         <local:ContentDialog x:Name="DownloadContentDialog" Visibility="Collapsed" Title="下载" Width="450" Height="300"
                              Closed="DownloadContentDialog_OnClosed">
             <local:ContentDialog.ContentElement>
-                <local:AddDownloadFilePage Url="https://download.jetbrains.8686c.com/resharper/ReSharperUltimate.2020.1.3/JetBrains.ReSharperUltimate.2020.1.3.exe"
-                                           FilePath="JetBrains.ReSharperUltimate.2020.1.3.exe"
+                <local:AddDownloadFilePage Url="{Binding CurrentDownloadUrl,Mode=TwoWay}"
+                                           FilePath="{Binding CurrentDownloadFilePath,Mode=TwoWay}"
                                            DownloadClick="AddDownloadFilePage_OnDownloadClick"></local:AddDownloadFilePage>
             </local:ContentDialog.ContentElement>
         </local:ContentDialog>

@@ -47,10 +47,22 @@ namespace dotnetCampus.FileDownloader.WPF
 
         private static string GetFileName(string url)
         {
+            if (string.IsNullOrEmpty(url))
+            {
+                return string.Empty;
+            }
+
             Uri uri = new Uri(url);
 
             var fileName = System.IO.Path.GetFileName(uri.AbsolutePath);
             return Uri.UnescapeDataString(fileName);
+        }
+
+        public void Clean()
+        {
+            Url = string.Empty;
+
+            FilePath = string.Empty;
         }
 
         public string Url
