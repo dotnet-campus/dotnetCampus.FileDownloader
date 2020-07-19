@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Windows;
 using dotnetCampus.FileDownloader.WPF.Annotations;
+using Newtonsoft.Json;
 
 namespace dotnetCampus.FileDownloader.WPF
 {
@@ -40,6 +41,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public string FilePath { get; set; }
 
+        [JsonIgnore]
         public string DownloadSpeed
         {
             get => _downloadSpeed;

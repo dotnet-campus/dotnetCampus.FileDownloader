@@ -16,21 +16,6 @@ namespace dotnetCampus.FileDownloader.WPF
             if (!File.Exists(file))
             {
                 var list = new List<DownloadFileInfo>();
-#if DEBUG
-                for (int i = 0; i < 10; i++)
-                {
-                    list.Add(new DownloadFileInfo()
-                    {
-                        FileName = "lindexi.data",
-                        AddedTime = DateTime.Now.ToString(),
-                        DownloadProcess = "100/100",
-                        DownloadSpeed = "10MB/s",
-                        DownloadUrl = "http://blog.lindexi.com",
-                        FilePath = @"C:\lindexi\lindexi.data",
-                        FileSize = "100 GB"
-                    });
-                }
-#endif
 
                 return list;
             }
