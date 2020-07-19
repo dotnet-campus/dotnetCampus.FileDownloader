@@ -7,7 +7,6 @@
         mc:Ignorable="d"
         Title="FileDownloader" Height="450" Width="800">
     <Window.Resources>
-
         <Style x:Key="GridViewColumnHeaderGripper" TargetType="Thumb">
             <Setter Property="Canvas.Right" Value="-9"/>
             <Setter Property="Width" Value="18"/>
@@ -186,7 +185,7 @@
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Margin="10,10,10,10" Orientation="Horizontal" Height="50" VerticalAlignment="Top">
-            <Button Width="50" Content="+"></Button>
+            <Button Width="50" Content="+" Click="AddFileDownload_OnClick"></Button>
         </StackPanel>
         <Grid Grid.Row="1" Margin="10,10,10,10">
             <ListView >
