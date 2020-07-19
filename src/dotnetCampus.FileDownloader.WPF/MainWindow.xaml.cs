@@ -31,11 +31,6 @@ namespace dotnetCampus.FileDownloader.WPF
 
         private void AddFileDownload_OnClick(object sender, RoutedEventArgs e)
         {
-
-        }
-
-        private void AddFileDownload_OnClick(object sender, RoutedEventArgs e)
-        {
             
         }
 

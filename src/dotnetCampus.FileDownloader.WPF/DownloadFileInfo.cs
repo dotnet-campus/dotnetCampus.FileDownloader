@@ -8,6 +8,7 @@ namespace dotnetCampus.FileDownloader.WPF
     {
         private string _downloadProcess;
         private string _fileSize;
+        private string _downloadSpeed;
         public string FileName { get; set; }
 
         public string FileSize
@@ -38,7 +39,16 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public string FilePath { get; set; }
 
-        public string DownloadSpeed { get; set; }
+        public string DownloadSpeed
+        {
+            get => _downloadSpeed;
+            set
+            {
+                if (value == _downloadSpeed) return;
+                _downloadSpeed = value;
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
