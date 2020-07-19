@@ -53,6 +53,8 @@ namespace dotnetCampus.FileDownloader.WPF
             var file = addDownloadFilePage.FilePath;
 
             ViewModel.AddDownloadFile(url, file);
+
+            HideDownloadDialog();
         }
 
         public MainViewModel ViewModel { get; } = new MainViewModel();

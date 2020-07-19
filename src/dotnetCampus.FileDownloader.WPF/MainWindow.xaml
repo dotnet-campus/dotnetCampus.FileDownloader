@@ -196,7 +196,7 @@
                         <GridView>
                             <GridViewColumn Width="200" Header="文件名" DisplayMemberBinding="{Binding FileName}" />
                             <GridViewColumn Width="100" Header="大小" DisplayMemberBinding="{Binding FileSize}"/>
-                            <GridViewColumn Width="100" Header="进度" DisplayMemberBinding="{Binding DownloadProcess}"/>
+                            <GridViewColumn Width="200" Header="进度" DisplayMemberBinding="{Binding DownloadProcess}"/>
                             <GridViewColumn Width="100" Header="下载速度" DisplayMemberBinding="{Binding DownloadSpeed}"/>
                             <GridViewColumn Width="200" Header="添加日期" DisplayMemberBinding="{Binding AddedTime}"/>
                         </GridView>

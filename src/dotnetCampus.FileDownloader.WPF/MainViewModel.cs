@@ -57,6 +57,7 @@ namespace dotnetCampus.FileDownloader.WPF
             progress.ProgressChanged += (sender, downloadProgress) =>
             {
                 downloadFileInfo.FileSize = FileSizeFormatter.FormatSize(downloadProgress.FileLength);
+                downloadFileInfo.DownloadProcess = $"{FileSizeFormatter.FormatSize(downloadProgress.DownloadedLength)}/{FileSizeFormatter.FormatSize(downloadProgress.FileLength)}";
 
                 // ReSharper disable once AccessToDisposedClosure
                 fileDownloadSpeedMonitor.Report(downloadProgress.DownloadedLength);
