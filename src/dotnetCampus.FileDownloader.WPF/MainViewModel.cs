@@ -65,6 +65,8 @@ namespace dotnetCampus.FileDownloader.WPF
 
             var segmentFileDownloader = new SegmentFileDownloader(url, new FileInfo(file), logger, progress);
             await segmentFileDownloader.DownloadFile();
+
+            downloadFileInfo.DownloadSpeed = "";
         }
 
         private readonly ILoggerFactory _loggerFactory;
