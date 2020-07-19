@@ -180,23 +180,33 @@
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition></RowDefinition>
-        </Grid.RowDefinitions>
-        <StackPanel Margin="10,10,10,10" Orientation="Horizontal" Height="50" VerticalAlignment="Top">
-            <Button Width="50" Content="+" Click="AddFileDownload_OnClick"></Button>
-        </StackPanel>
-        <Grid Grid.Row="1" Margin="10,10,10,10">
-            <ListView >
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Width="80" Header="asdf" />
-                        <GridViewColumn Width="100" Header="asd" />
-                        <GridViewColumn Width="200" Header="as" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
+        <Grid x:Name="MainGrid" IsEnabled="False">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <StackPanel Margin="10,10,10,10" Orientation="Horizontal" Height="50" VerticalAlignment="Top">
+                <Button Width="50" Content="+" Click="AddFileDownload_OnClick"></Button>
+            </StackPanel>
+            <Grid Grid.Row="1" Margin="10,10,10,10">
+                <ListView >
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Width="200" Header="文件名" />
+                            <GridViewColumn Width="100" Header="大小" />
+                            <GridViewColumn Width="100" Header="进度" />
+                            <GridViewColumn Width="100" Header="下载速度" />
+                            <GridViewColumn Width="200" Header="添加日期" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
         </Grid>
+
+        <local:ContentDialog x:Name="DownloadContentDialog" Title="下载" Width="450" Height="300">
+            <local:ContentDialog.ContentElement>
+                <local:AddDownloadFilePage DownloadClick="AddDownloadFilePage_OnDownloadClick"></local:AddDownloadFilePage>
+            </local:ContentDialog.ContentElement>
+        </local:ContentDialog>
     </Grid>
 </Window>

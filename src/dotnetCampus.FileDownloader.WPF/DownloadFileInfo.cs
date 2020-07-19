@@ -38,6 +38,8 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public string FilePath { get; set; }
 
+        public string DownloadSpeed { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

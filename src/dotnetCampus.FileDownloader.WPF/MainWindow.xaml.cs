@@ -34,6 +34,16 @@ namespace dotnetCampus.FileDownloader.WPF
 
         }
 
+        private void AddFileDownload_OnClick(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+        private void AddDownloadFilePage_OnDownloadClick(object? sender, EventArgs e)
+        {
+            
+        }
+
         private MainViewModel ViewModel { get; }  = new MainViewModel();
 
     }
