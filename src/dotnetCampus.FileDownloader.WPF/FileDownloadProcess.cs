@@ -1,20 +1,18 @@
-﻿using System;
+﻿//using System;
 
-namespace dotnetCampus.FileDownloader.WPF
-{
-    public class FileDownloadProcess : IProgress<DownloadProgress>
-    {
-        public FileDownloadProcess(DownloadFileInfo downloadFileInfo)
-        {
-            DownloadFileInfo = downloadFileInfo;
-        }
+//namespace dotnetCampus.FileDownloader.WPF
+//{
+//    public class FileDownloadProcess : IProgress<DownloadProgress>
+//    {
+//        public FileDownloadProcess(DownloadFileInfo downloadFileInfo)
+//        {
+//            DownloadFileInfo = downloadFileInfo;
+//        }
 
-        public void Report(DownloadProgress value)
-        {
+//        public void Report(DownloadProgress value)
+//        {
+//        }
 
-
-        }
-
-        private DownloadFileInfo DownloadFileInfo { get; }
-    }
-}
+//        private DownloadFileInfo DownloadFileInfo { get; }
+//    }
+//}

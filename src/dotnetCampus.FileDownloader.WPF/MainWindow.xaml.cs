@@ -71,6 +71,4 @@ namespace dotnetCampus.FileDownloader.WPF
             HideDownloadDialog();
         }
     }
-
-
 }
