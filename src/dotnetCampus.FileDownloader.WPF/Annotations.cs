@@ -25,6 +25,7 @@ using System;
 
 #pragma warning disable 1591
 #pragma warning disable SA1402
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -1235,3 +1236,4 @@ namespace dotnetCampus.FileDownloader.WPF.Annotations
   [AttributeUsage(AttributeTargets.Parameter)]
   public sealed class RazorWriteMethodParameterAttribute : Attribute { }
 }
+#pragma warning restore SA1402 // FileMayOnlyContainASingleType
