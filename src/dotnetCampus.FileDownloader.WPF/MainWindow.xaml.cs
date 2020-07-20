@@ -38,7 +38,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
             if (Regex.IsMatch(text, @"^((https|http|ftp|rtsp|mms)?:\/\/)[^\s]+"))
             {
-                ViewModel.CurrentDownloadUrl = text;
+                ViewModel.AddFileDownloadViewModel.CurrentDownloadUrl = text;
             }
         }
 
@@ -53,8 +53,8 @@ namespace dotnetCampus.FileDownloader.WPF
             MainGrid.IsEnabled = true;
             DownloadContentDialog.Visibility = Visibility.Hidden;
 
-            ViewModel.CurrentDownloadUrl = string.Empty;
-            ViewModel.CurrentDownloadFilePath = string.Empty;
+            ViewModel.AddFileDownloadViewModel.CurrentDownloadUrl = string.Empty;
+            ViewModel.AddFileDownloadViewModel.CurrentDownloadFilePath = string.Empty;
         }
 
         private void AddDownloadFilePage_OnDownloadClick(object sender, EventArgs e)

@@ -205,7 +205,9 @@
             </Grid>
         </Grid>
 
-        <local:ContentDialog x:Name="DownloadContentDialog" Visibility="Collapsed" Title="下载" Width="450" Height="300"
+        <local:ContentDialog x:Name="DownloadContentDialog" Visibility="Collapsed"
+                             Title="下载" Width="450" Height="300"
+                             DataContext="{Binding Path=AddFileDownloadViewModel}"
                              Closed="DownloadContentDialog_OnClosed">
             <local:ContentDialog.ContentElement>
                 <local:AddDownloadFilePage Url="{Binding CurrentDownloadUrl,Mode=TwoWay}"
