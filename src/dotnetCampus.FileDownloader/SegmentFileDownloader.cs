@@ -11,7 +11,8 @@ namespace dotnetCampus.FileDownloader
 {
     public class SegmentFileDownloader
     {
-        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger, IProgress<DownloadProgress> progress)
+        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger,
+            IProgress<DownloadProgress> progress, int bufferLength = ushort.MaxValue)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _progress = progress ?? throw new ArgumentNullException(nameof(progress));
@@ -25,7 +26,11 @@ namespace dotnetCampus.FileDownloader
             File = file ?? throw new ArgumentNullException(nameof(file));
 
             logger.BeginScope("Url={url} File={file}", url, file);
+
+            BufferLength = bufferLength;
         }
+
+        public int BufferLength { get; }
 
         public string Url { get; }
 
@@ -186,7 +191,7 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     await using var responseStream = response.GetResponseStream();
-                    const int length = 1024;
+                    int length = BufferLength;
                     Debug.Assert(responseStream != null, nameof(responseStream) + " != null");
 
                     while (!downloadSegment.Finished)
