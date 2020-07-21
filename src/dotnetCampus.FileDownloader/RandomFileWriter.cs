@@ -12,10 +12,23 @@ namespace dotnetCampus.FileDownloader
     /// </summary>
     public class RandomFileWriter : IAsyncDisposable
     {
+        /// <summary>
+        /// 不按照顺序，随机写入文件
+        /// </summary>
+        /// <param name="stream"></param>
         public RandomFileWriter(FileStream stream)
         {
             Stream = stream;
             Task.Run(WriteToFile);
+        }
+
+        /// <summary>
+        /// 加入写文件队列
+        /// </summary>
+        public void QueueWrite(long fileStartPoint, byte[] data, int dataOffset, int dataLength)
+        {
+            var fileSegment = new FileSegment(fileStartPoint, data, dataOffset, dataLength);
+            DownloadSegmentList.Enqueue(fileSegment);
         }
 
         /// <summary>
@@ -48,6 +61,11 @@ namespace dotnetCampus.FileDownloader
             await task.Task;
         }
 
+        /// <summary>
+        /// 每次写完触发事件
+        /// </summary>
+        public event EventHandler<byte[]> StepWriteFinished = delegate { };
+
         private Exception? Exception { set; get; }
 
         private async Task WriteToFile()
@@ -72,6 +90,9 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     fileSegment.TaskCompletionSource?.SetResult(true);
+                    fileSegment.AfterWriteAction?.Invoke();
+
+                    StepWriteFinished(this, fileSegment.Data);
                 }
                 catch (Exception)
                 {
@@ -91,21 +112,23 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        private event EventHandler WriteFinished;
+        private event EventHandler? WriteFinished;
 
         private FileStream Stream { get; }
 
         private AsyncQueue<FileSegment> DownloadSegmentList { get; } = new AsyncQueue<FileSegment>();
 
-        readonly struct FileSegment
+        private readonly struct FileSegment
         {
-            public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength, TaskCompletionSource<bool> taskCompletionSource = null)
+            public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength,
+                TaskCompletionSource<bool>? taskCompletionSource = null, Action? afterWriteAction = null)
             {
                 FileStartPoint = fileStartPoint;
                 Data = data;
                 DataLength = dataLength;
                 DataOffset = dataOffset;
                 TaskCompletionSource = taskCompletionSource;
+                AfterWriteAction = afterWriteAction;
             }
 
             /// <summary>
@@ -128,7 +151,9 @@ namespace dotnetCampus.FileDownloader
             /// </summary>
             public int DataLength { get; }
 
-            public TaskCompletionSource<bool> TaskCompletionSource { get; }
+            public TaskCompletionSource<bool>? TaskCompletionSource { get; }
+
+            public Action? AfterWriteAction { get; }
         }
 
         /// <summary>

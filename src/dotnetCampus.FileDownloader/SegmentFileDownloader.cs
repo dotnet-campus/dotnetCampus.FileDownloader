@@ -44,6 +44,7 @@ namespace dotnetCampus.FileDownloader
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
             FileWriter = new RandomFileWriter(FileStream);
+            FileWriter.StepWriteFinished += (sender, bytes) => SharedArrayPool.Return(bytes);
 
             SegmentManager = new SegmentManager(contentLength);
 
@@ -201,8 +202,7 @@ namespace dotnetCampus.FileDownloader
                         _logger.LogInformation(
                             $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
-                        var task = FileWriter.WriteAsync(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
-                        _ = task.ContinueWith(_ => SharedArrayPool.Return(buffer));
+                        FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
 
                         downloadSegment.DownloadedLength += n;
 

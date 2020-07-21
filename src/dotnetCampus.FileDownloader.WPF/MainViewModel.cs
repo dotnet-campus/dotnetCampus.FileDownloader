@@ -50,28 +50,29 @@ namespace dotnetCampus.FileDownloader.WPF
             DownloadFileInfoList.Add(downloadFileInfo);
 
             using var fileDownloadSpeedMonitor = new FileDownloadSpeedMonitor();
-            fileDownloadSpeedMonitor.ProgressChanged += (sender, text) =>
+            fileDownloadSpeedMonitor.ProgressChanged += (sender, downloadProgress) =>
             {
-                downloadFileInfo.DownloadSpeed = text;
+                downloadFileInfo.DownloadSpeed = downloadProgress.DownloadSpeed;
+                downloadFileInfo.FileSize = downloadProgress.FileSize;
+                downloadFileInfo.DownloadProcess = downloadProgress.DownloadProcess;
             };
 
             fileDownloadSpeedMonitor.Start();
 
             progress.ProgressChanged += (sender, downloadProgress) =>
             {
-                downloadFileInfo.FileSize = FileSizeFormatter.FormatSize(downloadProgress.FileLength);
-                downloadFileInfo.DownloadProcess = $"{FileSizeFormatter.FormatSize(downloadProgress.DownloadedLength)}/{FileSizeFormatter.FormatSize(downloadProgress.FileLength)}";
-
                 // ReSharper disable once AccessToDisposedClosure
-                fileDownloadSpeedMonitor.Report(downloadProgress.DownloadedLength);
+                fileDownloadSpeedMonitor.Report(downloadProgress);
             };
 
             _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
 
             var segmentFileDownloader = new SegmentFileDownloader(url, new FileInfo(file), logger, progress);
             await segmentFileDownloader.DownloadFile();
+            fileDownloadSpeedMonitor.Stop();
 
             downloadFileInfo.DownloadSpeed = "";
+            downloadFileInfo.DownloadProcess = "完成";
 
             _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
         }

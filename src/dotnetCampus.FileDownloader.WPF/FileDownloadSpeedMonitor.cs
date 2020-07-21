@@ -16,7 +16,24 @@ namespace dotnetCampus.FileDownloader.WPF
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(500));
 
-                    ProgressChanged(this, GetCurrentSpeed());
+                    if (!_started)
+                    {
+                        return;
+                    }
+
+                    if (_currentDownloadProgress is null)
+                    {
+                        continue;
+                    }
+
+                    var speed = GetCurrentSpeed();
+                    var downloadInfoProgress = new DownloadInfoProgress(FileSizeFormatter.FormatSize(_currentDownloadProgress.FileLength),
+                        $"{FileSizeFormatter.FormatSize(_currentDownloadProgress.DownloadedLength)}/{FileSizeFormatter.FormatSize(_currentDownloadProgress.FileLength)}",
+                        speed, _currentDownloadProgress);
+
+                    ProgressChanged(this, downloadInfoProgress);
+
+                    _lastDownloadProgress = _currentDownloadProgress;
                 }
             });
         }
@@ -26,31 +43,51 @@ namespace dotnetCampus.FileDownloader.WPF
             _started = false;
         }
 
-        public event EventHandler<string> ProgressChanged = null!;
+        public event EventHandler<DownloadInfoProgress> ProgressChanged = null!;
 
         private bool _started;
 
-        public void Report(long downloadedLength)
-        {
-            _currentDownloadedLength = downloadedLength;
-        }
-
         private string GetCurrentSpeed()
         {
-            var text = ($"{ FileSizeFormatter.FormatSize((_currentDownloadedLength - _lastDownloadedLength) * 1000.0 / (DateTime.Now - _lastDateTime).TotalMilliseconds)}/s");
+            var text = ($"{ FileSizeFormatter.FormatSize((_currentDownloadProgress!.DownloadedLength - _lastDownloadProgress!.DownloadedLength) * 1000.0 / (DateTime.Now - _lastDateTime).TotalMilliseconds)}/s");
             _lastDateTime = DateTime.Now;
-            _lastDownloadedLength = _currentDownloadedLength;
 
             return text;
         }
 
-        private long _currentDownloadedLength;
-        private long _lastDownloadedLength;
+
         private DateTime _lastDateTime;
 
         public void Dispose()
         {
             _started = false;
+        }
+
+        public void Report(DownloadProgress downloadProgress)
+        {
+            _currentDownloadProgress = downloadProgress;
+            _lastDownloadProgress ??= _currentDownloadProgress;
+        }
+
+        private DownloadProgress? _lastDownloadProgress;
+        private DownloadProgress? _currentDownloadProgress;
+
+        public class DownloadInfoProgress
+        {
+            public DownloadInfoProgress(string fileSize,
+                string downloadProcess, string downloadSpeed, DownloadProgress downloadProgress)
+            {
+                FileSize = fileSize;
+                DownloadProcess = downloadProcess;
+                DownloadSpeed = downloadSpeed;
+                DownloadProgress = downloadProgress;
+            }
+
+            public string FileSize { get; }
+            public string DownloadProcess { get; }
+            public string DownloadSpeed { get; }
+
+            public DownloadProgress DownloadProgress { get; }
         }
     }
 }
