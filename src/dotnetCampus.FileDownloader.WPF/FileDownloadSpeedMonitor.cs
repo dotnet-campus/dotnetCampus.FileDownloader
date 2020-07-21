@@ -33,7 +33,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
                     ProgressChanged(this, downloadInfoProgress);
 
-                    _lastDownloadProgress = _currentDownloadProgress;
+                    _lastDownloadLength = _currentDownloadProgress.DownloadedLength;
                 }
             });
         }
@@ -49,14 +49,17 @@ namespace dotnetCampus.FileDownloader.WPF
 
         private string GetCurrentSpeed()
         {
-            var text = ($"{ FileSizeFormatter.FormatSize((_currentDownloadProgress!.DownloadedLength - _lastDownloadProgress!.DownloadedLength) * 1000.0 / (DateTime.Now - _lastDateTime).TotalMilliseconds)}/s");
+            var downloadedLength = _currentDownloadProgress!.DownloadedLength - _lastDownloadLength!.Value;
+
+            var text = ($"{ FileSizeFormatter.FormatSize(downloadedLength * 1000.0 / (DateTime.Now - _lastDateTime).TotalMilliseconds)}/s");
+
             _lastDateTime = DateTime.Now;
 
             return text;
         }
 
 
-        private DateTime _lastDateTime;
+        private DateTime _lastDateTime = DateTime.Now;
 
         public void Dispose()
         {
@@ -66,10 +69,11 @@ namespace dotnetCampus.FileDownloader.WPF
         public void Report(DownloadProgress downloadProgress)
         {
             _currentDownloadProgress = downloadProgress;
-            _lastDownloadProgress ??= _currentDownloadProgress;
+            _lastDownloadLength ??= downloadProgress.DownloadedLength;
         }
 
-        private DownloadProgress? _lastDownloadProgress;
+        private long? _lastDownloadLength;
+
         private DownloadProgress? _currentDownloadProgress;
 
         public class DownloadInfoProgress
