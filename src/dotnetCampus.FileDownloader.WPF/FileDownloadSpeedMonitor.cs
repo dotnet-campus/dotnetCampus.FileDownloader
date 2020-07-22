@@ -12,8 +12,8 @@ namespace dotnetCampus.FileDownloader.WPF
         /// <summary>
         /// 文件下载速度监控
         /// </summary>
-        /// <param name="delayTime">触发事件延迟时间</param>
-        public FileDownloadSpeedMonitor(TimeSpan? delayTime)
+        /// <param name="delayTime">触发事件延迟时间，默认是 500 毫秒</param>
+        public FileDownloadSpeedMonitor(TimeSpan? delayTime = null)
         {
             if (delayTime is null)
             {
