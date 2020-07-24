@@ -269,6 +269,7 @@ namespace dotnetCampus.FileDownloader
 
             await FileWriter.DisposeAsync();
             await FileStream.DisposeAsync();
+            DownloadDataList.Dispose();
 
             FileDownloadTask.SetResult(true);
         }
