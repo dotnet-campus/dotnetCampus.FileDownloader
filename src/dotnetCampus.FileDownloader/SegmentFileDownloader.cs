@@ -12,10 +12,11 @@ namespace dotnetCampus.FileDownloader
     public class SegmentFileDownloader
     {
         public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger,
-            IProgress<DownloadProgress> progress, int bufferLength = ushort.MaxValue)
+            IProgress<DownloadProgress> progress, ISharedArrayPool? sharedArrayPool = null, int bufferLength = ushort.MaxValue)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+            SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
 
             if (string.IsNullOrEmpty(url))
             {
@@ -31,6 +32,8 @@ namespace dotnetCampus.FileDownloader
         }
 
         public int BufferLength { get; }
+
+        public ISharedArrayPool SharedArrayPool { get; }
 
         public string Url { get; }
 
@@ -126,7 +129,7 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     var url = Url;
-                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
+                    var webRequest = (HttpWebRequest)WebRequest.Create(url);
                     webRequest.Method = "GET";
 
                     action?.Invoke(webRequest);
@@ -180,6 +183,12 @@ namespace dotnetCampus.FileDownloader
             while (!SegmentManager.IsFinished())
             {
                 var data = await DownloadDataList.DequeueAsync();
+
+                // 没有内容了
+                if (SegmentManager.IsFinished())
+                {
+                    return;
+                }
 
                 var downloadSegment = data.DownloadSegment;
 
