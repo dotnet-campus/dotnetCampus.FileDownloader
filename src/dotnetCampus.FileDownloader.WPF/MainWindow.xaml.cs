@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Extensions.Logging;
+using Path = System.IO.Path;
 
 namespace dotnetCampus.FileDownloader.WPF
 {
@@ -70,5 +72,58 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             HideDownloadDialog();
         }
+
+        private void OpenFileCommand_OnExecute(object parameter)
+        {
+            if (!(parameter is DownloadFileInfo downloadFileInfo))
+            {
+                return;
+            }
+
+            if (downloadFileInfo.IsFinished)
+            {
+                var processStartInfo = new ProcessStartInfo("explorer")
+                {
+                    ArgumentList =
+                    {
+                        downloadFileInfo.FilePath
+                    }
+                };
+
+                Process.Start(processStartInfo);
+            }
+        }
+
+        private void OpenFolderCommand_OnExecute(object parameter)
+        {
+            if (!(parameter is DownloadFileInfo downloadFileInfo))
+            {
+                return;
+            }
+
+            if (downloadFileInfo.IsFinished)
+            {
+                System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{downloadFileInfo.FilePath}\"");
+            }
+        }
+    }
+
+    public class DelegateCommand : ICommand
+    {
+        public Func<object, bool>? CanExecuteDelegate { set; get; }
+
+        public Action<object>? ExecuteDelegate { set; get; }
+
+        public bool CanExecute(object parameter)
+        {
+            return CanExecuteDelegate?.Invoke(parameter) ?? true;
+        }
+
+        public void Execute(object parameter)
+        {
+            ExecuteDelegate?.Invoke(parameter);
+        }
+
+        public event EventHandler? CanExecuteChanged;
     }
 }

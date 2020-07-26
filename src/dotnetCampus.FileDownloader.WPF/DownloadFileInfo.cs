@@ -41,6 +41,8 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public string FilePath { get; set; }
 
+        public bool IsFinished { get; set; }
+
         [JsonIgnore]
         public string DownloadSpeed
         {

@@ -26,6 +26,11 @@ namespace dotnetCampus.FileDownloader.WPF
 
             if (downloadedFileInfoList != null)
             {
+                foreach (var downloadFileInfo in downloadedFileInfoList)
+                {
+                    downloadFileInfo.IsFinished = true;
+                }
+
                 DownloadFileInfoList.AddRange(downloadedFileInfoList);
             }
         }
@@ -84,6 +89,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
             downloadFileInfo.DownloadSpeed = "";
             downloadFileInfo.DownloadProcess = "完成";
+            downloadFileInfo.IsFinished = true;
 
             _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
 

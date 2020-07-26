@@ -7,6 +7,20 @@
         mc:Ignorable="d"
         Title="FileDownloader" Height="450" Width="800" DataContext="{Binding RelativeSource={RelativeSource Self},Path=ViewModel}">
     <Window.Resources>
+
+        <!-- region 业务-->
+
+        <local:DelegateCommand x:Key="OpenFileCommand" ExecuteDelegate="OpenFileCommand_OnExecute" ></local:DelegateCommand>
+        <local:DelegateCommand x:Key="OpenFolderCommand" ExecuteDelegate="OpenFolderCommand_OnExecute" ></local:DelegateCommand>
+
+        <ContextMenu x:Key="DownloadFileContextMenu">
+            <MenuItem Header="Open File" Command="{StaticResource OpenFileCommand}" CommandParameter="{Binding}"></MenuItem>
+            <MenuItem Header="Open Folder" Command="{StaticResource OpenFolderCommand}" CommandParameter="{Binding}"></MenuItem>
+        </ContextMenu>
+
+        <!-- endregion -->
+
+
         <Style x:Key="GridViewColumnHeaderGripper" TargetType="Thumb">
             <Setter Property="Canvas.Right" Value="-9"/>
             <Setter Property="Width" Value="18"/>
@@ -56,6 +70,8 @@
 
         <Thickness x:Key="DefaultControlPadding">10</Thickness>
 
+
+
         <Style x:Key="ListViewItemBaseStyle" TargetType="ListViewItem">
             <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -67,8 +83,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
-                        <Border CornerRadius="4" x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
-                            <GridViewRowPresenter Content="{TemplateBinding Content}" Columns="{TemplateBinding GridView.ColumnCollection}"/>
+                        <Border CornerRadius="4" x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                Background="{TemplateBinding Background}" 
+                                Padding="{TemplateBinding Padding}" 
+                                SnapsToDevicePixels="true">
+                            <GridViewRowPresenter Content="{TemplateBinding Content}" 
+                                                  ContextMenu="{StaticResource DownloadFileContextMenu}"
+                                                  Columns="{TemplateBinding GridView.ColumnCollection}">
+                            </GridViewRowPresenter>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
