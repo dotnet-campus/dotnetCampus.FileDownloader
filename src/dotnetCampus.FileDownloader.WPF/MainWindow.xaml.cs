@@ -80,18 +80,15 @@ namespace dotnetCampus.FileDownloader.WPF
                 return;
             }
 
-            if (downloadFileInfo.IsFinished)
+            var processStartInfo = new ProcessStartInfo("explorer")
             {
-                var processStartInfo = new ProcessStartInfo("explorer")
+                ArgumentList =
                 {
-                    ArgumentList =
-                    {
-                        downloadFileInfo.FilePath
-                    }
-                };
+                    downloadFileInfo.FilePath
+                }
+            };
 
-                Process.Start(processStartInfo);
-            }
+            Process.Start(processStartInfo);
         }
 
         private void OpenFolderCommand_OnExecute(object parameter)
@@ -101,10 +98,7 @@ namespace dotnetCampus.FileDownloader.WPF
                 return;
             }
 
-            if (downloadFileInfo.IsFinished)
-            {
-                System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{downloadFileInfo.FilePath}\"");
-            }
+            System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{downloadFileInfo.FilePath}\"");
         }
     }
 
