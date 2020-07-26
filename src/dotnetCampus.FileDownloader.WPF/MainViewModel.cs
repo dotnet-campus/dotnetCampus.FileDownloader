@@ -24,7 +24,10 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             var downloadedFileInfoList = await DownloadFileManager.ReadDownloadedFileList();
 
-            DownloadFileInfoList.AddRange(downloadedFileInfoList);
+            if (downloadedFileInfoList != null)
+            {
+                DownloadFileInfoList.AddRange(downloadedFileInfoList);
+            }
         }
 
         public ObservableCollection<DownloadFileInfo> DownloadFileInfoList { get; } = new ObservableCollection<DownloadFileInfo>();
