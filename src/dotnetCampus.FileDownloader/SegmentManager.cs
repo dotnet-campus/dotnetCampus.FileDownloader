@@ -22,11 +22,16 @@ namespace dotnetCampus.FileDownloader
         /// <summary>
         /// 创建一个新的分段用于下载
         /// </summary>
-        public DownloadSegment GetNewDownloadSegment()
+        public DownloadSegment? GetNewDownloadSegment()
         {
             lock (_locker)
             {
                 var downloadSegment = NewDownloadSegment();
+
+                if (downloadSegment == null)
+                {
+                    return null;
+                }
 
                 RegisterDownloadSegment(downloadSegment);
 
@@ -42,7 +47,7 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        private DownloadSegment NewDownloadSegment()
+        private DownloadSegment? NewDownloadSegment()
         {
             if (DownloadSegmentList.Count == 0)
             {

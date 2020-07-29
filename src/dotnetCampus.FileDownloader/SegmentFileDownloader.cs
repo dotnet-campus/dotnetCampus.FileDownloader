@@ -61,7 +61,7 @@ namespace dotnetCampus.FileDownloader
             var downloadSegment = SegmentManager.GetNewDownloadSegment();
 
             // 下载第一段
-            Download(response, downloadSegment);
+            Download(response, downloadSegment!);
 
             var supportSegment = await TryDownloadLast(contentLength);
 
@@ -247,13 +247,18 @@ namespace dotnetCampus.FileDownloader
             await FinishDownload();
         }
 
-        private void Download(WebResponse webResponse, DownloadSegment downloadSegment)
+        private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
         {
             DownloadDataList.Enqueue(new DownloadData(webResponse, downloadSegment));
         }
 
-        private void Download(DownloadSegment downloadSegment)
+        private void Download(DownloadSegment? downloadSegment)
         {
+            if (downloadSegment == null)
+            {
+                return;
+            }
+
             Download(null, downloadSegment);
         }
 
@@ -310,13 +315,13 @@ namespace dotnetCampus.FileDownloader
 
         private class DownloadData
         {
-            public DownloadData(WebResponse webResponse, DownloadSegment downloadSegment)
+            public DownloadData(WebResponse? webResponse, DownloadSegment downloadSegment)
             {
                 WebResponse = webResponse;
                 DownloadSegment = downloadSegment;
             }
 
-            public WebResponse WebResponse { get; }
+            public WebResponse? WebResponse { get; }
 
             public DownloadSegment DownloadSegment { get; }
         }
