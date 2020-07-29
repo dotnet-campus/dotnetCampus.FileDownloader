@@ -6,7 +6,7 @@
 
         <PackAsTool>true</PackAsTool>
 
-        <ToolCommandName>FileDownloader</ToolCommandName>
+        <ToolCommandName>DownloadFile</ToolCommandName>
     </PropertyGroup>
 
     <ItemGroup>
