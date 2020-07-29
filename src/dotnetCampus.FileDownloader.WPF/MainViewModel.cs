@@ -47,7 +47,7 @@ namespace dotnetCampus.FileDownloader.WPF
             var file = AddFileDownloadViewModel.CurrentDownloadFilePath;
 
             var logger = _loggerFactory.CreateLogger<SegmentFileDownloader>();
-            var progress = new Progress<DownloadProgress>();
+            using var progress = new FileDownloadSpeedProgress();
 
             file = Path.GetFullPath(file);
 
@@ -61,20 +61,11 @@ namespace dotnetCampus.FileDownloader.WPF
 
             DownloadFileInfoList.Add(downloadFileInfo);
 
-            using var fileDownloadSpeedMonitor = new FileDownloadSpeedMonitor();
-            fileDownloadSpeedMonitor.ProgressChanged += (sender, downloadProgress) =>
+            progress.ProgressChanged += (sender, downloadProgress) =>
             {
                 downloadFileInfo.DownloadSpeed = downloadProgress.DownloadSpeed;
                 downloadFileInfo.FileSize = downloadProgress.FileSize;
                 downloadFileInfo.DownloadProcess = downloadProgress.DownloadProcess;
-            };
-
-            fileDownloadSpeedMonitor.Start();
-
-            progress.ProgressChanged += (sender, downloadProgress) =>
-            {
-                // ReSharper disable once AccessToDisposedClosure
-                fileDownloadSpeedMonitor.Report(downloadProgress);
             };
 
             _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
@@ -83,9 +74,7 @@ namespace dotnetCampus.FileDownloader.WPF
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
             await segmentFileDownloader.DownloadFile();
 
-            GC.Collect(generation: 2, GCCollectionMode.Optimized, false);
-
-            fileDownloadSpeedMonitor.Stop();
+            progress.Stop();
 
             downloadFileInfo.DownloadSpeed = "";
             downloadFileInfo.DownloadProcess = "完成";
