@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace dotnetCampus.FileDownloader.Tool
+namespace dotnetCampus.FileDownloader
 {
     static class FileSizeFormatter
     {

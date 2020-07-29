@@ -6,10 +6,6 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="..\dotnetCampus.FileDownloader.Tool\FileSizeFormatter.cs" Link="FileSizeFormatter.cs" />
-  </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Walterlv.Themes.FluentDesign" Version="5.7.1" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
