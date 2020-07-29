@@ -122,7 +122,7 @@ namespace dotnetCampus.FileDownloader
             return (response, contentLength);
         }
 
-        private async Task<WebResponse> GetWebResponseAsync(Action<HttpWebRequest> action = null)
+        private async Task<WebResponse?> GetWebResponseAsync(Action<HttpWebRequest>? action = null)
         {
             for (var i = 0; !_isDisposed; i++)
             {
@@ -167,7 +167,7 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         /// <param name="downloadSegment"></param>
         /// <returns></returns>
-        private async Task<WebResponse> GetWebResponse(DownloadSegment downloadSegment)
+        private async Task<WebResponse?> GetWebResponse(DownloadSegment downloadSegment)
         {
             _logger.LogInformation(
                 $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
@@ -199,6 +199,12 @@ namespace dotnetCampus.FileDownloader
 
                 try
                 {
+                    if (response == null)
+                    {
+                        // 继续下一次
+                        throw new ArgumentException("Can not response");
+                    }
+
                     await using var responseStream = response.GetResponseStream();
                     int length = BufferLength;
                     Debug.Assert(responseStream != null, nameof(responseStream) + " != null");
@@ -299,6 +305,11 @@ namespace dotnetCampus.FileDownloader
             {
                 webRequest.AddRange(startPoint, contentLength);
             });
+
+            if (responseLast == null)
+            {
+                return false;
+            }
 
             if (responseLast.ContentLength == downloadLength)
             {
