@@ -46,6 +46,11 @@ namespace dotnetCampus.FileDownloader
                     ProgressChanged(this, downloadInfoProgress);
 
                     _lastDownloadLength = _currentDownloadProgress.DownloadedLength;
+
+                    if (downloadInfoProgress.IsFinished)
+                    {
+                        Stop();
+                    }
                 }
             });
         }
@@ -106,6 +111,8 @@ namespace dotnetCampus.FileDownloader
                 DownloadSpeed = downloadSpeed;
                 DownloadProgress = downloadProgress;
             }
+
+            public bool IsFinished => DownloadProgress.DownloadedLength == DownloadProgress.FileLength;
 
             public string FileSize { get; }
             public string DownloadProcess { get; }
