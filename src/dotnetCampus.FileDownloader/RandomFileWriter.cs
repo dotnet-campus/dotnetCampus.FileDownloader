@@ -205,7 +205,7 @@ namespace dotnetCampus.FileDownloader
 
                 if (Exception != null)
                 {
-                    throw Exception;
+                    ExceptionDispatchInfo.Capture(Exception).Throw();
                 }
 
                 if (FileSegmentList.Count == 0)
