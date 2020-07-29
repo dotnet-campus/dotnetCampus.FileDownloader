@@ -52,7 +52,7 @@ namespace dotnetCampus.FileDownloader
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
             FileWriter = new RandomFileWriter(FileStream);
-            FileWriter.StepWriteFinished += (sender, bytes) => SharedArrayPool.Return(bytes);
+            FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
             SegmentManager = new SegmentManager(contentLength);
 

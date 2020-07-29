@@ -63,7 +63,7 @@ namespace dotnetCampus.FileDownloader
         /// <summary>
         /// 每次写完触发事件
         /// </summary>
-        public event EventHandler<byte[]> StepWriteFinished = delegate { };
+        public event EventHandler<StepWriteFinishedArgs> StepWriteFinished = delegate { };
 
         private Exception? Exception { set; get; }
 
@@ -91,7 +91,16 @@ namespace dotnetCampus.FileDownloader
                     fileSegment.TaskCompletionSource?.SetResult(true);
                     fileSegment.AfterWriteAction?.Invoke();
 
-                    StepWriteFinished(this, fileSegment.Data);
+                    StepWriteFinished
+                    (
+                        this,
+                        new StepWriteFinishedArgs
+                        (
+                            fileSegment.FileStartPoint,
+                            fileSegment.DataOffset,
+                            fileSegment.Data,
+                            fileSegment.DataLength)
+                    );
                 }
                 catch (Exception)
                 {
