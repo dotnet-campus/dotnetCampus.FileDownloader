@@ -199,40 +199,7 @@ namespace dotnetCampus.FileDownloader
 
                 try
                 {
-                    if (response == null)
-                    {
-                        // 继续下一次
-                        throw new ArgumentException("Can not response");
-                    }
-
-                    await using var responseStream = response.GetResponseStream();
-                    int length = BufferLength;
-                    Debug.Assert(responseStream != null, nameof(responseStream) + " != null");
-
-                    while (!downloadSegment.Finished)
-                    {
-                        var buffer = SharedArrayPool.Rent(length);
-                        var n = await responseStream.ReadAsync(buffer, 0, length);
-
-                        if (n < 0)
-                        {
-                            break;
-                        }
-
-                        _logger.LogInformation(
-                            $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
-
-                        FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
-
-                        downloadSegment.DownloadedLength += n;
-
-                        _progress.Report(new DownloadProgress(SegmentManager));
-
-                        if (downloadSegment.Finished)
-                        {
-                            break;
-                        }
-                    }
+                    await DownloadSegmentInner(response, downloadSegment);
                 }
                 catch (Exception e)
                 {
@@ -251,6 +218,50 @@ namespace dotnetCampus.FileDownloader
             }
 
             await FinishDownload();
+        }
+
+        /// <summary>
+        /// 下载的主要逻辑
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="downloadSegment"></param>
+        /// <returns></returns>
+        private async Task DownloadSegmentInner(WebResponse? response, DownloadSegment downloadSegment)
+        {
+            if (response == null)
+            {
+                // 继续下一次
+                throw new WebResponseException("Can not response");
+            }
+
+            await using var responseStream = response.GetResponseStream();
+            int length = BufferLength;
+            Debug.Assert(responseStream != null, nameof(responseStream) + " != null");
+
+            while (!downloadSegment.Finished)
+            {
+                var buffer = SharedArrayPool.Rent(length);
+                var n = await responseStream.ReadAsync(buffer, 0, length);
+
+                if (n < 0)
+                {
+                    break;
+                }
+
+                _logger.LogInformation(
+                    $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
+
+                FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
+
+                downloadSegment.DownloadedLength += n;
+
+                _progress.Report(new DownloadProgress(SegmentManager));
+
+                if (downloadSegment.Finished)
+                {
+                    break;
+                }
+            }
         }
 
         private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
