@@ -10,7 +10,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -107,24 +106,5 @@ namespace dotnetCampus.FileDownloader.WPF
                 System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{downloadFileInfo.FilePath}\"");
             }
         }
-    }
-
-    public class DelegateCommand : ICommand
-    {
-        public Func<object, bool>? CanExecuteDelegate { set; get; }
-
-        public Action<object>? ExecuteDelegate { set; get; }
-
-        public bool CanExecute(object parameter)
-        {
-            return CanExecuteDelegate?.Invoke(parameter) ?? true;
-        }
-
-        public void Execute(object parameter)
-        {
-            ExecuteDelegate?.Invoke(parameter);
-        }
-
-        public event EventHandler? CanExecuteChanged;
     }
 }

@@ -100,7 +100,7 @@ namespace dotnetCampus.FileDownloader
                 }
 
                 var length = emptySegmentLength;
-                var center = length / 2 + currentDownloadPoint;
+                var center = (length / 2) + currentDownloadPoint;
 
                 previousDownloadSegment.RequirementDownloadPoint = center;
                 return new DownloadSegment(center, requirementDownloadPoint);

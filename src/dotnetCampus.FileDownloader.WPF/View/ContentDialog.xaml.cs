@@ -32,7 +32,6 @@ namespace dotnetCampus.FileDownloader.WPF
             set { SetValue(TitleProperty, value); }
         }
 
-
         public static readonly DependencyProperty ContentElementProperty = DependencyProperty.Register(
             "ContentElement", typeof(UIElement), typeof(ContentDialog), new PropertyMetadata(default(UIElement)));
 
