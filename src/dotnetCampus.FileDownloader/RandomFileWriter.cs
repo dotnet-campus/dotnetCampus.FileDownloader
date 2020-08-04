@@ -89,7 +89,6 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     fileSegment.TaskCompletionSource?.SetResult(true);
-                    fileSegment.AfterWriteAction?.Invoke();
 
                     StepWriteFinished
                     (
@@ -99,7 +98,8 @@ namespace dotnetCampus.FileDownloader
                             fileSegment.FileStartPoint,
                             fileSegment.DataOffset,
                             fileSegment.Data,
-                            fileSegment.DataLength)
+                            fileSegment.DataLength
+                        )
                     );
                 }
                 catch (Exception)
@@ -129,14 +129,13 @@ namespace dotnetCampus.FileDownloader
         private readonly struct FileSegment
         {
             public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength,
-                TaskCompletionSource<bool>? taskCompletionSource = null, Action? afterWriteAction = null)
+                TaskCompletionSource<bool>? taskCompletionSource = null)
             {
                 FileStartPoint = fileStartPoint;
                 Data = data;
                 DataLength = dataLength;
                 DataOffset = dataOffset;
                 TaskCompletionSource = taskCompletionSource;
-                AfterWriteAction = afterWriteAction;
             }
 
             /// <summary>
@@ -160,11 +159,6 @@ namespace dotnetCampus.FileDownloader
             public int DataLength { get; }
 
             public TaskCompletionSource<bool>? TaskCompletionSource { get; }
-
-            /// <summary>
-            /// 文件写入完成之后执行的事件
-            /// </summary>
-            public Action? AfterWriteAction { get; }
         }
 
         /// <summary>
