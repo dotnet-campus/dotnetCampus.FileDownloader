@@ -7,8 +7,15 @@ using Newtonsoft.Json;
 
 namespace dotnetCampus.FileDownloader.WPF
 {
-    public class DownloadFileManager
+    /// <summary>
+    /// 下载文件列表管理
+    /// </summary>
+    public class DownloadFileListManager
     {
+        /// <summary>
+        /// 读取本地存储的下载列表
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<DownloadFileInfo>> ReadDownloadedFileList()
         {
             var file = GetStorageFilePath();
@@ -26,6 +33,11 @@ namespace dotnetCampus.FileDownloader.WPF
             return downloadFileInfoList;
         }
 
+        /// <summary>
+        /// 写入下载列表
+        /// </summary>
+        /// <param name="downloadFileInfoList"></param>
+        /// <returns></returns>
         public async Task WriteDownloadedFileListToFile(List<DownloadFileInfo> downloadFileInfoList)
         {
             var file = GetStorageFilePath();

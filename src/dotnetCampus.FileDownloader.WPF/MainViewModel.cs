@@ -21,7 +21,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public async void Init()
         {
-            var downloadedFileInfoList = await DownloadFileManager.ReadDownloadedFileList();
+            var downloadedFileInfoList = await DownloadFileListManager.ReadDownloadedFileList();
 
             if (downloadedFileInfoList != null)
             {
@@ -36,7 +36,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public ObservableCollection<DownloadFileInfo> DownloadFileInfoList { get; } = new ObservableCollection<DownloadFileInfo>();
 
-        private DownloadFileManager DownloadFileManager { get; } = new DownloadFileManager();
+        private DownloadFileListManager DownloadFileListManager { get; } = new DownloadFileListManager();
 
         private ISharedArrayPool SharedArrayPool { get; } = new FileDownloaderSharedArrayPool();
 
@@ -67,7 +67,7 @@ namespace dotnetCampus.FileDownloader.WPF
                 downloadFileInfo.DownloadProcess = downloadProgress.DownloadProcess;
             };
 
-            _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
+            _ = DownloadFileListManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
 
             var segmentFileDownloader = new SegmentFileDownloader(url, new FileInfo(file), logger, progress,
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
@@ -79,7 +79,7 @@ namespace dotnetCampus.FileDownloader.WPF
             downloadFileInfo.DownloadProcess = "完成";
             downloadFileInfo.IsFinished = true;
 
-            _ = DownloadFileManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
+            _ = DownloadFileListManager.WriteDownloadedFileListToFile(DownloadFileInfoList.ToList());
 
             // 后续优化多任务下载的时候的回收
             _ = Task.Delay(TimeSpan.FromSeconds(3))
