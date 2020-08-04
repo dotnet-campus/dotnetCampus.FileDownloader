@@ -161,6 +161,9 @@ namespace dotnetCampus.FileDownloader
 
             public TaskCompletionSource<bool>? TaskCompletionSource { get; }
 
+            /// <summary>
+            /// 文件写入完成之后执行的事件
+            /// </summary>
             public Action? AfterWriteAction { get; }
         }
 
