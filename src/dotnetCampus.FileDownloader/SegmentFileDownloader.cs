@@ -11,10 +11,12 @@ namespace dotnetCampus.FileDownloader
 {
     public class SegmentFileDownloader
     {
-        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger, IProgress<DownloadProgress> progress)
+        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger,
+            IProgress<DownloadProgress> progress, ISharedArrayPool? sharedArrayPool = null, int bufferLength = ushort.MaxValue)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+            SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
 
             if (string.IsNullOrEmpty(url))
             {
@@ -25,7 +27,13 @@ namespace dotnetCampus.FileDownloader
             File = file ?? throw new ArgumentNullException(nameof(file));
 
             logger.BeginScope("Url={url} File={file}", url, file);
+
+            BufferLength = bufferLength;
         }
+
+        public int BufferLength { get; }
+
+        public ISharedArrayPool SharedArrayPool { get; }
 
         public string Url { get; }
 
@@ -44,6 +52,7 @@ namespace dotnetCampus.FileDownloader
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
             FileWriter = new RandomFileWriter(FileStream);
+            FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
             SegmentManager = new SegmentManager(contentLength);
 
@@ -52,7 +61,7 @@ namespace dotnetCampus.FileDownloader
             var downloadSegment = SegmentManager.GetNewDownloadSegment();
 
             // 下载第一段
-            Download(response, downloadSegment);
+            Download(response, downloadSegment!);
 
             var supportSegment = await TryDownloadLast(contentLength);
 
@@ -113,14 +122,14 @@ namespace dotnetCampus.FileDownloader
             return (response, contentLength);
         }
 
-        private async Task<WebResponse> GetWebResponseAsync(Action<HttpWebRequest> action = null)
+        private async Task<WebResponse?> GetWebResponseAsync(Action<HttpWebRequest>? action = null)
         {
             for (var i = 0; !_isDisposed; i++)
             {
                 try
                 {
                     var url = Url;
-                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
+                    var webRequest = (HttpWebRequest)WebRequest.Create(url);
                     webRequest.Method = "GET";
 
                     action?.Invoke(webRequest);
@@ -158,7 +167,7 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         /// <param name="downloadSegment"></param>
         /// <returns></returns>
-        private async Task<WebResponse> GetWebResponse(DownloadSegment downloadSegment)
+        private async Task<WebResponse?> GetWebResponse(DownloadSegment downloadSegment)
         {
             _logger.LogInformation(
                 $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
@@ -175,6 +184,12 @@ namespace dotnetCampus.FileDownloader
             {
                 var data = await DownloadDataList.DequeueAsync();
 
+                // 没有内容了
+                if (SegmentManager.IsFinished())
+                {
+                    return;
+                }
+
                 var downloadSegment = data.DownloadSegment;
 
                 _logger.LogInformation(
@@ -184,35 +199,7 @@ namespace dotnetCampus.FileDownloader
 
                 try
                 {
-                    await using var responseStream = response.GetResponseStream();
-                    const int length = 1024;
-                    Debug.Assert(responseStream != null, nameof(responseStream) + " != null");
-
-                    while (!downloadSegment.Finished)
-                    {
-                        var buffer = SharedArrayPool.Rent(length);
-                        var n = await responseStream.ReadAsync(buffer, 0, length);
-
-                        if (n < 0)
-                        {
-                            break;
-                        }
-
-                        _logger.LogInformation(
-                            $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
-
-                        var task = FileWriter.WriteAsync(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
-                        _ = task.ContinueWith(_ => SharedArrayPool.Return(buffer));
-
-                        downloadSegment.DownloadedLength += n;
-
-                        _progress.Report(new DownloadProgress(SegmentManager));
-
-                        if (downloadSegment.Finished)
-                        {
-                            break;
-                        }
-                    }
+                    await DownloadSegmentInner(response, downloadSegment);
                 }
                 catch (Exception e)
                 {
@@ -233,13 +220,67 @@ namespace dotnetCampus.FileDownloader
             await FinishDownload();
         }
 
-        private void Download(WebResponse webResponse, DownloadSegment downloadSegment)
+        /// <summary>
+        /// 下载的主要逻辑
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="downloadSegment"></param>
+        /// <returns></returns>
+        private async Task DownloadSegmentInner(WebResponse? response, DownloadSegment downloadSegment)
+        {
+            if (response == null)
+            {
+                // 继续下一次
+                throw new WebResponseException("Can not response");
+            }
+
+            await using var responseStream = response.GetResponseStream();
+            int length = BufferLength;
+            Debug.Assert(responseStream != null, nameof(responseStream) + " != null");
+
+            while (!downloadSegment.Finished)
+            {
+                var buffer = SharedArrayPool.Rent(length);
+                var n = await responseStream.ReadAsync(buffer, 0, length);
+
+                if (n < 0)
+                {
+                    break;
+                }
+
+                LogDownloadSegment(downloadSegment);
+
+                FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
+
+                downloadSegment.DownloadedLength += n;
+
+                _progress.Report(new DownloadProgress(SegmentManager));
+
+                if (downloadSegment.Finished)
+                {
+                    break;
+                }
+            }
+        }
+
+        private void LogDownloadSegment(DownloadSegment downloadSegment)
+        {
+            _logger.LogInformation(
+                $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
+        }
+
+        private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
         {
             DownloadDataList.Enqueue(new DownloadData(webResponse, downloadSegment));
         }
 
-        private void Download(DownloadSegment downloadSegment)
+        private void Download(DownloadSegment? downloadSegment)
         {
+            if (downloadSegment == null)
+            {
+                return;
+            }
+
             Download(null, downloadSegment);
         }
 
@@ -264,6 +305,7 @@ namespace dotnetCampus.FileDownloader
 
             await FileWriter.DisposeAsync();
             await FileStream.DisposeAsync();
+            DownloadDataList.Dispose();
 
             FileDownloadTask.SetResult(true);
         }
@@ -280,6 +322,11 @@ namespace dotnetCampus.FileDownloader
                 webRequest.AddRange(startPoint, contentLength);
             });
 
+            if (responseLast == null)
+            {
+                return false;
+            }
+
             if (responseLast.ContentLength == downloadLength)
             {
                 var downloadSegment = new DownloadSegment(startPoint, contentLength);
@@ -295,13 +342,13 @@ namespace dotnetCampus.FileDownloader
 
         private class DownloadData
         {
-            public DownloadData(WebResponse webResponse, DownloadSegment downloadSegment)
+            public DownloadData(WebResponse? webResponse, DownloadSegment downloadSegment)
             {
                 WebResponse = webResponse;
                 DownloadSegment = downloadSegment;
             }
 
-            public WebResponse WebResponse { get; }
+            public WebResponse? WebResponse { get; }
 
             public DownloadSegment DownloadSegment { get; }
         }

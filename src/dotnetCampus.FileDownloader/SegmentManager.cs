@@ -22,11 +22,16 @@ namespace dotnetCampus.FileDownloader
         /// <summary>
         /// 创建一个新的分段用于下载
         /// </summary>
-        public DownloadSegment GetNewDownloadSegment()
+        public DownloadSegment? GetNewDownloadSegment()
         {
             lock (_locker)
             {
                 var downloadSegment = NewDownloadSegment();
+
+                if (downloadSegment == null)
+                {
+                    return null;
+                }
 
                 RegisterDownloadSegment(downloadSegment);
 
@@ -42,7 +47,7 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        private DownloadSegment NewDownloadSegment()
+        private DownloadSegment? NewDownloadSegment()
         {
             if (DownloadSegmentList.Count == 0)
             {
@@ -95,7 +100,7 @@ namespace dotnetCampus.FileDownloader
                 }
 
                 var length = emptySegmentLength;
-                var center = length / 2 + currentDownloadPoint;
+                var center = (length / 2) + currentDownloadPoint;
 
                 previousDownloadSegment.RequirementDownloadPoint = center;
                 return new DownloadSegment(center, requirementDownloadPoint);
@@ -112,10 +117,12 @@ namespace dotnetCampus.FileDownloader
                 var n = DownloadSegmentList.FindIndex(temp => temp.StartPoint > downloadSegment.StartPoint);
                 if (n < 0)
                 {
+                    // 找不到一个比他大的，放在最后面
                     DownloadSegmentList.Add(downloadSegment);
                 }
                 else
                 {
+                    // 原本是按照顺序的，找到第一个比他大的，放在前面
                     DownloadSegmentList.Insert(n, downloadSegment);
                 }
 
@@ -147,23 +154,5 @@ namespace dotnetCampus.FileDownloader
 
         private List<DownloadSegment> DownloadSegmentList { get; } = new List<DownloadSegment>();
         private readonly object _locker = new object();
-
-
-        readonly struct Segment
-        {
-            public Segment(long startPoint, long length)
-            {
-                StartPoint = startPoint;
-                Length = length;
-            }
-
-            public long StartPoint { get; }
-            public long Length { get; }
-        }
     }
-
-    //internal static class EmptySegmentCalculator
-    //{
-    //    public void 
-    //}
 }

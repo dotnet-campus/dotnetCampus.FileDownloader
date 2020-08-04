@@ -67,12 +67,11 @@ namespace FileDownloader.Tests
                 var secondDownloadSegment = segmentManager.GetNewDownloadSegment();
 
                 Assert.AreEqual(0, firstDownloadSegment.StartPoint);
-                Assert.AreEqual(fileLength / 2 + downloadLength / 2, firstDownloadSegment.RequirementDownloadPoint);
+                Assert.AreEqual((fileLength / 2) + (downloadLength / 2), firstDownloadSegment.RequirementDownloadPoint);
 
-                Assert.AreEqual(fileLength / 2 + downloadLength / 2, secondDownloadSegment.StartPoint);
+                Assert.AreEqual((fileLength / 2) + (downloadLength / 2), secondDownloadSegment.StartPoint);
                 Assert.AreEqual(fileLength, secondDownloadSegment.RequirementDownloadPoint);
             });
-
 
             "多次获取将会不断分段，所有分段合起来是文件大小".Test(() =>
             {
