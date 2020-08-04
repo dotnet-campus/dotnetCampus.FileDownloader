@@ -46,6 +46,9 @@ namespace dotnetCampus.FileDownloader.WPF.Utils
             }
         }
 
+        /// <summary>
+        /// 客户端程序在下载完成之后强行回收内存
+        /// </summary>
         public void Clean()
         {
             lock (Pool)

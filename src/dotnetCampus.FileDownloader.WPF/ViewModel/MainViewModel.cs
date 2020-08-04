@@ -74,6 +74,7 @@ namespace dotnetCampus.FileDownloader.WPF
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
             await segmentFileDownloader.DownloadFile();
 
+            // 下载完成逻辑
             progress.Stop();
 
             downloadFileInfo.DownloadSpeed = "";
