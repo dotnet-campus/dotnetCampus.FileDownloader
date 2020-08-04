@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader
 {
+    /// <summary>
+    /// 接近用户层的下载进度，包含下载速度
+    /// </summary>
     public class FileDownloadSpeedProgress : IProgress<DownloadProgress>, IDisposable
     {
         /// <summary>
@@ -37,11 +40,7 @@ namespace dotnetCampus.FileDownloader
                         continue;
                     }
 
-                    var speed = GetCurrentSpeed();
-                    var downloadInfoProgress = new DownloadInfoProgress(
-                        FileSizeFormatter.FormatSize(_currentDownloadProgress.FileLength),
-                        $"{FileSizeFormatter.FormatSize(_currentDownloadProgress.DownloadedLength)}/{FileSizeFormatter.FormatSize(_currentDownloadProgress.FileLength)}",
-                        speed, _currentDownloadProgress);
+                    var downloadInfoProgress = GetDownloadInfoProgress();
 
                     ProgressChanged(this, downloadInfoProgress);
 
@@ -55,12 +54,29 @@ namespace dotnetCampus.FileDownloader
             });
         }
 
+        private DownloadInfoProgress GetDownloadInfoProgress()
+        {
+            string speed = GetCurrentSpeed();
+            string fileSize = FileSizeFormatter.FormatSize(_currentDownloadProgress!.FileLength);
+
+            string downloadProcess = $"{FileSizeFormatter.FormatSize(_currentDownloadProgress.DownloadedLength)}/{FileSizeFormatter.FormatSize(_currentDownloadProgress.FileLength)}";
+
+            var downloadInfoProgress = new DownloadInfoProgress
+            (
+                fileSize,
+                downloadProcess,
+                speed,
+                _currentDownloadProgress
+            );
+            return downloadInfoProgress;
+        }
+
         public void Stop()
         {
             _started = false;
         }
 
-        public event EventHandler<DownloadInfoProgress> ProgressChanged = null!;
+        public event EventHandler<DownloadInfoProgress> ProgressChanged = delegate { };
 
         private bool _started;
 

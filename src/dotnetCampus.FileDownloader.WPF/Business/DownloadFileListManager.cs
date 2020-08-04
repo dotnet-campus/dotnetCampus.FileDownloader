@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace dotnetCampus.FileDownloader.WPF
 {
     /// <summary>
-    /// 下载文件列表管理
+    /// 下载文件列表管理，用于记下已加入下载的文件列表
     /// </summary>
     public class DownloadFileListManager
     {
