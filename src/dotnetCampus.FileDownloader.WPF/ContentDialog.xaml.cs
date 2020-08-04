@@ -42,7 +42,7 @@ namespace dotnetCampus.FileDownloader.WPF
             set { SetValue(ContentElementProperty, value); }
         }
 
-        public event EventHandler Closed = null!;
+        public event EventHandler Closed = delegate {  };
 
         private void CloseButton_OnClick(object sender, RoutedEventArgs e)
         {
