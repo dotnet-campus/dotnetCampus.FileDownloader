@@ -248,8 +248,7 @@ namespace dotnetCampus.FileDownloader
                     break;
                 }
 
-                _logger.LogInformation(
-                    $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
+                LogDownloadSegment(downloadSegment);
 
                 FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
 
@@ -262,6 +261,12 @@ namespace dotnetCampus.FileDownloader
                     break;
                 }
             }
+        }
+
+        private void LogDownloadSegment(DownloadSegment downloadSegment)
+        {
+            _logger.LogInformation(
+                $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
         }
 
         private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
