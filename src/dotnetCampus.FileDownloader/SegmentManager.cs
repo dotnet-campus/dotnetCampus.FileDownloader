@@ -154,23 +154,5 @@ namespace dotnetCampus.FileDownloader
 
         private List<DownloadSegment> DownloadSegmentList { get; } = new List<DownloadSegment>();
         private readonly object _locker = new object();
-
-
-        readonly struct Segment
-        {
-            public Segment(long startPoint, long length)
-            {
-                StartPoint = startPoint;
-                Length = length;
-            }
-
-            public long StartPoint { get; }
-            public long Length { get; }
-        }
     }
-
-    //internal static class EmptySegmentCalculator
-    //{
-    //    public void 
-    //}
 }
