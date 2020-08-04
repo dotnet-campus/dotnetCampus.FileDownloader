@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using dotnetCampus.FileDownloader.WPF.Model;
+using dotnetCampus.FileDownloader.WPF.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace dotnetCampus.FileDownloader.WPF

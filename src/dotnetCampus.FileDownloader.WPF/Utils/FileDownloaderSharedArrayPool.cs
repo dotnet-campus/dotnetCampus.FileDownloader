@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace dotnetCampus.FileDownloader.WPF
+namespace dotnetCampus.FileDownloader.WPF.Utils
 {
     /// <summary>
     /// 对 WPF 优化的文件下载使用的数组缓存

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using dotnetCampus.FileDownloader.WPF.Model;
 using Newtonsoft.Json;
 
 namespace dotnetCampus.FileDownloader.WPF

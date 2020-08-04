@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace dotnetCampus.FileDownloader.WPF
+namespace dotnetCampus.FileDownloader.WPF.Utils
 {
     public static class ObservableCollectionExtension
     {

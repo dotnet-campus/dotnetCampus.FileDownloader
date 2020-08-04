@@ -4,7 +4,7 @@ using System.Windows;
 using dotnetCampus.FileDownloader.WPF.Annotations;
 using Newtonsoft.Json;
 
-namespace dotnetCampus.FileDownloader.WPF
+namespace dotnetCampus.FileDownloader.WPF.Model
 {
     public class DownloadFileInfo : INotifyPropertyChanged
     {
