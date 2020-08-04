@@ -117,10 +117,12 @@ namespace dotnetCampus.FileDownloader
                 var n = DownloadSegmentList.FindIndex(temp => temp.StartPoint > downloadSegment.StartPoint);
                 if (n < 0)
                 {
+                    // 找不到一个比他大的，放在最后面
                     DownloadSegmentList.Add(downloadSegment);
                 }
                 else
                 {
+                    // 原本是按照顺序的，找到第一个比他大的，放在前面
                     DownloadSegmentList.Insert(n, downloadSegment);
                 }
 
