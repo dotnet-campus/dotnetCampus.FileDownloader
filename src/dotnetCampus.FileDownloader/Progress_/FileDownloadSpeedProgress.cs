@@ -112,7 +112,7 @@ namespace dotnetCampus.FileDownloader
                 DownloadProgress = downloadProgress;
             }
 
-            public bool IsFinished => DownloadProgress.DownloadedLength == DownloadProgress.FileLength;
+            public bool IsFinished => DownloadProgress.DownloadedLength >= DownloadProgress.FileLength;
 
             public string FileSize { get; }
             public string DownloadProcess { get; }
