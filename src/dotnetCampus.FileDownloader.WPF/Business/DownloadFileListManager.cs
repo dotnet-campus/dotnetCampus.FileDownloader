@@ -51,7 +51,7 @@ namespace dotnetCampus.FileDownloader.WPF
         private string GetStorageFilePath()
         {
             string folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-            var file = Path.Combine(folder!, StorageFile);
+            var file = Path.Combine(folder, StorageFile);
 
             return file;
         }
