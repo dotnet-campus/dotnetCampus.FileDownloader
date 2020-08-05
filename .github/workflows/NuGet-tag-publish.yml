@@ -25,7 +25,9 @@ jobs:
       run: dotnet TagToVersion -t ${{ github.ref }}
 
     - name: Build with dotnet
-      run: dotnet pack --configuration Release
+      run: |
+        dotnet build --configuration Release
+        dotnet pack --configuration Release
 
     - name: Install Nuget
       uses: nuget/setup-nuget@v1
