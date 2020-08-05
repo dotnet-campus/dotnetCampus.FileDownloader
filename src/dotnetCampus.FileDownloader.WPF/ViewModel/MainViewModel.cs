@@ -72,7 +72,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
             var segmentFileDownloader = new SegmentFileDownloader(url, new FileInfo(file), logger, progress,
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
-            await segmentFileDownloader.DownloadFile();
+            await segmentFileDownloader.DownloadFileAsync();
 
             // 下载完成逻辑
             progress.Stop();

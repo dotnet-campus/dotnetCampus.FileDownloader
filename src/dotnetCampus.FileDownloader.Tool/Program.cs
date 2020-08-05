@@ -31,7 +31,7 @@ namespace dotnetCampus.FileDownloader.Tool
                      var progress = new Progress<DownloadProgress>();
 
                      var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
-                     await segmentFileDownloader.DownloadFile();
+                     await segmentFileDownloader.DownloadFileAsync();
 #endif
                      await Task.Delay(100);
                  });
@@ -76,7 +76,7 @@ namespace dotnetCampus.FileDownloader.Tool
                 var url = option.Url;
                 var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
 
-                await segmentFileDownloader.DownloadFile();
+                await segmentFileDownloader.DownloadFileAsync();
 
                 //finished = true;
             }
