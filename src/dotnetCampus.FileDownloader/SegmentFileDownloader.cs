@@ -43,7 +43,7 @@ namespace dotnetCampus.FileDownloader
         /// 开始下载文件
         /// </summary>
         /// <returns></returns>
-        public async Task DownloadFile()
+        public async Task DownloadFileAsync()
         {
             _logger.LogInformation($"Start download Url={Url} File={File.FullName}");
 
