@@ -17,12 +17,12 @@ namespace dotnetCampus.FileDownloader
         /// <summary>
         /// 创建分段文件下载器
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="file"></param>
-        /// <param name="logger"></param>
-        /// <param name="progress"></param>
-        /// <param name="sharedArrayPool"></param>
-        /// <param name="bufferLength"></param>
+        /// <param name="url">下载链接，不对下载链接是否有效进行校对</param>
+        /// <param name="file">下载的文件路径</param>
+        /// <param name="logger">下载时的内部日志，默认将使用 Debug 输出</param>
+        /// <param name="progress">下载进度</param>
+        /// <param name="sharedArrayPool">共享缓存数组池，默认使用 ArrayPool 池</param>
+        /// <param name="bufferLength">缓存的数组长度，默认是 65535 的长度</param>
         public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader>? logger = null,
             IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
             int bufferLength = ushort.MaxValue)
@@ -44,13 +44,25 @@ namespace dotnetCampus.FileDownloader
             BufferLength = bufferLength;
         }
 
+        /// <summary>
+        /// 缓存的数组长度，默认是 65535 的长度
+        /// </summary>
         public int BufferLength { get; }
 
+        /// <summary>
+        /// 共享缓存数组池，默认使用 ArrayPool 池
+        /// </summary>
         public ISharedArrayPool SharedArrayPool { get; }
 
+        /// <summary>
+        /// 下载链接
+        /// </summary>
         public string Url { get; }
 
-        private FileInfo File { get; }
+        /// <summary>
+        /// 下载的文件
+        /// </summary>
+        public FileInfo File { get; }
 
         /// <summary>
         /// 开始下载文件
