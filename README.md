@@ -41,5 +41,5 @@ using var progress = new FileDownloadSpeedProgress();
 
 var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
 
-await segmentFileDownloader.DownloadFile();
+await segmentFileDownloader.DownloadFileAsync();
 ```
