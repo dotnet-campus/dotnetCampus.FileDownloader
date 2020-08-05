@@ -27,7 +27,7 @@ namespace dotnetCampus.FileDownloader
             IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
             int bufferLength = ushort.MaxValue)
         {
-            _logger = logger ?? new DebuggerSegmentFileDownloaderLogger();
+            _logger = logger ?? new DebugSegmentFileDownloaderLogger();
             _progress = progress ?? new Progress<DownloadProgress>();
             SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
 

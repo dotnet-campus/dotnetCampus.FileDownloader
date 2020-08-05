@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace dotnetCampus.FileDownloader
 {
-    internal class DebuggerSegmentFileDownloaderLogger : ILogger<SegmentFileDownloader>
+    internal class DebugSegmentFileDownloaderLogger : ILogger<SegmentFileDownloader>
     {
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
             Func<TState, Exception, string> formatter)
