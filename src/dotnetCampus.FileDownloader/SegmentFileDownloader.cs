@@ -9,13 +9,26 @@ using Microsoft.Extensions.Logging;
 
 namespace dotnetCampus.FileDownloader
 {
+    /// <summary>
+    /// 分段文件下载器
+    /// </summary>
     public class SegmentFileDownloader
     {
-        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader> logger,
-            IProgress<DownloadProgress> progress, ISharedArrayPool? sharedArrayPool = null, int bufferLength = ushort.MaxValue)
+        /// <summary>
+        /// 创建分段文件下载器
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="file"></param>
+        /// <param name="logger"></param>
+        /// <param name="progress"></param>
+        /// <param name="sharedArrayPool"></param>
+        /// <param name="bufferLength"></param>
+        public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader>? logger = null,
+            IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
+            int bufferLength = ushort.MaxValue)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+            _logger = logger ?? new DebuggerSegmentFileDownloaderLogger();
+            _progress = progress ?? new Progress<DownloadProgress>();
             SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
 
             if (string.IsNullOrEmpty(url))
@@ -26,7 +39,7 @@ namespace dotnetCampus.FileDownloader
             Url = url;
             File = file ?? throw new ArgumentNullException(nameof(file));
 
-            logger.BeginScope("Url={url} File={file}", url, file);
+            _logger.BeginScope("Url={url} File={file}", url, file);
 
             BufferLength = bufferLength;
         }
@@ -129,7 +142,7 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     var url = Url;
-                    var webRequest = (HttpWebRequest)WebRequest.Create(url);
+                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
                     webRequest.Method = "GET";
 
                     action?.Invoke(webRequest);
@@ -174,7 +187,8 @@ namespace dotnetCampus.FileDownloader
 
             // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
 
-            var response = await GetWebResponseAsync(webRequest => webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
+            var response = await GetWebResponseAsync(webRequest =>
+                webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
             return response;
         }
 
