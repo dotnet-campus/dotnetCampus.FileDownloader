@@ -33,13 +33,7 @@ dotnet add package dotnetCampus.FileDownloader
 ## Usage
 
 ```csharp
-var loggerFactory = LoggerFactory.Create(builder => { });
-
-var logger = loggerFactory.CreateLogger<SegmentFileDownloader>();
-
-using var progress = new FileDownloadSpeedProgress();
-
-var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
+var segmentFileDownloader = new SegmentFileDownloader(url, file);
 
 await segmentFileDownloader.DownloadFileAsync();
 ```
