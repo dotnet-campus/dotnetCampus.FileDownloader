@@ -8,7 +8,7 @@ The repo includes the file download library and the file download tool.
 
 # File download tool
 
-A dotnet tool to download the file.
+A dotnet tool to download files.
 
 ## Install
 
@@ -32,7 +32,7 @@ dotnet add package dotnetCampus.FileDownloader
 
 ## Usage
 
-```
+```csharp
 var loggerFactory = LoggerFactory.Create(builder => { });
 
 var logger = loggerFactory.CreateLogger<SegmentFileDownloader>();
