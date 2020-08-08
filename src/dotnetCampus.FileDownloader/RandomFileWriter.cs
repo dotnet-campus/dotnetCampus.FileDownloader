@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
@@ -12,10 +11,23 @@ namespace dotnetCampus.FileDownloader
     /// </summary>
     public class RandomFileWriter : IAsyncDisposable
     {
+        /// <summary>
+        /// 不按照顺序，随机写入文件
+        /// </summary>
+        /// <param name="stream"></param>
         public RandomFileWriter(FileStream stream)
         {
             Stream = stream;
             Task.Run(WriteToFile);
+        }
+
+        /// <summary>
+        /// 加入写文件队列
+        /// </summary>
+        public void QueueWrite(long fileStartPoint, byte[] data, int dataOffset, int dataLength)
+        {
+            var fileSegment = new FileSegment(fileStartPoint, data, dataOffset, dataLength);
+            FileSegmentList.Enqueue(fileSegment);
         }
 
         /// <summary>
@@ -28,7 +40,7 @@ namespace dotnetCampus.FileDownloader
             var task = new TaskCompletionSource<bool>();
 
             var fileSegment = new FileSegment(fileStartPoint, data, 0, data.Length, task);
-            DownloadSegmentList.Enqueue(fileSegment);
+            FileSegmentList.Enqueue(fileSegment);
             await task.Task;
         }
 
@@ -44,9 +56,14 @@ namespace dotnetCampus.FileDownloader
             var task = new TaskCompletionSource<bool>();
 
             var fileSegment = new FileSegment(fileStartPoint, data, dataOffset, dataLength, task);
-            DownloadSegmentList.Enqueue(fileSegment);
+            FileSegmentList.Enqueue(fileSegment);
             await task.Task;
         }
+
+        /// <summary>
+        /// 每次写完触发事件
+        /// </summary>
+        public event EventHandler<byte[]> StepWriteFinished = delegate { };
 
         private Exception? Exception { set; get; }
 
@@ -54,7 +71,7 @@ namespace dotnetCampus.FileDownloader
         {
             while (true)
             {
-                var fileSegment = await DownloadSegmentList.DequeueAsync();
+                var fileSegment = await FileSegmentList.DequeueAsync();
 
                 try
                 {
@@ -72,13 +89,16 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     fileSegment.TaskCompletionSource?.SetResult(true);
+                    fileSegment.AfterWriteAction?.Invoke();
+
+                    StepWriteFinished(this, fileSegment.Data);
                 }
                 catch (Exception)
                 {
                     // 执行业务代码
                 }
 
-                var isEmpty = DownloadSegmentList.Count == 0;
+                var isEmpty = FileSegmentList.Count == 0;
 
                 if (isEmpty)
                 {
@@ -91,21 +111,23 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        private event EventHandler WriteFinished;
+        private event EventHandler? WriteFinished;
 
         private FileStream Stream { get; }
 
-        private AsyncQueue<FileSegment> DownloadSegmentList { get; } = new AsyncQueue<FileSegment>();
+        private AsyncQueue<FileSegment> FileSegmentList { get; } = new AsyncQueue<FileSegment>();
 
-        readonly struct FileSegment
+        private readonly struct FileSegment
         {
-            public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength, TaskCompletionSource<bool> taskCompletionSource = null)
+            public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength,
+                TaskCompletionSource<bool>? taskCompletionSource = null, Action? afterWriteAction = null)
             {
                 FileStartPoint = fileStartPoint;
                 Data = data;
                 DataLength = dataLength;
                 DataOffset = dataOffset;
                 TaskCompletionSource = taskCompletionSource;
+                AfterWriteAction = afterWriteAction;
             }
 
             /// <summary>
@@ -128,7 +150,9 @@ namespace dotnetCampus.FileDownloader
             /// </summary>
             public int DataLength { get; }
 
-            public TaskCompletionSource<bool> TaskCompletionSource { get; }
+            public TaskCompletionSource<bool>? TaskCompletionSource { get; }
+
+            public Action? AfterWriteAction { get; }
         }
 
         /// <summary>
@@ -138,60 +162,56 @@ namespace dotnetCampus.FileDownloader
         /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
-            // 从业务上，这里只有一个线程访问，也不会有重入
-            _isDispose = true;
-
-            if (Exception != null)
+            try
             {
-                ExceptionDispatchInfo.Capture(Exception).Throw();
-            }
-            // 需要先判断 Exception 因为加入只进入一个任务，刚好这个任务炸了
-            if (DownloadSegmentList.Count == 0)
-            {
-                return;
-            }
+                // 从业务上，这里只有一个线程访问，也不会有重入
+                _isDispose = true;
 
-            var task = new TaskCompletionSource<bool>();
-
-            WriteFinished += (sender, args) =>
-            {
                 if (Exception != null)
                 {
-                    task.SetException(Exception);
+                    ExceptionDispatchInfo.Capture(Exception).Throw();
                 }
-                else
+
+                // 需要先判断 Exception 因为加入只进入一个任务，刚好这个任务炸了
+                if (FileSegmentList.Count == 0)
                 {
-                    task.SetResult(true);
+                    return;
                 }
-                WriteFinished = null;
-            };
 
-            if (Exception != null)
-            {
-                throw Exception;
+                var task = new TaskCompletionSource<bool>();
+
+                WriteFinished += (sender, args) =>
+                {
+                    if (Exception != null)
+                    {
+                        task.SetException(Exception);
+                    }
+                    else
+                    {
+                        task.SetResult(true);
+                    }
+
+                    WriteFinished = null;
+                };
+
+                if (Exception != null)
+                {
+                    throw Exception;
+                }
+
+                if (FileSegmentList.Count == 0)
+                {
+                    return;
+                }
+
+                await task.Task;
             }
-
-            if (DownloadSegmentList.Count == 0)
+            finally
             {
-                return;
+                FileSegmentList.Dispose();
             }
-
-            await task.Task;
         }
 
         private bool _isDispose;
-    }
-
-    public static class SharedArrayPool
-    {
-        public static byte[] Rent(int minLength)
-        {
-            return ArrayPool<byte>.Shared.Rent(minLength);
-        }
-
-        public static void Return(byte[] array)
-        {
-            ArrayPool<byte>.Shared.Return(array);
-        }
     }
 }

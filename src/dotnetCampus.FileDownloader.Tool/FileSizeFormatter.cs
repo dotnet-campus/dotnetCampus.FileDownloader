@@ -6,6 +6,9 @@ namespace dotnetCampus.FileDownloader.Tool
     static class FileSizeFormatter
     {
         public static string FormatSize(long bytes, string formatString = "{0:0.00}{1}")
+            => FormatSize((double) bytes, formatString);
+
+        public static string FormatSize(double bytes, string formatString = "{0:0.00}{1}")
         {
             int counter = 0;
             double number = bytes;

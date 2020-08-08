@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="dotnetCampus.FileDownloader.WPF.ContentDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:dotnetCampus.FileDownloader.WPF"
+             mc:Ignorable="d" 
+             x:Name="Dialog"
+             HorizontalAlignment="Center"
+             VerticalAlignment="Center"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Border BorderBrush="#565656" BorderThickness="2">
+            <Grid Background="#F2F2F2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Grid Background="#0FAFAF">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Margin="5,5,5,5" Text="{Binding ElementName=Dialog,Path=Title,Mode=OneWay}"></TextBlock>
+                    <Button Grid.Column="1" Width="30" Margin="0,-2,-1,0" Padding="0"  Content="x" Click="CloseButton_OnClick"></Button>
+                </Grid>
+
+                <ContentControl Grid.Row="1" Content="{Binding ElementName=Dialog,Path=ContentElement,Mode=OneWay}"></ContentControl>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
