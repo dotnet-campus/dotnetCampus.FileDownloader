@@ -6,16 +6,19 @@
         xmlns:local="clr-namespace:dotnetCampus.FileDownloader.WPF"
         mc:Ignorable="d"
         Title="FileDownloader" Height="450" Width="800" DataContext="{Binding RelativeSource={RelativeSource Self},Path=ViewModel}">
+    <Window.CommandBindings>
+        <CommandBinding Command="local:MainWindow.OpenFileCommand" CanExecute="OpenFileCommand_OnCanExecute"
+                        Executed="OpenFileCommand_OnExecuted"></CommandBinding>
+        <CommandBinding Command="local:MainWindow.OpenFolderCommand" CanExecute="OpenFolderCommand_OnCanExecute"
+                        Executed="OpenFolderCommand_OnExecuted"></CommandBinding>
+    </Window.CommandBindings>
     <Window.Resources>
 
         <!-- region 业务-->
-
-        <local:DelegateCommand x:Key="OpenFileCommand" ExecuteDelegate="OpenFileCommand_OnExecute" ></local:DelegateCommand>
-        <local:DelegateCommand x:Key="OpenFolderCommand" ExecuteDelegate="OpenFolderCommand_OnExecute" ></local:DelegateCommand>
-
-        <ContextMenu x:Key="DownloadFileContextMenu">
-            <MenuItem Header="Open File" Command="{StaticResource OpenFileCommand}" CommandParameter="{Binding}"></MenuItem>
-            <MenuItem Header="Open Folder" Command="{StaticResource OpenFolderCommand}" CommandParameter="{Binding}"></MenuItem>
+     
+        <ContextMenu x:Key="DownloadFileContextMenu" >
+            <MenuItem Header="Open File" Command="local:MainWindow.OpenFileCommand" CommandParameter="{Binding}" ></MenuItem>
+            <MenuItem Header="Open Folder" Command="local:MainWindow.OpenFolderCommand" CommandParameter="{Binding}" CommandTarget="{Binding Path=PlacementTarget,RelativeSource={RelativeSource AncestorType=ContextMenu}}"></MenuItem>
         </ContextMenu>
 
         <!-- endregion -->

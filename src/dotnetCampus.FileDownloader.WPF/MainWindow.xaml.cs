@@ -73,9 +73,23 @@ namespace dotnetCampus.FileDownloader.WPF
             HideDownloadDialog();
         }
 
-        private void OpenFileCommand_OnExecute(object parameter)
+        public static readonly RoutedUICommand OpenFileCommand = new RoutedUICommand();
+        public static readonly RoutedUICommand OpenFolderCommand = new RoutedUICommand();
+
+        private void OpenFileCommand_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            if (!(parameter is DownloadFileInfo downloadFileInfo))
+            if (!(e.Parameter is DownloadFileInfo downloadFileInfo))
+            {
+                e.CanExecute = false;
+                return;
+            }
+
+            e.CanExecute = downloadFileInfo.IsFinished;
+        }
+
+        private void OpenFileCommand_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (!(e.Parameter is DownloadFileInfo downloadFileInfo))
             {
                 return;
             }
@@ -91,33 +105,25 @@ namespace dotnetCampus.FileDownloader.WPF
             Process.Start(processStartInfo);
         }
 
-        private void OpenFolderCommand_OnExecute(object parameter)
+        private void OpenFolderCommand_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            if (!(parameter is DownloadFileInfo downloadFileInfo))
+            if (!(e.Parameter is DownloadFileInfo downloadFileInfo))
+            {
+                e.CanExecute = false;
+                return;
+            }
+
+            e.CanExecute = downloadFileInfo.IsFinished;
+        }
+
+        private void OpenFolderCommand_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (!(e.Parameter is DownloadFileInfo downloadFileInfo))
             {
                 return;
             }
 
             System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{downloadFileInfo.FilePath}\"");
         }
-    }
-
-    public class DelegateCommand : ICommand
-    {
-        public Func<object, bool>? CanExecuteDelegate { set; get; }
-
-        public Action<object>? ExecuteDelegate { set; get; }
-
-        public bool CanExecute(object parameter)
-        {
-            return CanExecuteDelegate?.Invoke(parameter) ?? true;
-        }
-
-        public void Execute(object parameter)
-        {
-            ExecuteDelegate?.Invoke(parameter);
-        }
-
-        public event EventHandler? CanExecuteChanged;
     }
 }

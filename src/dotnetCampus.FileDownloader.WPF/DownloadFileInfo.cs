@@ -11,6 +11,7 @@ namespace dotnetCampus.FileDownloader.WPF
         private string _downloadProcess;
         private string _fileSize;
         private string _downloadSpeed;
+        private bool _isFinished = false;
         public string FileName { get; set; }
 
         public string FileSize
@@ -49,6 +50,17 @@ namespace dotnetCampus.FileDownloader.WPF
             {
                 if (value == _downloadSpeed) return;
                 _downloadSpeed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsFinished
+        {
+            get => _isFinished;
+            set
+            {
+                if (value == _isFinished) return;
+                _isFinished = value;
                 OnPropertyChanged();
             }
         }
