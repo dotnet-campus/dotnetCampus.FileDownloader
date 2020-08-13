@@ -32,6 +32,8 @@ namespace dotnetCampus.FileDownloader.WPF
             ViewModel.Init();
         }
 
+        public MainViewModel ViewModel { get; } = new MainViewModel();
+
         private void AddFileDownload_OnClick(object sender, RoutedEventArgs e)
         {
             ShowDownloadDialog();
@@ -66,7 +68,21 @@ namespace dotnetCampus.FileDownloader.WPF
             HideDownloadDialog();
         }
 
-        public MainViewModel ViewModel { get; } = new MainViewModel();
+        private void CleanDownloadItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (DownloadItemList.SelectedItems.Count == 0)
+            {
+                ViewModel.DownloadFileInfoList.Clear();
+            }
+            else
+            {
+                foreach (var downloadFileInfo in DownloadItemList.SelectedItems.OfType<DownloadFileInfo>().ToList())
+                {
+                    ViewModel.DownloadFileInfoList.Remove(downloadFileInfo);
+                }
+            }
+        }
+
 
         private void DownloadContentDialog_OnClosed(object? sender, EventArgs e)
         {
@@ -75,6 +91,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public static readonly RoutedUICommand OpenFileCommand = new RoutedUICommand();
         public static readonly RoutedUICommand OpenFolderCommand = new RoutedUICommand();
+        public static readonly RoutedUICommand RemoveItemCommand = new RoutedUICommand();
 
         private void OpenFileCommand_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
@@ -124,6 +141,28 @@ namespace dotnetCampus.FileDownloader.WPF
             }
 
             System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{downloadFileInfo.FilePath}\"");
+        }
+
+
+        private void RemoveItemCommand_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (!(e.Parameter is DownloadFileInfo downloadFileInfo))
+            {
+                e.CanExecute = false;
+                return;
+            }
+
+            e.CanExecute = true;
+        }
+
+        private void RemoveItemCommand_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (!(e.Parameter is DownloadFileInfo downloadFileInfo))
+            {
+                return;
+            }
+
+            ViewModel.DownloadFileInfoList.Remove(downloadFileInfo);
         }
     }
 }
