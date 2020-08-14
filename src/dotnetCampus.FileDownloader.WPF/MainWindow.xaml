@@ -5,33 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dotnetCampus.FileDownloader.WPF"
         mc:Ignorable="d"
-        Title="FileDownloader" Height="450" Width="800" DataContext="{Binding RelativeSource={RelativeSource Self},Path=ViewModel}">
+        Title="FileDownloader" Height="450" Width="800"
+        DataContext="{Binding RelativeSource={RelativeSource Self},Path=ViewModel}">
+    <Window.CommandBindings>
+        <CommandBinding Command="local:MainWindow.OpenFileCommand" CanExecute="OpenFileCommand_OnCanExecute"
+                        Executed="OpenFileCommand_OnExecuted" />
+        <CommandBinding Command="local:MainWindow.OpenFolderCommand" CanExecute="OpenFolderCommand_OnCanExecute"
+                        Executed="OpenFolderCommand_OnExecuted" />
+        <CommandBinding Command="local:MainWindow.RemoveItemCommand" CanExecute="RemoveItemCommand_OnCanExecute"
+                        Executed="RemoveItemCommand_OnExecuted" />
+    </Window.CommandBindings>
     <Window.Resources>
 
         <!-- region 业务-->
 
-        <local:DelegateCommand x:Key="OpenFileCommand" ExecuteDelegate="OpenFileCommand_OnExecute" ></local:DelegateCommand>
-        <local:DelegateCommand x:Key="OpenFolderCommand" ExecuteDelegate="OpenFolderCommand_OnExecute" ></local:DelegateCommand>
-
         <ContextMenu x:Key="DownloadFileContextMenu">
-            <MenuItem Header="Open File" Command="{StaticResource OpenFileCommand}" CommandParameter="{Binding}"></MenuItem>
-            <MenuItem Header="Open Folder" Command="{StaticResource OpenFolderCommand}" CommandParameter="{Binding}"></MenuItem>
+            <MenuItem Header="Open File" Command="local:MainWindow.OpenFileCommand" CommandParameter="{Binding}" />
+            <MenuItem Header="Open Folder" Command="local:MainWindow.OpenFolderCommand" CommandParameter="{Binding}" />
+            <MenuItem Header="Delete Item" Command="local:MainWindow.RemoveItemCommand" CommandParameter="{Binding}" />
         </ContextMenu>
 
         <!-- endregion -->
 
 
         <Style x:Key="GridViewColumnHeaderGripper" TargetType="Thumb">
-            <Setter Property="Canvas.Right" Value="-9"/>
-            <Setter Property="Width" Value="18"/>
-            <Setter Property="Height" Value="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}}"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Canvas.Right" Value="-9" />
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
                         <Border Background="Transparent" Padding="{TemplateBinding Padding}">
-                            <Rectangle Fill="{TemplateBinding Background}" HorizontalAlignment="Center" Width="1"/>
+                            <Rectangle Fill="{TemplateBinding Background}" HorizontalAlignment="Center" Width="1" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -39,28 +46,33 @@
         </Style>
 
         <Style TargetType="GridViewColumnHeader">
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="Padding" Value="12,6,12,12"/>
-            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Padding" Value="12,6,12,12" />
+            <Setter Property="MinHeight" Value="44" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="GridViewColumnHeader">
                         <Grid>
-                            <Border x:Name="HeaderBorder" BorderBrush="{TemplateBinding BorderBrush}" Background="Transparent">
+                            <Border x:Name="HeaderBorder" BorderBrush="{TemplateBinding BorderBrush}"
+                                    Background="Transparent">
                                 <Grid>
                                     <Grid.RowDefinitions>
-                                        <RowDefinition MaxHeight="7"/>
-                                        <RowDefinition/>
+                                        <RowDefinition MaxHeight="7" />
+                                        <RowDefinition />
                                     </Grid.RowDefinitions>
                                     <Border Padding="{TemplateBinding Padding}" Grid.RowSpan="2">
-                                        <ContentPresenter x:Name="HeaderContent" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="0,0,0,1" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                        <ContentPresenter x:Name="HeaderContent"
+                                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                          Margin="0,0,0,1" RecognizesAccessKey="True"
+                                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                                     </Border>
                                 </Grid>
                             </Border>
                             <Canvas>
-                                <Thumb x:Name="PART_HeaderGripper" Style="{StaticResource GridViewColumnHeaderGripper}"/>
+                                <Thumb x:Name="PART_HeaderGripper" Style="{StaticResource GridViewColumnHeaderGripper}" />
                             </Canvas>
                         </Grid>
                     </ControlTemplate>
@@ -71,31 +83,29 @@
         <Thickness x:Key="DefaultControlPadding">10</Thickness>
 
 
-
         <Style x:Key="ListViewItemBaseStyle" TargetType="ListViewItem">
-            <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="SnapsToDevicePixels" Value="true"/>
-            <Setter Property="Margin" Value="0,0,0,4"/>
-            <Setter Property="Padding" Value="{StaticResource DefaultControlPadding}"/>
-            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="SnapsToDevicePixels" Value="true" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Padding" Value="{StaticResource DefaultControlPadding}" />
+            <Setter Property="MinHeight" Value="44" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
-                        <Border CornerRadius="4" x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                Background="{TemplateBinding Background}" 
-                                Padding="{TemplateBinding Padding}" 
+                        <Border CornerRadius="4" x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="true">
-                            <GridViewRowPresenter Content="{TemplateBinding Content}" 
+                            <GridViewRowPresenter Content="{TemplateBinding Content}"
                                                   ContextMenu="{StaticResource DownloadFileContextMenu}"
-                                                  Columns="{TemplateBinding GridView.ColumnCollection}">
-                            </GridViewRowPresenter>
+                                                  Columns="{TemplateBinding GridView.ColumnCollection}" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -103,62 +113,93 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Foreground" Value="#565656"/>
+                    <Setter Property="Foreground" Value="#565656" />
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="ListViewScrollViewerStyle" TargetType="ScrollViewer">
-            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Focusable" Value="False" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollViewer">
                         <ControlTemplate.Resources>
                             <Storyboard x:Key="Storyboard1">
-                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="PART_VerticalScrollBar">
-                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value=".8"/>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                               Storyboard.TargetName="PART_VerticalScrollBar">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value=".8" />
                                 </DoubleAnimationUsingKeyFrames>
-                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="PART_HorizontalScrollBar">
-                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value=".8"/>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                               Storyboard.TargetName="PART_HorizontalScrollBar">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value=".8" />
                                 </DoubleAnimationUsingKeyFrames>
                             </Storyboard>
                             <Storyboard x:Key="Storyboard2">
-                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="PART_VerticalScrollBar">
-                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value="0"/>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                               Storyboard.TargetName="PART_VerticalScrollBar">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value="0" />
                                 </DoubleAnimationUsingKeyFrames>
-                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="PART_HorizontalScrollBar">
-                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value="0"/>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                               Storyboard.TargetName="PART_HorizontalScrollBar">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:.2" Value="0" />
                                 </DoubleAnimationUsingKeyFrames>
                             </Storyboard>
                         </ControlTemplate.Resources>
                         <Grid Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <DockPanel Margin="{TemplateBinding Padding}" Grid.RowSpan="2" Grid.ColumnSpan="2">
-                                <ScrollViewer DockPanel.Dock="Top" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
-                                    <GridViewHeaderRowPresenter AllowsColumnReorder="{Binding TemplatedParent.View.AllowsColumnReorder, RelativeSource={RelativeSource TemplatedParent}}" ColumnHeaderContainerStyle="{Binding TemplatedParent.View.ColumnHeaderContainerStyle, RelativeSource={RelativeSource TemplatedParent}}" ColumnHeaderToolTip="{Binding TemplatedParent.View.ColumnHeaderToolTip, RelativeSource={RelativeSource TemplatedParent}}" ColumnHeaderContextMenu="{Binding TemplatedParent.View.ColumnHeaderContextMenu, RelativeSource={RelativeSource TemplatedParent}}" ColumnHeaderTemplate="{Binding TemplatedParent.View.ColumnHeaderTemplate, RelativeSource={RelativeSource TemplatedParent}}" Columns="{Binding TemplatedParent.View.Columns, RelativeSource={RelativeSource TemplatedParent}}" Margin="2,0" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                <ScrollViewer DockPanel.Dock="Top" Focusable="False"
+                                              HorizontalScrollBarVisibility="Hidden"
+                                              VerticalScrollBarVisibility="Hidden">
+                                    <GridViewHeaderRowPresenter
+                                        AllowsColumnReorder="{Binding TemplatedParent.View.AllowsColumnReorder, RelativeSource={RelativeSource TemplatedParent}}"
+                                        ColumnHeaderContainerStyle="{Binding TemplatedParent.View.ColumnHeaderContainerStyle, RelativeSource={RelativeSource TemplatedParent}}"
+                                        ColumnHeaderToolTip="{Binding TemplatedParent.View.ColumnHeaderToolTip, RelativeSource={RelativeSource TemplatedParent}}"
+                                        ColumnHeaderContextMenu="{Binding TemplatedParent.View.ColumnHeaderContextMenu, RelativeSource={RelativeSource TemplatedParent}}"
+                                        ColumnHeaderTemplate="{Binding TemplatedParent.View.ColumnHeaderTemplate, RelativeSource={RelativeSource TemplatedParent}}"
+                                        Columns="{Binding TemplatedParent.View.Columns, RelativeSource={RelativeSource TemplatedParent}}"
+                                        Margin="2,0" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                                 </ScrollViewer>
-                                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" CanContentScroll="{TemplateBinding CanContentScroll}" CanHorizontallyScroll="False" CanVerticallyScroll="False" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" KeyboardNavigation.DirectionalNavigation="Local" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                        CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                        CanHorizontallyScroll="False" CanVerticallyScroll="False"
+                                                        ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                        Content="{TemplateBinding Content}"
+                                                        KeyboardNavigation.DirectionalNavigation="Local"
+                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </DockPanel>
-                            <ScrollBar x:Name="PART_VerticalScrollBar" Opacity="0"  Cursor="Arrow" Grid.Column="1" Maximum="{TemplateBinding ScrollableHeight}" Minimum="0" Grid.Row="0" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" ViewportSize="{TemplateBinding ViewportHeight}"/>
-                            <ScrollBar x:Name="PART_HorizontalScrollBar" Opacity="0"  Cursor="Arrow" Grid.Column="0" Maximum="{TemplateBinding ScrollableWidth}" Minimum="0" Orientation="Horizontal" Grid.Row="1" Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" ViewportSize="{TemplateBinding ViewportWidth}"/>
-                            <DockPanel Background="{Binding Background, ElementName=PART_VerticalScrollBar}" Grid.Column="1" LastChildFill="False" Grid.Row="1">
-                                <Rectangle DockPanel.Dock="Left" Fill="White" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" Width="1"/>
-                                <Rectangle DockPanel.Dock="Top" Fill="White" Height="1" Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+                            <ScrollBar x:Name="PART_VerticalScrollBar" Opacity="0" Cursor="Arrow" Grid.Column="1"
+                                       Maximum="{TemplateBinding ScrollableHeight}" Minimum="0" Grid.Row="0"
+                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                       Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                       ViewportSize="{TemplateBinding ViewportHeight}" />
+                            <ScrollBar x:Name="PART_HorizontalScrollBar" Opacity="0" Cursor="Arrow" Grid.Column="0"
+                                       Maximum="{TemplateBinding ScrollableWidth}" Minimum="0" Orientation="Horizontal"
+                                       Grid.Row="1"
+                                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                       Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                       ViewportSize="{TemplateBinding ViewportWidth}" />
+                            <DockPanel Background="{Binding Background, ElementName=PART_VerticalScrollBar}"
+                                       Grid.Column="1" LastChildFill="False" Grid.Row="1">
+                                <Rectangle DockPanel.Dock="Left" Fill="White"
+                                           Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" Width="1" />
+                                <Rectangle DockPanel.Dock="Top" Fill="White" Height="1"
+                                           Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" />
                             </DockPanel>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <EventTrigger RoutedEvent="MouseEnter">
-                                <BeginStoryboard Storyboard="{StaticResource Storyboard1}"/>
+                                <BeginStoryboard Storyboard="{StaticResource Storyboard1}" />
                             </EventTrigger>
                             <EventTrigger RoutedEvent="MouseLeave">
-                                <BeginStoryboard Storyboard="{StaticResource Storyboard2}"/>
+                                <BeginStoryboard Storyboard="{StaticResource Storyboard2}" />
                             </EventTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -167,24 +208,27 @@
         </Style>
 
         <Style TargetType="ListView">
-            <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="6"/>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="ScrollViewer.CanContentScroll" Value="true"/>
-            <Setter Property="ScrollViewer.PanningMode" Value="Both"/>
-            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="ItemContainerStyle" Value="{StaticResource ListViewItemBaseStyle}"/>
+            <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
+            <Setter Property="ScrollViewer.PanningMode" Value="Both" />
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource ListViewItemBaseStyle}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListView">
-                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
                             <ScrollViewer Style="{StaticResource ListViewScrollViewerStyle}">
-                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </ScrollViewer>
                         </Border>
                     </ControlTemplate>
@@ -193,10 +237,10 @@
             <Style.Triggers>
                 <MultiTrigger>
                     <MultiTrigger.Conditions>
-                        <Condition Property="IsGrouping" Value="true"/>
-                        <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false"/>
+                        <Condition Property="IsGrouping" Value="true" />
+                        <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false" />
                     </MultiTrigger.Conditions>
-                    <Setter Property="ScrollViewer.CanContentScroll" Value="false"/>
+                    <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
                 </MultiTrigger>
             </Style.Triggers>
         </Style>
@@ -205,23 +249,24 @@
     </Window.Resources>
 
     <Grid>
-        <Grid x:Name="MainGrid" >
+        <Grid x:Name="MainGrid">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition></RowDefinition>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
             </Grid.RowDefinitions>
             <StackPanel Margin="10,10,10,10" Orientation="Horizontal" Height="50" VerticalAlignment="Top">
-                <Button Width="50" Content="+" Click="AddFileDownload_OnClick"></Button>
+                <Button Margin="10,10,10,10" Width="50" Content="+" Click="AddFileDownload_OnClick" />
+                <Button Margin="10,10,10,10" Width="50" Content="x" Click="CleanDownloadItem_OnClick" />
             </StackPanel>
             <Grid Grid.Row="1" Margin="10,10,10,10">
-                <ListView ItemsSource="{Binding Path=DownloadFileInfoList}">
+                <ListView x:Name="DownloadItemList" ItemsSource="{Binding Path=DownloadFileInfoList}">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Width="200" Header="文件名" DisplayMemberBinding="{Binding FileName}" />
-                            <GridViewColumn Width="100" Header="大小" DisplayMemberBinding="{Binding FileSize}"/>
-                            <GridViewColumn Width="200" Header="进度" DisplayMemberBinding="{Binding DownloadProcess}"/>
-                            <GridViewColumn Width="100" Header="下载速度" DisplayMemberBinding="{Binding DownloadSpeed}"/>
-                            <GridViewColumn Width="200" Header="添加日期" DisplayMemberBinding="{Binding AddedTime}"/>
+                            <GridViewColumn Width="100" Header="大小" DisplayMemberBinding="{Binding FileSize}" />
+                            <GridViewColumn Width="200" Header="进度" DisplayMemberBinding="{Binding DownloadProcess}" />
+                            <GridViewColumn Width="100" Header="下载速度" DisplayMemberBinding="{Binding DownloadSpeed}" />
+                            <GridViewColumn Width="200" Header="添加日期" DisplayMemberBinding="{Binding AddedTime}" />
                         </GridView>
                     </ListView.View>
                 </ListView>
@@ -235,7 +280,7 @@
             <local:ContentDialog.ContentElement>
                 <local:AddDownloadFilePage Url="{Binding CurrentDownloadUrl,Mode=TwoWay}"
                                            FilePath="{Binding CurrentDownloadFilePath,Mode=TwoWay}"
-                                           DownloadClick="AddDownloadFilePage_OnDownloadClick"></local:AddDownloadFilePage>
+                                           DownloadClick="AddDownloadFilePage_OnDownloadClick" />
             </local:ContentDialog.ContentElement>
         </local:ContentDialog>
     </Grid>

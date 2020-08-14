@@ -8,10 +8,10 @@ namespace dotnetCampus.FileDownloader.WPF.Model
 {
     public class DownloadFileInfo : INotifyPropertyChanged
     {
-        /// <summary>
-        ///     文件名
-        /// </summary>
-        /// 文件名不可变，因此不带通知
+        private string _downloadProcess;
+        private string _fileSize;
+        private string _downloadSpeed;
+        private bool _isFinished = false;
         public string FileName { get; set; }
 
         /// <summary>
@@ -62,20 +62,6 @@ namespace dotnetCampus.FileDownloader.WPF.Model
         public string FilePath { get; set; }
 
         /// <summary>
-        ///     是否下载完成
-        /// </summary>
-        public bool IsFinished
-        {
-            get => _isFinished;
-            set
-            {
-                if (value == _isFinished) return;
-                _isFinished = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
         ///     当前下载的速度
         /// </summary>
         [JsonIgnore]
@@ -86,6 +72,17 @@ namespace dotnetCampus.FileDownloader.WPF.Model
             {
                 if (value == _downloadSpeed) return;
                 _downloadSpeed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsFinished
+        {
+            get => _isFinished;
+            set
+            {
+                if (value == _isFinished) return;
+                _isFinished = value;
                 OnPropertyChanged();
             }
         }
@@ -104,10 +101,5 @@ namespace dotnetCampus.FileDownloader.WPF.Model
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
                 });
         }
-
-        private string _downloadProcess;
-        private string _downloadSpeed;
-        private string _fileSize;
-        private bool _isFinished;
     }
 }
