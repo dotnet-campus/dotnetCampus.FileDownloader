@@ -26,11 +26,6 @@ namespace dotnetCampus.FileDownloader.WPF
 
             if (downloadedFileInfoList != null)
             {
-                foreach (var downloadFileInfo in downloadedFileInfoList)
-                {
-                    downloadFileInfo.IsFinished = true;
-                }
-
                 DownloadFileInfoList.AddRange(downloadedFileInfoList);
             }
         }
