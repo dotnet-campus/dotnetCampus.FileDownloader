@@ -84,7 +84,6 @@ namespace dotnetCampus.FileDownloader.WPF
             }
         }
 
-
         private void DownloadContentDialog_OnClosed(object? sender, EventArgs e)
         {
             HideDownloadDialog();
@@ -143,7 +142,6 @@ namespace dotnetCampus.FileDownloader.WPF
 
             System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{downloadFileInfo.FilePath}\"");
         }
-
 
         private void RemoveItemCommand_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
