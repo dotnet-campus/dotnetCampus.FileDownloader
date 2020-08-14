@@ -5,6 +5,8 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <UseWPF>true</UseWPF>
         <Nullable>enable</Nullable>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>dotnetCampus.FileDownloader.WPF</ToolCommandName>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Walterlv.Themes.FluentDesign" Version="5.7.2" />
