@@ -74,6 +74,17 @@ namespace dotnetCampus.FileDownloader
 
             var (response, contentLength) = await GetContentLength();
 
+            _logger.LogInformation($"ContentLength={contentLength}");
+
+            if (contentLength < 0)
+            {
+                // contentLength == -1
+                // 当前非下载内容，没有存在长度
+                // 可测试使用的链接是 https://dotnet.microsoft.com/download/dotnet/thank-you/sdk-5.0.100-preview.7-windows-x64-installer
+                _logger.LogWarning($"Can not download file. ContentLength={contentLength}");
+                return;
+            }
+
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
             FileWriter = new RandomFileWriter(FileStream);
@@ -154,7 +165,7 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     var url = Url;
-                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
+                    var webRequest = (HttpWebRequest)WebRequest.Create(url);
                     webRequest.Method = "GET";
 
                     action?.Invoke(webRequest);
