@@ -43,6 +43,8 @@ namespace dotnetCampus.FileDownloader.WPF
 
             if (Regex.IsMatch(text, @"^((https|http|ftp|rtsp|mms)?:\/\/)[^\s]+"))
             {
+                // 先清除，然后赋值，这样可以自动获取文件名
+                ViewModel.AddFileDownloadViewModel.CurrentDownloadFilePath = string.Empty;
                 ViewModel.AddFileDownloadViewModel.CurrentDownloadUrl = text;
             }
         }
@@ -163,5 +165,5 @@ namespace dotnetCampus.FileDownloader.WPF
 
             ViewModel.DownloadFileInfoList.Remove(downloadFileInfo);
         }
-    }
+    } 
 }
