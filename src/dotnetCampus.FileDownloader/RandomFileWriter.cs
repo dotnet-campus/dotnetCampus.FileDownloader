@@ -1,15 +1,154 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.ExceptionServices;
+using System.Threading;
 using System.Threading.Tasks;
 using dotnetCampus.Threading;
 
 namespace dotnetCampus.FileDownloader
 {
+    public class RandomFileWriter2 : IRandomFileWriter
+    {
+        public RandomFileWriter2(FileStream stream)
+        {
+            Stream = stream;
+        }
+
+        private FileStream Stream { get; }
+
+        /// <summary>
+        /// 每次写完触发事件
+        /// </summary>
+        public event EventHandler<StepWriteFinishedArgs> StepWriteFinished = delegate { };
+
+        public void QueueWrite(long fileStartPoint, byte[] data, int dataOffset, int dataLength)
+        {
+            var fileSegment = new FileSegment(fileStartPoint, data, dataOffset, dataLength);
+            FileSegmentList.Enqueue(fileSegment);
+
+            WriteInner();
+        }
+
+        private ConcurrentQueue<FileSegment> FileSegmentList { get; } = new ConcurrentQueue<FileSegment>();
+
+        private bool _isWriting;
+        private event EventHandler? WriteFinished;
+
+        private async void WriteInner()
+        {
+            if (_isWriting) return;
+
+            lock (FileSegmentList)
+            {
+                if (_isWriting) return;
+                _isWriting = true;
+            }
+
+            while (FileSegmentList.TryDequeue(out var fileSegment))
+            {
+                Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
+
+                await Stream.WriteAsync(fileSegment.Data, fileSegment.DataOffset, fileSegment.DataLength);
+
+                StepWriteFinished
+                (
+                    this,
+                    new StepWriteFinishedArgs
+                    (
+                        fileSegment.FileStartPoint,
+                        fileSegment.DataOffset,
+                        fileSegment.Data,
+                        fileSegment.DataLength
+                    )
+                );
+            }
+
+            lock (FileSegmentList)
+            {
+                WriteFinished?.Invoke(this, EventArgs.Empty);
+            }
+
+            _isWriting = false;
+        }
+
+        private readonly struct FileSegment
+        {
+            public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength,
+                TaskCompletionSource<bool>? taskCompletionSource = null)
+            {
+                FileStartPoint = fileStartPoint;
+                Data = data;
+                DataLength = dataLength;
+                DataOffset = dataOffset;
+                TaskCompletionSource = taskCompletionSource;
+            }
+
+            /// <summary>
+            /// 文件开始写入的点
+            /// </summary>
+            public long FileStartPoint { get; }
+
+            /// <summary>
+            /// 表示从 <see cref="Data"/> 的读取点
+            /// </summary>
+            public int DataOffset { get; }
+
+            /// <summary>
+            /// 写入文件的数据
+            /// </summary>
+            public byte[] Data { get; }
+
+            /// <summary>
+            /// 表示从 <see cref="Data"/> 的读取长度
+            /// </summary>
+            public int DataLength { get; }
+
+            public TaskCompletionSource<bool>? TaskCompletionSource { get; }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!_isWriting)
+            {
+                return;
+            }
+
+            var taskCompletionSource = new TaskCompletionSource<bool>();
+            lock (FileSegmentList)
+            {
+                WriteFinished += (sender, args) =>
+                {
+                    taskCompletionSource.SetResult(true);
+                };
+            }
+
+            if (!_isWriting)
+            {
+                return;
+            }
+
+            await taskCompletionSource.Task;
+        }
+    }
+
+    public interface IRandomFileWriter: IAsyncDisposable
+    {
+        /// <summary>
+        /// 加入写文件队列
+        /// </summary>
+        void QueueWrite(long fileStartPoint, byte[] data, int dataOffset, int dataLength);
+
+        /// <summary>
+        /// 每次写完触发事件
+        /// </summary>
+        event EventHandler<StepWriteFinishedArgs> StepWriteFinished;
+    }
+
     /// <summary>
     /// 不按照顺序，随机写入文件
     /// </summary>
-    public class RandomFileWriter : IAsyncDisposable
+    public class RandomFileWriter : IAsyncDisposable, IRandomFileWriter
     {
         /// <summary>
         /// 不按照顺序，随机写入文件
