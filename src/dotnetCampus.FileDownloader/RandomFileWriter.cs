@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,8 +10,15 @@ using dotnetCampus.Threading;
 
 namespace dotnetCampus.FileDownloader
 {
+    /// <summary>
+    /// 顺序写入优先的支持乱序多线程的文件写入方法
+    /// </summary>
     public class RandomFileWriterWithOrderFirst : IRandomFileWriter
     {
+        /// <summary>
+        /// 创建文件写入方法
+        /// </summary>
+        /// <param name="stream"></param>
         public RandomFileWriterWithOrderFirst(FileStream stream)
         {
             Stream = stream;
@@ -25,6 +33,7 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         public event EventHandler<StepWriteFinishedArgs> StepWriteFinished = delegate { };
 
+        /// <inheritdoc />
         public void QueueWrite(long fileStartPoint, byte[] data, int dataOffset, int dataLength)
         {
             var fileSegment = new FileSegment(fileStartPoint, data, dataOffset, dataLength);
@@ -35,9 +44,12 @@ namespace dotnetCampus.FileDownloader
 
         private async Task WriteInner(List<FileSegment> fileSegmentList)
         {
-            foreach (var fileSegment in fileSegmentList)
+            foreach (var fileSegment in GetFileSegment(fileSegmentList))
             {
-                Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
+                if (Stream.Position != fileSegment.FileStartPoint)
+                {
+                    Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
+                }
 
                 await Stream.WriteAsync(fileSegment.Data, fileSegment.DataOffset, fileSegment.DataLength);
 
@@ -52,6 +64,44 @@ namespace dotnetCampus.FileDownloader
                         fileSegment.DataLength
                     )
                 );
+            }
+
+            static IEnumerable<FileSegment> GetFileSegment(List<FileSegment> fileSegmentList)
+            {
+                long lastPosition = -1;
+                while (fileSegmentList.Count != 0)
+                {
+                    if (lastPosition == -1)
+                    {
+                        var first = fileSegmentList[0];
+                        fileSegmentList.RemoveAt(0);
+
+                        lastPosition = first.FileStartPoint + first.DataLength;
+
+                        yield return first;
+                    }
+
+                    bool canFound = false;
+                    for (var i = 0; i < fileSegmentList.Count; i++)
+                    {
+                        var fileSegment = fileSegmentList[i];
+                        if (fileSegment.FileStartPoint == lastPosition)
+                        {
+                            fileSegmentList.RemoveAt(i);
+                            canFound = true;
+
+                            lastPosition = fileSegment.FileStartPoint + fileSegment.DataLength;
+
+                            yield return fileSegment;
+                            break;
+                        }
+                    }
+
+                    if (!canFound)
+                    {
+                        lastPosition = -1;
+                    }
+                }
             }
         }
 
