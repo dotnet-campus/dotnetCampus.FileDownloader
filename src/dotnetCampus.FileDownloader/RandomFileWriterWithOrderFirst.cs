@@ -8,6 +8,8 @@ namespace dotnetCampus.FileDownloader
     /// <summary>
     /// 顺序写入优先的支持乱序多线程的文件写入方法
     /// </summary>
+    /// 和 <see cref="RandomFileWriter"/> 不同的是，这个方法采用让文件写入时，尽可能是连续写入，这样磁盘写入性能比较快，在下载速度比写入速度快的时候
+    /// 这个方法可以做到比 <see cref="RandomFileWriter"/> 提升更多的速度
     public class RandomFileWriterWithOrderFirst : IRandomFileWriter
     {
         /// <summary>
