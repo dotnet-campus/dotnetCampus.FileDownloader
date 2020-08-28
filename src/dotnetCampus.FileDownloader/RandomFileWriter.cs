@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -8,11 +9,13 @@ using dotnetCampus.Threading;
 
 namespace dotnetCampus.FileDownloader
 {
-    public class RandomFileWriter2 : IRandomFileWriter
+    public class RandomFileWriterWithOrderFirst : IRandomFileWriter
     {
-        public RandomFileWriter2(FileStream stream)
+        public RandomFileWriterWithOrderFirst(FileStream stream)
         {
             Stream = stream;
+
+            FileSegmentTaskList = new DoubleBufferTask<FileSegment>(WriteInner);
         }
 
         private FileStream Stream { get; }
@@ -25,72 +28,41 @@ namespace dotnetCampus.FileDownloader
         public void QueueWrite(long fileStartPoint, byte[] data, int dataOffset, int dataLength)
         {
             var fileSegment = new FileSegment(fileStartPoint, data, dataOffset, dataLength);
-            FileSegmentList.Add(fileSegment);
-
-            WriteInner();
+            FileSegmentTaskList.AddTask(fileSegment);
         }
 
-        private DoubleBuffer<FileSegment> FileSegmentList { get; } = new DoubleBuffer<FileSegment>();
+        private DoubleBufferTask<FileSegment> FileSegmentTaskList { get; }
 
-        private bool _isWriting;
-        private event EventHandler? WriteFinished;
-
-        private async void WriteInner()
+        private async Task WriteInner(List<FileSegment> fileSegmentList)
         {
-            if (_isWriting) return;
-
-            lock (FileSegmentList)
+            foreach (var fileSegment in fileSegmentList)
             {
-                if (_isWriting) return;
-                _isWriting = true;
-            }
+                Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
 
-            while (true)
-            {
-                var buffer = FileSegmentList.SwitchBuffer();
-                if (buffer.Count == 0) break;
-                // 如果 Buffer 里面有内容
-                foreach (var fileSegment in buffer)
-                {
-                    Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
+                await Stream.WriteAsync(fileSegment.Data, fileSegment.DataOffset, fileSegment.DataLength);
 
-                    await Stream.WriteAsync(fileSegment.Data, fileSegment.DataOffset, fileSegment.DataLength);
-
-                    StepWriteFinished
+                StepWriteFinished
+                (
+                    this,
+                    new StepWriteFinishedArgs
                     (
-                        this,
-                        new StepWriteFinishedArgs
-                        (
-                            fileSegment.FileStartPoint,
-                            fileSegment.DataOffset,
-                            fileSegment.Data,
-                            fileSegment.DataLength
-                        )
-                    );
-                }
-
-                buffer.Clear();
+                        fileSegment.FileStartPoint,
+                        fileSegment.DataOffset,
+                        fileSegment.Data,
+                        fileSegment.DataLength
+                    )
+                );
             }
-
-
-            lock (FileSegmentList)
-            {
-                WriteFinished?.Invoke(this, EventArgs.Empty);
-            }
-
-            _isWriting = false;
         }
 
         private readonly struct FileSegment
         {
-            public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength,
-                TaskCompletionSource<bool>? taskCompletionSource = null)
+            public FileSegment(long fileStartPoint, byte[] data, int dataOffset, int dataLength)
             {
                 FileStartPoint = fileStartPoint;
                 Data = data;
                 DataLength = dataLength;
                 DataOffset = dataOffset;
-                TaskCompletionSource = taskCompletionSource;
             }
 
             /// <summary>
@@ -112,35 +84,20 @@ namespace dotnetCampus.FileDownloader
             /// 表示从 <see cref="Data"/> 的读取长度
             /// </summary>
             public int DataLength { get; }
-
-            public TaskCompletionSource<bool>? TaskCompletionSource { get; }
         }
 
+        /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            if (!_isWriting)
-            {
-                return;
-            }
+            FileSegmentTaskList.Finish();
 
-            var taskCompletionSource = new TaskCompletionSource<bool>();
-            lock (FileSegmentList)
-            {
-                WriteFinished += (sender, args) =>
-                {
-                    taskCompletionSource.SetResult(true);
-                };
-            }
-
-            if (!_isWriting)
-            {
-                return;
-            }
-
-            await taskCompletionSource.Task;
+            await FileSegmentTaskList.WaitAllTaskFinish();
         }
     }
 
+    /// <summary>
+    /// 不按照顺序，随机写入文件
+    /// </summary>
     public interface IRandomFileWriter : IAsyncDisposable
     {
         /// <summary>
@@ -215,10 +172,13 @@ namespace dotnetCampus.FileDownloader
 
         private Exception? Exception { set; get; }
 
+        private bool _isWriting;
+
         private async Task WriteToFile()
         {
             while (true)
             {
+                _isWriting = true;
                 var fileSegment = await FileSegmentList.DequeueAsync();
 
                 try
@@ -233,6 +193,8 @@ namespace dotnetCampus.FileDownloader
                     WriteFinished?.Invoke(this, EventArgs.Empty);
                     return;
                 }
+
+                _isWriting = false;
 
                 try
                 {
@@ -353,7 +315,10 @@ namespace dotnetCampus.FileDownloader
                     ExceptionDispatchInfo.Capture(Exception).Throw();
                 }
 
-                if (FileSegmentList.Count == 0)
+                // 这个判断存在一个坑，也就是在写入出队的时候，此时其实还没有实际写完成
+                // 在 var fileSegment = await FileSegmentList.DequeueAsync() 方法出队了
+                // 但是 Stream.WriteAsync 还没完成
+                if (FileSegmentList.Count == 0 && !_isWriting)
                 {
                     return;
                 }

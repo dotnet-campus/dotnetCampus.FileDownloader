@@ -87,7 +87,7 @@ namespace dotnetCampus.FileDownloader
 
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
-            FileWriter = new RandomFileWriter(FileStream);
+            FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
             FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
             SegmentManager = new SegmentManager(contentLength);
@@ -127,7 +127,7 @@ namespace dotnetCampus.FileDownloader
 
         private bool _isDisposed;
 
-        private RandomFileWriter FileWriter { set; get; }
+        private IRandomFileWriter FileWriter { set; get; }
 
         private FileStream FileStream { set; get; }
 
