@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace dotnetCampus.FileDownloader
 {
@@ -31,6 +32,18 @@ namespace dotnetCampus.FileDownloader
                     CurrentList = AList;
                     return BList;
                 }
+            }
+        }
+
+        public void DoAll(Action<List<T>> action)
+        {
+            while (true)
+            {
+                var buffer = SwitchBuffer();
+                if (buffer.Count == 0) break;
+
+                action(buffer);
+                buffer.Clear();
             }
         }
 

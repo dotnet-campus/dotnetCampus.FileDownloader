@@ -25,12 +25,12 @@ namespace dotnetCampus.FileDownloader
         public void QueueWrite(long fileStartPoint, byte[] data, int dataOffset, int dataLength)
         {
             var fileSegment = new FileSegment(fileStartPoint, data, dataOffset, dataLength);
-            FileSegmentList.Enqueue(fileSegment);
+            FileSegmentList.Add(fileSegment);
 
             WriteInner();
         }
 
-        private ConcurrentQueue<FileSegment> FileSegmentList { get; } = new ConcurrentQueue<FileSegment>();
+        private DoubleBuffer<FileSegment> FileSegmentList { get; } = new DoubleBuffer<FileSegment>();
 
         private bool _isWriting;
         private event EventHandler? WriteFinished;
@@ -45,24 +45,33 @@ namespace dotnetCampus.FileDownloader
                 _isWriting = true;
             }
 
-            while (FileSegmentList.TryDequeue(out var fileSegment))
+            while (true)
             {
-                Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
+                var buffer = FileSegmentList.SwitchBuffer();
+                if (buffer.Count == 0) break;
+                // 如果 Buffer 里面有内容
+                foreach (var fileSegment in buffer)
+                {
+                    Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
 
-                await Stream.WriteAsync(fileSegment.Data, fileSegment.DataOffset, fileSegment.DataLength);
+                    await Stream.WriteAsync(fileSegment.Data, fileSegment.DataOffset, fileSegment.DataLength);
 
-                StepWriteFinished
-                (
-                    this,
-                    new StepWriteFinishedArgs
+                    StepWriteFinished
                     (
-                        fileSegment.FileStartPoint,
-                        fileSegment.DataOffset,
-                        fileSegment.Data,
-                        fileSegment.DataLength
-                    )
-                );
+                        this,
+                        new StepWriteFinishedArgs
+                        (
+                            fileSegment.FileStartPoint,
+                            fileSegment.DataOffset,
+                            fileSegment.Data,
+                            fileSegment.DataLength
+                        )
+                    );
+                }
+
+                buffer.Clear();
             }
+
 
             lock (FileSegmentList)
             {
