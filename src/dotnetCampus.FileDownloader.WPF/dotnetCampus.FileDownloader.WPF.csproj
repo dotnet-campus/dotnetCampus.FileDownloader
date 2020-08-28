@@ -9,9 +9,9 @@
         <ToolCommandName>dotnetCampus.FileDownloader.WPF</ToolCommandName>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Walterlv.Themes.FluentDesign" Version="5.7.2" />
+        <PackageReference Include="Walterlv.Themes.FluentDesign" Version="5.8.0" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.6"></PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.7"></PackageReference>
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\dotnetCampus.FileDownloader\dotnetCampus.FileDownloader.csproj" />
