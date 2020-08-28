@@ -9,6 +9,9 @@ namespace dotnetCampus.FileDownloader
         void Return(byte[] array);
     }
 
+    /// <summary>
+    /// 共享数组内存，底层使用 ArrayPool 实现
+    /// </summary>
     public class SharedArrayPool : ISharedArrayPool
     {
         public SharedArrayPool(ArrayPool<byte>? arrayPool = null)
