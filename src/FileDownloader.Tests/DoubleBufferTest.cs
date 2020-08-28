@@ -47,7 +47,15 @@ namespace FileDownloader.Tests
 
                 Task.WaitAll(t1, t2);
 
-                // 没有执行一次
+                doubleBuffer.DoAllAsync(async list =>
+                {
+                    foreach (var foo in list)
+                    {
+                        await Task.Delay(random.Next(50));
+                        foo.Foo();
+                    }
+                }).Wait();
+
                 mock.Verify(foo => foo.Foo(), Times.Exactly(n));
             });
 
