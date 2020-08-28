@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader
@@ -9,14 +8,28 @@ namespace dotnetCampus.FileDownloader
     /// 提供双缓存 线程安全列表
     /// </summary>
     /// 写入的时候写入到一个列表，通过 SwitchBuffer 方法，可以切换当前缓存
-    class DoubleBuffer<T>
+    class DoubleBuffer<T> : DoubleBuffer<List<T>, T>
     {
-        public DoubleBuffer()
+        public DoubleBuffer() : base(new List<T>(), new List<T>())
         {
+        }
+    }
+
+    /// <summary>
+    /// 提供双缓存 线程安全列表
+    /// </summary>
+    /// 写入的时候写入到一个列表，通过 SwitchBuffer 方法，可以切换当前缓存
+    class DoubleBuffer<T, TU> where T : class, ICollection<TU>
+    {
+        public DoubleBuffer(T aList, T bList)
+        {
+            AList = aList;
+            BList = bList;
+
             CurrentList = AList;
         }
 
-        public void Add(T t)
+        public void Add(TU t)
         {
             lock (_lock)
             {
@@ -24,7 +37,7 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        public List<T> SwitchBuffer()
+        public T SwitchBuffer()
         {
             lock (_lock)
             {
@@ -45,7 +58,7 @@ namespace dotnetCampus.FileDownloader
         /// 执行完所有任务
         /// </summary>
         /// <param name="action">当前缓存里面存在的任务，请不要保存传入的 List 参数</param>
-        public void DoAll(Action<List<T>> action)
+        public void DoAll(Action<T> action)
         {
             while (true)
             {
@@ -62,7 +75,7 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         /// <param name="action">当前缓存里面存在的任务，请不要保存传入的 List 参数</param>
         /// <returns></returns>
-        public async Task DoAllAsync(Func<List<T>, Task> action)
+        public async Task DoAllAsync(Func<T, Task> action)
         {
             while (true)
             {
@@ -76,9 +89,9 @@ namespace dotnetCampus.FileDownloader
 
         private readonly object _lock = new object();
 
-        private List<T> CurrentList { set; get; }
+        private T CurrentList { set; get; }
 
-        private List<T> AList { get; } = new List<T>();
-        private List<T> BList { get; } = new List<T>();
+        private T AList { get; }
+        private T BList { get; }
     }
 }
