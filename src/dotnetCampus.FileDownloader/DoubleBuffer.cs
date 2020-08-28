@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader
 {
@@ -43,6 +45,19 @@ namespace dotnetCampus.FileDownloader
                 if (buffer.Count == 0) break;
 
                 action(buffer);
+                buffer.Clear();
+            }
+        }
+
+
+        public async Task DoAllAsync(Func<List<T>, Task> action)
+        {
+            while (true)
+            {
+                var buffer = SwitchBuffer();
+                if (buffer.Count == 0) break;
+
+                await action(buffer);
                 buffer.Clear();
             }
         }
