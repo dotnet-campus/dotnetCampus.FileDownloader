@@ -22,36 +22,43 @@ namespace dotnetCampus.FileDownloader
 
         public void Start()
         {
+            if (_started)
+            {
+                return;
+            }
+
             _started = true;
 
-            Task.Run(async () =>
+            Task.Run(async () => { await WatchProcess(); });
+        }
+
+        private async Task WatchProcess()
+        {
+            while (_started)
             {
-                while (_started)
+                if (!_started)
                 {
-                    await Task.Delay(DelayTime);
-
-                    if (!_started)
-                    {
-                        return;
-                    }
-
-                    if (_currentDownloadProgress is null)
-                    {
-                        continue;
-                    }
-
-                    var downloadInfoProgress = GetDownloadInfoProgress();
-
-                    ProgressChanged(this, downloadInfoProgress);
-
-                    _lastDownloadLength = _currentDownloadProgress.DownloadedLength;
-
-                    if (downloadInfoProgress.IsFinished)
-                    {
-                        Stop();
-                    }
+                    return;
                 }
-            });
+
+                if (_currentDownloadProgress is null)
+                {
+                    continue;
+                }
+
+                var downloadInfoProgress = GetDownloadInfoProgress();
+
+                ProgressChanged(this, downloadInfoProgress);
+
+                _lastDownloadLength = _currentDownloadProgress.DownloadedLength;
+
+                if (downloadInfoProgress.IsFinished)
+                {
+                    Stop();
+                }
+
+                await Task.Delay(DelayTime);
+            }
         }
 
         private DownloadInfoProgress GetDownloadInfoProgress()
@@ -102,15 +109,16 @@ namespace dotnetCampus.FileDownloader
             _started = false;
         }
 
-        public void Report(DownloadProgress downloadProgress)
+        public async void Report(DownloadProgress downloadProgress)
         {
-            if (!_started)
-            {
-                Start();
-            }
-
             _currentDownloadProgress = downloadProgress;
             _lastDownloadLength ??= downloadProgress.DownloadedLength;
+
+            if (!_started)
+            {
+                _started = true;
+                await WatchProcess();
+            }
         }
 
         private long? _lastDownloadLength;
