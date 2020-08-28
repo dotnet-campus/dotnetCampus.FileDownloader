@@ -95,15 +95,13 @@ namespace FileDownloader.Tests
                 mock.Setup(foo => foo.Foo());
 
                 var doubleBufferTask = new DoubleBufferTask<IFoo>(async list =>
-               {
-                   foreach (var foo in list)
-                   {
-                       await Task.Delay(TimeSpan.FromMilliseconds(50));
-                       foo.Foo();
-                   }
-               });
-
-                const int n = 10;
+                {
+                    foreach (var foo in list)
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(50));
+                        foo.Foo();
+                    }
+                });
 
                 doubleBufferTask.Finish();
 
