@@ -37,14 +37,26 @@ namespace dotnetCampus.FileDownloader
 
         private DoubleBufferTask<FileSegment> FileSegmentTaskList { get; }
 
+        private int Count { set; get; }
+
+        private int Write { set; get; }
+
         private async Task WriteInner(List<FileSegment> fileSegmentList)
         {
             foreach (var fileSegment in GetFileSegment(fileSegmentList))
             {
                 if (Stream.Position != fileSegment.FileStartPoint)
                 {
+                    System.Diagnostics.Debug.WriteLine($"{Write}Stream.Position != fileSegment.FileStartPoint");
                     Stream.Seek(fileSegment.FileStartPoint, SeekOrigin.Begin);
                 }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"{Count}/{Write} Stream.Position == fileSegment.FileStartPoint");
+                    Count++;
+                }
+
+                Write++;
 
                 await Stream.WriteAsync(fileSegment.Data, fileSegment.DataOffset, fileSegment.DataLength);
 
