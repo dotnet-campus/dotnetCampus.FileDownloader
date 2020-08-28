@@ -51,7 +51,6 @@ namespace FileDownloader.Tests
                 mock.Verify(foo => foo.Foo(), Times.Exactly(n));
             });
 
-
             "多线程一边加入元素一边执行，可以执行所有元素".Test(() =>
             {
                 var mock = new Mock<IFoo>();
@@ -74,10 +73,7 @@ namespace FileDownloader.Tests
                     }
                 });
 
-                var t2 = Task.Run(() =>
-                {
-                    doubleBuffer.DoAll(list => list.ForEach(foo => foo.Foo()));
-                });
+                var t2 = Task.Run(() => { doubleBuffer.DoAll(list => list.ForEach(foo => foo.Foo())); });
 
                 Task.WaitAll(t1, t2);
 

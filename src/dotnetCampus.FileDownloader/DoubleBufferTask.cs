@@ -65,7 +65,6 @@ namespace dotnetCampus.FileDownloader
 
         private readonly Func<List<T>, Task> _doTask;
 
-
         private DoubleBuffer<T> DoubleBuffer { get; } = new DoubleBuffer<T>();
     }
 }

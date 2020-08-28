@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader
 {
+    /// <summary>
+    /// 提供双缓存 线程安全列表
+    /// </summary>
+    /// 写入的时候写入到一个列表，通过 SwitchBuffer 方法，可以切换当前缓存
     class DoubleBuffer<T>
     {
         public DoubleBuffer()
@@ -37,6 +41,10 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
+        /// <summary>
+        /// 执行完所有任务
+        /// </summary>
+        /// <param name="action">当前缓存里面存在的任务，请不要保存传入的 List 参数</param>
         public void DoAll(Action<List<T>> action)
         {
             while (true)
@@ -49,7 +57,11 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-
+        /// <summary>
+        /// 执行完所有任务
+        /// </summary>
+        /// <param name="action">当前缓存里面存在的任务，请不要保存传入的 List 参数</param>
+        /// <returns></returns>
         public async Task DoAllAsync(Func<List<T>, Task> action)
         {
             while (true)
