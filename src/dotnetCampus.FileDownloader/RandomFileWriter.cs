@@ -132,7 +132,7 @@ namespace dotnetCampus.FileDownloader
         }
     }
 
-    public interface IRandomFileWriter: IAsyncDisposable
+    public interface IRandomFileWriter : IAsyncDisposable
     {
         /// <summary>
         /// 加入写文件队列
