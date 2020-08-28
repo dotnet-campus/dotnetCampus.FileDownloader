@@ -71,7 +71,7 @@ namespace dotnetCampus.FileDownloader.WPF
             HideDownloadDialog();
 
             DependencyObject border = VisualTreeHelper.GetChild(DownloadItemList, 0);
-            ScrollViewer scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+            ScrollViewer scrollViewer = (ScrollViewer) VisualTreeHelper.GetChild(border, 0);
             scrollViewer.ScrollToBottom();
         }
 
@@ -169,5 +169,5 @@ namespace dotnetCampus.FileDownloader.WPF
 
             ViewModel.DownloadFileInfoList.Remove(downloadFileInfo);
         }
-    } 
+    }
 }
