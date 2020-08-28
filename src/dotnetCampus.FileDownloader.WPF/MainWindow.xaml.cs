@@ -69,6 +69,10 @@ namespace dotnetCampus.FileDownloader.WPF
             ViewModel.AddDownloadFile();
 
             HideDownloadDialog();
+
+            DependencyObject border = VisualTreeHelper.GetChild(DownloadItemList, 0);
+            ScrollViewer scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+            scrollViewer.ScrollToBottom();
         }
 
         private void CleanDownloadItem_OnClick(object sender, RoutedEventArgs e)
