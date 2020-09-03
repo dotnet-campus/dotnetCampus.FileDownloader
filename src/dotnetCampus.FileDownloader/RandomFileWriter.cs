@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Threading;
 using System.Threading.Tasks;
 using dotnetCampus.Threading;
 
@@ -9,7 +12,7 @@ namespace dotnetCampus.FileDownloader
     /// <summary>
     /// 不按照顺序，随机写入文件
     /// </summary>
-    public class RandomFileWriter : IAsyncDisposable
+    public class RandomFileWriter : IAsyncDisposable, IRandomFileWriter
     {
         /// <summary>
         /// 不按照顺序，随机写入文件
@@ -67,10 +70,13 @@ namespace dotnetCampus.FileDownloader
 
         private Exception? Exception { set; get; }
 
+        private bool _isWriting;
+
         private async Task WriteToFile()
         {
             while (true)
             {
+                _isWriting = true;
                 var fileSegment = await FileSegmentList.DequeueAsync();
 
                 try
@@ -85,6 +91,8 @@ namespace dotnetCampus.FileDownloader
                     WriteFinished?.Invoke(this, EventArgs.Empty);
                     return;
                 }
+
+                _isWriting = false;
 
                 try
                 {
@@ -205,7 +213,10 @@ namespace dotnetCampus.FileDownloader
                     ExceptionDispatchInfo.Capture(Exception).Throw();
                 }
 
-                if (FileSegmentList.Count == 0)
+                // 这个判断存在一个坑，也就是在写入出队的时候，此时其实还没有实际写完成
+                // 在 var fileSegment = await FileSegmentList.DequeueAsync() 方法出队了
+                // 但是 Stream.WriteAsync 还没完成
+                if (FileSegmentList.Count == 0 && !_isWriting)
                 {
                     return;
                 }

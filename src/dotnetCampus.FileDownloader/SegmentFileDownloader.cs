@@ -87,7 +87,7 @@ namespace dotnetCampus.FileDownloader
 
             FileStream = File.Create();
             FileStream.SetLength(contentLength);
-            FileWriter = new RandomFileWriter(FileStream);
+            FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
             FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
             SegmentManager = new SegmentManager(contentLength);
@@ -127,13 +127,13 @@ namespace dotnetCampus.FileDownloader
 
         private bool _isDisposed;
 
-        private RandomFileWriter FileWriter { set; get; }
+        private IRandomFileWriter FileWriter { set; get; } = null!;
 
-        private FileStream FileStream { set; get; }
+        private FileStream FileStream { set; get; } = null!;
 
         private TaskCompletionSource<bool> FileDownloadTask { get; } = new TaskCompletionSource<bool>();
 
-        private SegmentManager SegmentManager { set; get; }
+        private SegmentManager SegmentManager { set; get; } = null!;
 
         /// <summary>
         /// 获取整个下载的长度
