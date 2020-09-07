@@ -32,7 +32,6 @@ namespace dotnetCampus.FileDownloader.WPF
             set { SetValue(TitleProperty, value); }
         }
 
-
         public static readonly DependencyProperty ContentElementProperty = DependencyProperty.Register(
             "ContentElement", typeof(UIElement), typeof(ContentDialog), new PropertyMetadata(default(UIElement)));
 
@@ -42,7 +41,7 @@ namespace dotnetCampus.FileDownloader.WPF
             set { SetValue(ContentElementProperty, value); }
         }
 
-        public event EventHandler Closed = null!;
+        public event EventHandler Closed = delegate {  };
 
         private void CloseButton_OnClick(object sender, RoutedEventArgs e)
         {

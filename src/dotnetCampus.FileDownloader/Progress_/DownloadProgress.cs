@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace dotnetCampus.FileDownloader
 {
+    /// <summary>
+    /// 下载进度
+    /// </summary>
     public class DownloadProgress
     {
         public DownloadProgress(SegmentManager segmentManager)

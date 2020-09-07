@@ -13,7 +13,7 @@ namespace dotnetCampus.FileDownloader
         /// <summary>
         /// 下载管理在发现支持分段下载的时候给出事件
         /// </summary>
-        public event EventHandler SegmentChanged;
+        public event EventHandler SegmentChanged = delegate { };
 
         public DownloadSegment()
         {
@@ -38,7 +38,7 @@ namespace dotnetCampus.FileDownloader
             internal set
             {
                 _requirementDownloadPoint = value;
-                SegmentChanged?.Invoke(this, null);
+                SegmentChanged?.Invoke(this, EventArgs.Empty);
             }
             get => _requirementDownloadPoint;
         }
@@ -57,7 +57,6 @@ namespace dotnetCampus.FileDownloader
             get => _downloadedLength;
             internal set
             {
-                // 不支持越下载内容越小
                 _downloadedLength = value;
             }
         }
@@ -73,6 +72,6 @@ namespace dotnetCampus.FileDownloader
         /// <summary>
         /// 分段管理
         /// </summary>
-        public SegmentManager SegmentManager { set; get; }
+        public SegmentManager? SegmentManager { set; get; }
     }
 }

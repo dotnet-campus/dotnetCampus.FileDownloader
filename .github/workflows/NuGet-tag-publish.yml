@@ -25,7 +25,9 @@ jobs:
       run: dotnet TagToVersion -t ${{ github.ref }}
 
     - name: Build with dotnet
-      run: dotnet pack --configuration Release
+      run: |
+        dotnet build --configuration Release
+        dotnet pack --configuration Release
 
     - name: Install Nuget
       uses: nuget/setup-nuget@v1
@@ -39,4 +41,4 @@ jobs:
     - name: Push generated package to GitHub registry
       run: |
         nuget push .\bin\Release\*.nupkg -Source github -SkipDuplicate
-        nuget push .\bin\Release\*.nupkg -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NugetKey }} -NoSymbols 
+        nuget push .\bin\Release\*.nupkg -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NugetKey }}

@@ -1,13 +1,25 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace dotnetCampus.FileDownloader.Tool
+namespace dotnetCampus.FileDownloader
 {
     static class FileSizeFormatter
     {
+        /// <summary>
+        /// 获取字节数的格式化字符串
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="formatString"></param>
+        /// <returns></returns>
         public static string FormatSize(long bytes, string formatString = "{0:0.00}{1}")
             => FormatSize((double) bytes, formatString);
 
+        /// <summary>
+        /// 获取字节数的格式化字符串。因为可能存在“平均字节数”，所以支持小数
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="formatString"></param>
+        /// <returns></returns>
         public static string FormatSize(double bytes, string formatString = "{0:0.00}{1}")
         {
             int counter = 0;

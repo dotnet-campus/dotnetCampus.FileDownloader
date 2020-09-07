@@ -31,7 +31,7 @@ namespace dotnetCampus.FileDownloader.Tool
                      var progress = new Progress<DownloadProgress>();
 
                      var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
-                     await segmentFileDownloader.DownloadFile();
+                     await segmentFileDownloader.DownloadFileAsync();
 #endif
                      await Task.Delay(100);
                  });
@@ -52,66 +52,33 @@ namespace dotnetCampus.FileDownloader.Tool
 
                 var logger = loggerFactory.CreateLogger<SegmentFileDownloader>();
 
-                var progress = new Progress<DownloadProgress>();
+                using var progress = new FileDownloadSpeedProgress();
 
-                var obj = new object();
-                DownloadProgress downloadProgress = null;
-
-                progress.ProgressChanged += (sender, p) =>
+                progress.ProgressChanged += (sender, downloadProgress) =>
                 {
-                    lock (obj)
+                    Console.Clear();
+
+                    Console.WriteLine($"Download url = {option.Url}");
+                    Console.WriteLine($"Output = {output}");
+
+                    Console.WriteLine();
+
+                    Console.WriteLine(
+                        $"Process {downloadProgress.DownloadProcess} {downloadProgress.DownloadSpeed}");
+
+                    foreach (var downloadSegment in downloadProgress.DownloadProgress.GetCurrentDownloadSegmentList())
                     {
-                        downloadProgress = p;
+                        Console.WriteLine(downloadSegment);
                     }
                 };
-
-                bool finished = false;
-                long lastLength = 0;
-                DateTime lastTime = DateTime.Now;
-
-                _ = Task.Run(async () =>
-                {
-                    while (!finished)
-                    {
-                        lock (obj)
-                        {
-                            if (downloadProgress == null)
-                            {
-                                continue;
-                            }
-
-                            Console.Clear();
-
-                            Console.WriteLine($"Download url = {option.Url}");
-                            Console.WriteLine($"Output = {output}");
-
-                            Console.WriteLine(
-                                $"Process {downloadProgress.DownloadedLength * 100.0 / downloadProgress.FileLength:0.00}");
-                            Console.WriteLine($"{downloadProgress.DownloadedLength}/{downloadProgress.FileLength}");
-                            Console.WriteLine();
-
-                            Console.WriteLine($"{ FileSizeFormatter.FormatSize((downloadProgress.DownloadedLength - lastLength) * 1000.0 / (DateTime.Now - lastTime).TotalMilliseconds)}/s");
-
-                            lastLength = downloadProgress.DownloadedLength;
-                            lastTime = DateTime.Now;
-
-                            foreach (var downloadSegment in downloadProgress.GetCurrentDownloadSegmentList())
-                            {
-                                Console.WriteLine(downloadSegment);
-                            }
-                        }
-
-                        await Task.Delay(500);
-                    }
-                });
 
                 var file = new FileInfo(output);
                 var url = option.Url;
                 var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
 
-                await segmentFileDownloader.DownloadFile();
+                await segmentFileDownloader.DownloadFileAsync();
 
-                finished = true;
+                //finished = true;
             }
             catch (Exception e)
             {
