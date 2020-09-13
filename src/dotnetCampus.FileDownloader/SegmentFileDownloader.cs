@@ -162,12 +162,21 @@ namespace dotnetCampus.FileDownloader
         {
             for (var i = 0; !_isDisposed; i++)
             {
+                TimeSpan retryDelayTime = TimeSpan.FromMilliseconds(100);
+
                 try
                 {
                     var url = Url;
                     _logger.LogDebug("[GetWebResponseAsync] Create WebRequest. Retry Count {0}", i);
                     var webRequest = (HttpWebRequest)WebRequest.Create(url);
                     webRequest.Method = "GET";
+                    // 加上超时，支持弱网
+                    // Timeout设置的是从发出请求开始算起，到与服务器建立连接的时间
+                    // ReadWriteTimeout设置的是从建立连接开始，到下载数据完毕所历经的时间
+                    // 即使下载速度再慢，只有要在下载，也不能算超时
+                    // 如果下载 BufferLength 长度 默认 65535 字节时间超过 30 秒，基本上也断开也差不多
+                    webRequest.Timeout = (int) TimeSpan.FromSeconds(10).TotalMilliseconds;
+                    webRequest.ReadWriteTimeout = (int)TimeSpan.FromSeconds(30).TotalMilliseconds;
 
                     _logger.LogDebug("[GetWebResponseAsync] Enter action.");
                     action?.Invoke(webRequest);
@@ -176,9 +185,19 @@ namespace dotnetCampus.FileDownloader
                     _logger.LogDebug("[GetWebResponseAsync] Start GetResponseAsync.");
                     var response = await webRequest.GetResponseAsync();
                     stopwatch.Stop();
-                    _logger.LogDebug("[GetWebResponseAsync] Finish GetResponseAsync. Cost time {0} ms", stopwatch.ElapsedMilliseconds);
+                    _logger.LogDebug("[GetWebResponseAsync] Finish GetResponseAsync. Cost time {0} ms",
+                        stopwatch.ElapsedMilliseconds);
 
                     return response;
+                }
+                catch (System.Net.WebException e)
+                {
+                    // 如超时或 403 等服务器返回的错误，此时修改重试时间
+                    // $exception	{"The operation has timed out."}
+                    // $exception	{"The remote server returned an error: (403) Forbidden."}
+                    _logger.LogInformation($"第{i}次获取长度失败 {e}");
+
+                    retryDelayTime = TimeSpan.FromSeconds(1);
                 }
                 catch (InvalidCastException)
                 {
@@ -194,12 +213,11 @@ namespace dotnetCampus.FileDownloader
                 }
                 catch (Exception e)
                 {
-                    // +		$exception	{"The operation has timed out."}	System.Net.WebException
                     _logger.LogInformation($"第{i}次获取长度失败 {e}");
                 }
 
                 // 后续需要配置不断下降时间
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                await Task.Delay(retryDelayTime);
             }
 
             return null;
@@ -254,16 +272,18 @@ namespace dotnetCampus.FileDownloader
                     // 在下面代码放回去继续下载
                 }
 
-                // 下载比较快，尝试再分配一段下载
-                if (downloadSegment.RequirementDownloadPoint - downloadSegment.StartPoint > 1024 * 1024)
+                if (downloadSegment.Finished)
                 {
-                    // 如果当前下载的内容依然是长段的，也就是 RequirementDownloadPoint-StartPoint 长度比较大，那么下载完成后请求新的下载
-                    Download(SegmentManager.GetNewDownloadSegment());
+                    // 下载比较快，尝试再分配一段下载
+                    if (downloadSegment.RequirementDownloadPoint - downloadSegment.StartPoint > 1024 * 1024)
+                    {
+                        // 如果当前下载的内容依然是长段的，也就是 RequirementDownloadPoint-StartPoint 长度比较大，那么下载完成后请求新的下载
+                        Download(SegmentManager.GetNewDownloadSegment());
+                    }
                 }
-
-                // 如果当前这一段还没完成，那么放回去继续下载
-                if (!downloadSegment.Finished)
+                else
                 {
+                    // 如果当前这一段还没完成，那么放回去继续下载
                     Download(downloadSegment);
                 }
             }
