@@ -335,7 +335,9 @@ namespace dotnetCampus.FileDownloader
 
                 downloadSegment.Message = "Start ReadAsync";
                 _logger.LogDebug("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
-                var n = await responseStream.ReadAsync(buffer, 0, length);
+                using var cancellationTokenSource = new CancellationTokenSource(StepTimeOut);
+                // 设置了 WebRequest.Timeout 不能用来修改异步的方法，所以需要使用下面方法
+                var n = await responseStream.ReadAsync(buffer, 0, length, cancellationTokenSource.Token);
                 _logger.LogDebug("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
                 downloadSegment.Message = "Finish ReadAsync";
 
