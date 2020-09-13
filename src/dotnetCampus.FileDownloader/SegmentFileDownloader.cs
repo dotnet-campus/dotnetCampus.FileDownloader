@@ -194,6 +194,7 @@ namespace dotnetCampus.FileDownloader
                 }
                 catch (Exception e)
                 {
+                    // +		$exception	{"The operation has timed out."}	System.Net.WebException
                     _logger.LogInformation($"第{i}次获取长度失败 {e}");
                 }
 
@@ -246,17 +247,24 @@ namespace dotnetCampus.FileDownloader
                 }
                 catch (Exception e)
                 {
+                    // error System.IO.IOException:  Received an unexpected EOF or 0 bytes from the transport stream.
+
                     _logger.LogInformation(
                         $"Download {downloadSegment.StartPoint}-{downloadSegment.RequirementDownloadPoint} error {e}");
-
-                    // 下载失败了，那么放回去继续下载
-                    Download(downloadSegment);
+                    // 在下面代码放回去继续下载
                 }
 
                 // 下载比较快，尝试再分配一段下载
                 if (downloadSegment.RequirementDownloadPoint - downloadSegment.StartPoint > 1024 * 1024)
                 {
+                    // 如果当前下载的内容依然是长段的，也就是 RequirementDownloadPoint-StartPoint 长度比较大，那么下载完成后请求新的下载
                     Download(SegmentManager.GetNewDownloadSegment());
+                }
+
+                // 如果当前这一段还没完成，那么放回去继续下载
+                if (!downloadSegment.Finished)
+                {
+                    Download(downloadSegment);
                 }
             }
 
@@ -269,6 +277,7 @@ namespace dotnetCampus.FileDownloader
         /// <param name="response"></param>
         /// <param name="downloadSegment"></param>
         /// <returns></returns>
+        /// 这个方法如果触发异常，将会在上一层进行重试
         private async Task DownloadSegmentInner(WebResponse? response, DownloadSegment downloadSegment)
         {
             if (response == null)
@@ -291,14 +300,15 @@ namespace dotnetCampus.FileDownloader
                 var n = await responseStream.ReadAsync(buffer, 0, length);
                 _logger.LogDebug("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
 
-                if (n < 0)
+                if (n <= 0)
                 {
                     break;
                 }
 
                 LogDownloadSegment(downloadSegment);
 
-                _logger.LogDebug("[DownloadSegmentInner] QueueWrite. Start {0} Length {1}", downloadSegment.CurrentDownloadPoint, n);
+                _logger.LogDebug("[DownloadSegmentInner] QueueWrite. Start {0} Length {1}",
+                    downloadSegment.CurrentDownloadPoint, n);
                 FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
 
                 downloadSegment.DownloadedLength += n;

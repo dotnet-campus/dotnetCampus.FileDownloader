@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using dotnetCampus.FileDownloader.WPF.Model;
 using dotnetCampus.FileDownloader.WPF.Utils;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Debug;
 
 namespace dotnetCampus.FileDownloader.WPF
 {
@@ -15,7 +16,13 @@ namespace dotnetCampus.FileDownloader.WPF
     {
         public MainViewModel()
         {
-            var loggerFactory = LoggerFactory.Create(builder => { });
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddProvider(new DebugLoggerProvider());
+#if DEBUG
+                builder.SetMinimumLevel(LogLevel.Debug);
+#endif
+            });
 
             _loggerFactory = loggerFactory;
         }
@@ -80,7 +87,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
             // 后续优化多任务下载的时候的回收
             _ = Task.Delay(TimeSpan.FromSeconds(3))
-                .ContinueWith(_ => ((FileDownloaderSharedArrayPool) SharedArrayPool).Clean());
+                .ContinueWith(_ => ((FileDownloaderSharedArrayPool)SharedArrayPool).Clean());
         }
 
         private readonly ILoggerFactory _loggerFactory;
