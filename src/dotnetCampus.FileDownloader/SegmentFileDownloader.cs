@@ -165,12 +165,18 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     var url = Url;
+                    _logger.LogDebug("[GetWebResponseAsync] Create WebRequest. Retry Count {0}", i);
                     var webRequest = (HttpWebRequest)WebRequest.Create(url);
                     webRequest.Method = "GET";
 
+                    _logger.LogDebug("[GetWebResponseAsync] Enter action.");
                     action?.Invoke(webRequest);
 
+                    var stopwatch = Stopwatch.StartNew();
+                    _logger.LogDebug("[GetWebResponseAsync] Start GetResponseAsync.");
                     var response = await webRequest.GetResponseAsync();
+                    stopwatch.Stop();
+                    _logger.LogDebug("[GetWebResponseAsync] Finish GetResponseAsync. Cost time {0} ms", stopwatch.ElapsedMilliseconds);
 
                     return response;
                 }
@@ -277,8 +283,13 @@ namespace dotnetCampus.FileDownloader
 
             while (!downloadSegment.Finished)
             {
+                _logger.LogDebug("[DownloadSegmentInner] Start Rent Array. {0}", downloadSegment);
                 var buffer = SharedArrayPool.Rent(length);
+                _logger.LogDebug("[DownloadSegmentInner] Finish Rent Array. {0}", downloadSegment);
+
+                _logger.LogDebug("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
                 var n = await responseStream.ReadAsync(buffer, 0, length);
+                _logger.LogDebug("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
 
                 if (n < 0)
                 {
@@ -287,6 +298,7 @@ namespace dotnetCampus.FileDownloader
 
                 LogDownloadSegment(downloadSegment);
 
+                _logger.LogDebug("[DownloadSegmentInner] QueueWrite. Start {0} Length {1}", downloadSegment.CurrentDownloadPoint, n);
                 FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
 
                 downloadSegment.DownloadedLength += n;
@@ -308,6 +320,7 @@ namespace dotnetCampus.FileDownloader
 
         private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
         {
+            _logger.LogDebug("[Download] Enqueue Download. {0}", downloadSegment);
             DownloadDataList.Enqueue(new DownloadData(webResponse, downloadSegment));
         }
 
