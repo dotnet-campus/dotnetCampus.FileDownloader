@@ -174,9 +174,9 @@ namespace dotnetCampus.FileDownloader
                     // Timeout设置的是从发出请求开始算起，到与服务器建立连接的时间
                     // ReadWriteTimeout设置的是从建立连接开始，到下载数据完毕所历经的时间
                     // 即使下载速度再慢，只有要在下载，也不能算超时
-                    // 如果下载 BufferLength 长度 默认 65535 字节时间超过 30 秒，基本上也断开也差不多
+                    // 如果下载 BufferLength 长度 默认 65535 字节时间超过 10 秒，基本上也断开也差不多
                     webRequest.Timeout = (int) TimeSpan.FromSeconds(10).TotalMilliseconds;
-                    webRequest.ReadWriteTimeout = (int)TimeSpan.FromSeconds(30).TotalMilliseconds;
+                    webRequest.ReadWriteTimeout = (int)TimeSpan.FromSeconds(10).TotalMilliseconds;
 
                     _logger.LogDebug("[GetWebResponseAsync] Enter action.");
                     action?.Invoke(webRequest);
