@@ -74,6 +74,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
             var segmentFileDownloader = new SegmentFileDownloader(url, new FileInfo(file), logger, progress,
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
+            CurrentSegmentFileDownloader = segmentFileDownloader;
             await segmentFileDownloader.DownloadFileAsync();
 
             // 下载完成逻辑
@@ -89,6 +90,8 @@ namespace dotnetCampus.FileDownloader.WPF
             _ = Task.Delay(TimeSpan.FromSeconds(3))
                 .ContinueWith(_ => ((FileDownloaderSharedArrayPool)SharedArrayPool).Clean());
         }
+
+        private SegmentFileDownloader? CurrentSegmentFileDownloader { set; get; }
 
         private readonly ILoggerFactory _loggerFactory;
 
