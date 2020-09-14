@@ -30,6 +30,8 @@ namespace dotnetCampus.FileDownloader
 
         public int Number { get; set; }
 
+        public string? Message { get; set; }
+
         /// <summary>
         /// 需要下载到的点
         /// </summary>
@@ -45,7 +47,7 @@ namespace dotnetCampus.FileDownloader
 
         public override string ToString()
         {
-            return $"[{Number:00}] {DownloadedLength * 100.0 / (RequirementDownloadPoint - StartPoint):0.00} Start={StartPoint} Require={RequirementDownloadPoint} Download={DownloadedLength}/{RequirementDownloadPoint - StartPoint}";
+            return $"[{Number:00}] Progress {DownloadedLength * 100.0 / (RequirementDownloadPoint - StartPoint):0.00} Start={StartPoint} Require={RequirementDownloadPoint} Download={DownloadedLength}/{RequirementDownloadPoint - StartPoint} {Message}";
         }
 
         /// <summary>
