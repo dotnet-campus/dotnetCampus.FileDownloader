@@ -23,13 +23,15 @@ namespace dotnetCampus.FileDownloader
         /// <param name="progress">下载进度</param>
         /// <param name="sharedArrayPool">共享缓存数组池，默认使用 ArrayPool 池</param>
         /// <param name="bufferLength">缓存的数组长度，默认是 65535 的长度</param>
+        /// <param name="stepTimeOut">每一步 每一分段下载超时时间 默认 10 秒</param>
         public SegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader>? logger = null,
             IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
-            int bufferLength = ushort.MaxValue)
+            int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null)
         {
             _logger = logger ?? new DebugSegmentFileDownloaderLogger();
             _progress = progress ?? new Progress<DownloadProgress>();
             SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
+            StepTimeOut = stepTimeOut ?? TimeSpan.FromSeconds(10);
 
             if (string.IsNullOrEmpty(url))
             {
@@ -158,21 +160,55 @@ namespace dotnetCampus.FileDownloader
             return (response, contentLength);
         }
 
+        private int _idGenerator;
+
+        /// <summary>
+        /// 每一次分段下载的超时时间，默认10秒
+        /// </summary>
+        public TimeSpan StepTimeOut { get; }
+
         private async Task<WebResponse?> GetWebResponseAsync(Action<HttpWebRequest>? action = null)
         {
+            var id = Interlocked.Increment(ref _idGenerator);
+
             for (var i = 0; !_isDisposed; i++)
             {
+                TimeSpan retryDelayTime = TimeSpan.FromMilliseconds(100);
+
                 try
                 {
                     var url = Url;
+                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
                     var webRequest = (HttpWebRequest)WebRequest.Create(url);
                     webRequest.Method = "GET";
+                    // 加上超时，支持弱网
+                    // Timeout设置的是从发出请求开始算起，到与服务器建立连接的时间
+                    // ReadWriteTimeout设置的是从建立连接开始，到下载数据完毕所历经的时间
+                    // 即使下载速度再慢，只有要在下载，也不能算超时
+                    // 如果下载 BufferLength 长度 默认 65535 字节时间超过 10 秒，基本上也断开也差不多
+                    webRequest.Timeout = (int)StepTimeOut.TotalMilliseconds;
+                    webRequest.ReadWriteTimeout = (int)StepTimeOut.TotalMilliseconds;
 
+                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Enter action.", id);
                     action?.Invoke(webRequest);
 
+                    var stopwatch = Stopwatch.StartNew();
+                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
                     var response = await webRequest.GetResponseAsync();
+                    stopwatch.Stop();
+                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
+                        stopwatch.ElapsedMilliseconds);
 
                     return response;
+                }
+                catch (System.Net.WebException e)
+                {
+                    // 如超时或 403 等服务器返回的错误，此时修改重试时间
+                    // $exception	{"The operation has timed out."}
+                    // $exception	{"The remote server returned an error: (403) Forbidden."}
+                    _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
+
+                    retryDelayTime = TimeSpan.FromSeconds(1);
                 }
                 catch (InvalidCastException)
                 {
@@ -188,11 +224,12 @@ namespace dotnetCampus.FileDownloader
                 }
                 catch (Exception e)
                 {
-                    _logger.LogInformation($"第{i}次获取长度失败 {e}");
+                    _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
                 }
 
                 // 后续需要配置不断下降时间
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                _logger.LogDebug("[GetWebResponseAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
+                await Task.Delay(retryDelayTime);
             }
 
             return null;
@@ -232,7 +269,9 @@ namespace dotnetCampus.FileDownloader
                 _logger.LogInformation(
                     $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
+                downloadSegment.Message = "Start GetWebResponse";
                 using var response = data.WebResponse ?? await GetWebResponse(downloadSegment);
+                downloadSegment.Message = "Finish GetWebResponse";
 
                 try
                 {
@@ -240,17 +279,26 @@ namespace dotnetCampus.FileDownloader
                 }
                 catch (Exception e)
                 {
+                    // error System.IO.IOException:  Received an unexpected EOF or 0 bytes from the transport stream.
+
                     _logger.LogInformation(
                         $"Download {downloadSegment.StartPoint}-{downloadSegment.RequirementDownloadPoint} error {e}");
-
-                    // 下载失败了，那么放回去继续下载
-                    Download(downloadSegment);
+                    // 在下面代码放回去继续下载
                 }
 
-                // 下载比较快，尝试再分配一段下载
-                if (downloadSegment.RequirementDownloadPoint - downloadSegment.StartPoint > 1024 * 1024)
+                if (downloadSegment.Finished)
                 {
-                    Download(SegmentManager.GetNewDownloadSegment());
+                    // 下载比较快，尝试再分配一段下载
+                    if (downloadSegment.RequirementDownloadPoint - downloadSegment.StartPoint > 1024 * 1024)
+                    {
+                        // 如果当前下载的内容依然是长段的，也就是 RequirementDownloadPoint-StartPoint 长度比较大，那么下载完成后请求新的下载
+                        Download(SegmentManager.GetNewDownloadSegment());
+                    }
+                }
+                else
+                {
+                    // 如果当前这一段还没完成，那么放回去继续下载
+                    Download(downloadSegment);
                 }
             }
 
@@ -263,6 +311,7 @@ namespace dotnetCampus.FileDownloader
         /// <param name="response"></param>
         /// <param name="downloadSegment"></param>
         /// <returns></returns>
+        /// 这个方法如果触发异常，将会在上一层进行重试
         private async Task DownloadSegmentInner(WebResponse? response, DownloadSegment downloadSegment)
         {
             if (response == null)
@@ -271,22 +320,37 @@ namespace dotnetCampus.FileDownloader
                 throw new WebResponseException("Can not response");
             }
 
+            downloadSegment.Message = "Start GetResponseStream";
             await using var responseStream = response.GetResponseStream();
+            downloadSegment.Message = "Finish GetResponseStream";
+
             int length = BufferLength;
             Debug.Assert(responseStream != null, nameof(responseStream) + " != null");
 
             while (!downloadSegment.Finished)
             {
+                _logger.LogDebug("[DownloadSegmentInner] Start Rent Array. {0}", downloadSegment);
                 var buffer = SharedArrayPool.Rent(length);
-                var n = await responseStream.ReadAsync(buffer, 0, length);
+                _logger.LogDebug("[DownloadSegmentInner] Finish Rent Array. {0}", downloadSegment);
 
-                if (n < 0)
+                downloadSegment.Message = "Start ReadAsync";
+                _logger.LogDebug("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
+                using var cancellationTokenSource = new CancellationTokenSource(StepTimeOut);
+                // 设置了 WebRequest.Timeout 不能用来修改异步的方法，所以需要使用下面方法
+                var n = await responseStream.ReadAsync(buffer, 0, length, cancellationTokenSource.Token);
+                _logger.LogDebug("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
+                downloadSegment.Message = "Finish ReadAsync";
+
+                if (n <= 0)
                 {
                     break;
                 }
 
                 LogDownloadSegment(downloadSegment);
 
+                downloadSegment.Message = "QueueWrite";
+                _logger.LogDebug("[DownloadSegmentInner] QueueWrite. Start {0} Length {1}",
+                    downloadSegment.CurrentDownloadPoint, n);
                 FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
 
                 downloadSegment.DownloadedLength += n;
@@ -308,6 +372,7 @@ namespace dotnetCampus.FileDownloader
 
         private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
         {
+            _logger.LogDebug("[Download] Enqueue Download. {0}", downloadSegment);
             DownloadDataList.Enqueue(new DownloadData(webResponse, downloadSegment));
         }
 

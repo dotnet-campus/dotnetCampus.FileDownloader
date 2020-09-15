@@ -111,6 +111,7 @@ namespace dotnetCampus.FileDownloader
 
         public void RegisterDownloadSegment(DownloadSegment downloadSegment)
         {
+            downloadSegment.Message = "Start RegisterDownloadSegment";
             lock (_locker)
             {
                 // 找到顺序
@@ -130,6 +131,8 @@ namespace dotnetCampus.FileDownloader
 
                 downloadSegment.SegmentManager = this;
             }
+
+            downloadSegment.Message = "Finish RegisterDownloadSegment";
         }
 
         /// <summary>
