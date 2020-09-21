@@ -85,7 +85,7 @@ namespace dotnetCampus.FileDownloader
         private TaskCompletionSource<bool> FileDownloadTask { get; } = new TaskCompletionSource<bool>();
         private SegmentManager SegmentManager { set; get; } = null!;
         private int _idGenerator;
-        private int MaxThread = 10;
+        private int _maxThread = 10;
 
         /// <summary>
         /// 每一次分段下载的超时时间，默认10秒
@@ -164,13 +164,13 @@ namespace dotnetCampus.FileDownloader
                 // 多创建几个线程下载
                 //threadCount = 10;
 
-                for (var i = 0; i < MaxThread; i++)
+                for (var i = 0; i < _maxThread; i++)
                 {
                     Download(SegmentManager.GetNewDownloadSegment());
                 }
             }
 
-            for (var i = 0; i < MaxThread; i++)
+            for (var i = 0; i < _maxThread; i++)
             {
                 _ = Task.Run(DownloadTask);
             }
