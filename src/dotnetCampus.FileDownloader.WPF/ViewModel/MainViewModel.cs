@@ -18,6 +18,7 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             var loggerFactory = LoggerFactory.Create(builder =>
             {
+                //如果Debug模式下，速度不能达到极限，可以屏蔽下面代码，使用原生的Debug.WriteLine();
                 builder.AddProvider(new DebugLoggerProvider());
 #if DEBUG
                 builder.SetMinimumLevel(LogLevel.Debug);

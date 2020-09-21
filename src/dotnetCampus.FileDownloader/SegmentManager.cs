@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace dotnetCampus.FileDownloader
@@ -53,7 +54,30 @@ namespace dotnetCampus.FileDownloader
                 return DownloadSegmentList.TrueForAll(segment => segment.Finished);
             }
         }
-
+        public void GetDownloadSegmentStatus(out DownloadSegment? segment, out int runCount, out double maxReportTime)
+        {
+            lock (_locker)
+            {
+                int maxCount = DownloadSegmentList.Count;
+                maxReportTime = 0;
+                runCount = 0;
+                segment = null;
+                for (int i = 0; i < maxCount; i++)
+                {
+                    DownloadSegment downloadSegment = DownloadSegmentList[i];
+                    if (downloadSegment.LoadingState == DownloadingState.Runing)
+                    {
+                        double reportTime = (DateTime.Now - downloadSegment.LastDownTime).TotalMilliseconds;
+                        if (reportTime >= maxReportTime)
+                        {
+                            maxReportTime = reportTime;
+                            segment = downloadSegment;
+                        }
+                        runCount++;
+                    }
+                }
+            }
+        }
         private DownloadSegment? NewDownloadSegment()
         {
             if (DownloadSegmentList.Count == 0)
