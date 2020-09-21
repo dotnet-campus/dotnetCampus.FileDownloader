@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using dotnetCampus.Threading;
 
 namespace dotnetCampus.FileDownloader
 {
