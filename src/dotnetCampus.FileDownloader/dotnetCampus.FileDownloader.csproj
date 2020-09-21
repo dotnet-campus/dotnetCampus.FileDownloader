@@ -31,12 +31,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="dotnetCampus.AsyncWorkerCollection.Source" Version="1.1.6">
+        <PackageReference Include="dotnetCampus.AsyncWorkerCollection.Source" Version="1.2.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
 
-        <PackageReference Include="dotnetCampus.SourceYard" Version="0.1.19257-alpha">
+        <PackageReference Include="dotnetCampus.SourceYard" Version="0.1.19353-alpha">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

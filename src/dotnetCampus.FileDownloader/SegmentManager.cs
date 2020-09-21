@@ -18,6 +18,9 @@ namespace dotnetCampus.FileDownloader
             FileLength = fileLength;
         }
 
+        /// <summary>
+        /// 下载文件长度
+        /// </summary>
         public long FileLength { get; }
 
         /// <summary>
@@ -40,6 +43,10 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
+        /// <summary>
+        /// 是否下载完成
+        /// </summary>
+        /// <returns></returns>
         public bool IsFinished()
         {
             lock (_locker)
@@ -133,6 +140,10 @@ namespace dotnetCampus.FileDownloader
             return null;
         }
 
+        /// <summary>
+        /// 注册下载段
+        /// </summary>
+        /// <param name="downloadSegment"></param>
         public void RegisterDownloadSegment(DownloadSegment downloadSegment)
         {
             downloadSegment.Message = "Start RegisterDownloadSegment";
@@ -171,6 +182,10 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
+        /// <summary>
+        /// 获取下载完成的文件长度
+        /// </summary>
+        /// <returns></returns>
         public long GetDownloadedLength()
         {
             lock (_locker)

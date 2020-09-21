@@ -264,7 +264,7 @@ namespace dotnetCampus.FileDownloader
 
                     return response;
                 }
-                catch (System.Net.WebException e)
+                catch (WebException e)
                 {
                     // 如超时或 403 等服务器返回的错误，此时修改重试时间
                     // $exception	{"The operation has timed out."}

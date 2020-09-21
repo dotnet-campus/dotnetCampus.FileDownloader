@@ -15,21 +15,38 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         public event EventHandler SegmentChanged = delegate { };
 
+        /// <summary>
+        /// 创建下载的段
+        /// </summary>
         public DownloadSegment()
         {
             StartPoint = 0;
         }
 
+        /// <summary>
+        /// 创建下载的段
+        /// </summary>
+        /// <param name="startPoint"></param>
+        /// <param name="requirementDownloadPoint"></param>
         public DownloadSegment(long startPoint, long requirementDownloadPoint)
         {
             StartPoint = startPoint;
             _requirementDownloadPoint = requirementDownloadPoint;
         }
 
+        /// <summary>
+        /// 下载起始点
+        /// </summary>
         public long StartPoint { get; }
 
+        /// <summary>
+        /// 当前段的序号，仅用于调试
+        /// </summary>
         public int Number { get; set; }
 
+        /// <summary>
+        /// 当前的信息，仅用于调试
+        /// </summary>
         public string? Message { get; set; }
         public DateTime LastDownTime { get; set; } = DateTime.Now;
         public LoadingState LoadingState { get; set; } = LoadingState.Pause;
@@ -46,6 +63,7 @@ namespace dotnetCampus.FileDownloader
             get => _requirementDownloadPoint;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"[{Number:00}] Progress {DownloadedLength * 100.0 / (RequirementDownloadPoint - StartPoint):0.00} Start={StartPoint} Require={RequirementDownloadPoint} Download={DownloadedLength}/{RequirementDownloadPoint - StartPoint} {Message} Time={(DateTime.Now - LastDownTime).TotalMilliseconds}";
@@ -70,6 +88,9 @@ namespace dotnetCampus.FileDownloader
         /// 需要处理多线程访问
         public long CurrentDownloadPoint => StartPoint + DownloadedLength;
 
+        /// <summary>
+        /// 是否下载完成
+        /// </summary>
         public bool Finished => CurrentDownloadPoint >= RequirementDownloadPoint;
 
         /// <summary>
