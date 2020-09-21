@@ -70,9 +70,8 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         private DateTime LastTime { get; set; } = DateTime.Now;
         /// <summary>
-        /// 自旋锁
+        /// 默认启用3个线程
         /// </summary>
-        private SpinLock slock = new SpinLock(false);
         private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(3);
         private readonly ILogger<SegmentFileDownloader> _logger;
         private readonly IProgress<DownloadProgress> _progress;
@@ -84,7 +83,6 @@ namespace dotnetCampus.FileDownloader
         private FileStream FileStream { set; get; } = null!;
 
         private TaskCompletionSource<bool> FileDownloadTask { get; } = new TaskCompletionSource<bool>();
-        //private TaskScheduler _taskScheduler = TaskScheduler.Current;
         private SegmentManager SegmentManager { set; get; } = null!;
         private int _idGenerator;
         private int MaxThread = 10;
@@ -105,46 +103,20 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         /// <param name="downloadSegment"></param>
         /// <returns></returns>
-        public void ControlSwitch(DownloadSegment downloadSegment)
+        private void ControlSwitch(DownloadSegment downloadSegment)
         {
-            //if (downloadSegment.LoadingState == LoadingState.Stop)
-            //{
-            //    DownReleaseOnce();
-            //}//小于3秒维护现状
+            //小于3秒维护现状
             if ((DateTime.Now - LastTime).TotalSeconds > 3)
             {
                 //变速器3秒为一周期
                 LastTime = DateTime.Now;
-                LockSetValue(() =>
-                {                    
+                lock (downloadSegment)
+                {
                     SegmentManager.GetDownloadSegmentStatus(out DownloadSegment? segment, out int runCount, out double maxReportTime);
                     int waitCount = DownloadDataList.Count;
                     Debug.WriteLine($"当前等待数量：{waitCount},待命最大响应时间：{maxReportTime},运行数量：{runCount}");
-                    if (maxReportTime > 10 * 1000 && segment != null && runCount > 1) segment.LoadingState = LoadingState.Pause;
+                    if (maxReportTime > 10 * 1000 && segment != null && runCount > 1) segment.LoadingState = DownloadingState.Pause;
                     else if (maxReportTime < 600 && waitCount > 0 || runCount < 1) DownReleaseOnce();
-                    //if (maxReportTime < 1000 && waitCount == 0 && runCount < MaxThread)
-                    //{
-                    //    Download(SegmentManager.GetNewDownloadSegment());
-                    //    DownReleaseOnce();
-                    //    //Task.Factory.StartNew(DownloadTask, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
-                    //}
-                });
-                //porter.LastDownTime = DateTime.Now;
-            }
-        }
-        private void LockSetValue(Action action)
-        {
-            if (action != null)
-            {
-                bool lockTaken = false;
-                try
-                {
-                    slock.Enter(ref lockTaken);
-                    action();
-                }
-                finally
-                {
-                    if (lockTaken) slock.Exit(false);
                 }
             }
         }
@@ -329,7 +301,7 @@ namespace dotnetCampus.FileDownloader
                 }
 
                 var downloadSegment = data.DownloadSegment;
-                downloadSegment.LoadingState = LoadingState.Runing;
+                downloadSegment.LoadingState = DownloadingState.Runing;
 
                 _logger.LogInformation(
                     $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
@@ -353,7 +325,7 @@ namespace dotnetCampus.FileDownloader
 
                 if (downloadSegment.Finished)
                 {
-                    downloadSegment.LoadingState = LoadingState.Stop;
+                    downloadSegment.LoadingState = DownloadingState.Finished;
                     // 下载比较快，尝试再分配一段下载
                     if (downloadSegment.RequirementDownloadPoint - downloadSegment.StartPoint > 1024 * 1024)
                     {
@@ -426,11 +398,10 @@ namespace dotnetCampus.FileDownloader
                 _progress.Report(new DownloadProgress(SegmentManager));
                 //控制开关，如果下载阻塞就先暂停
                 ControlSwitch(downloadSegment);
-                if (downloadSegment.LoadingState == LoadingState.Pause)
+                if (downloadSegment.LoadingState == DownloadingState.Pause)
                 {
                     break;
                 }
-
                 if (downloadSegment.Finished)
                 {                    
                     break;

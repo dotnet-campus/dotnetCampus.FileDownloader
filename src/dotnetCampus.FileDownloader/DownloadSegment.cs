@@ -49,7 +49,7 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         public string? Message { get; set; }
         public DateTime LastDownTime { get; set; } = DateTime.Now;
-        public LoadingState LoadingState { get; set; } = LoadingState.Pause;
+        public DownloadingState LoadingState { get; set; } = DownloadingState.Pause;
         /// <summary>
         /// 需要下载到的点
         /// </summary>
@@ -101,10 +101,10 @@ namespace dotnetCampus.FileDownloader
     /// <summary>
     /// 下载状态
     /// </summary>
-    public enum LoadingState
+    public enum DownloadingState
     {
         Runing = 1,
         Pause = 0,
-        Stop = -1
+        Finished = -1
     }
 }
