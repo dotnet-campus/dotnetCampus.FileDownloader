@@ -31,7 +31,8 @@ namespace dotnetCampus.FileDownloader
         public int Number { get; set; }
 
         public string? Message { get; set; }
-
+        public DateTime LastDownTime { get; set; } = DateTime.Now;
+        public LoadingState LoadingState { get; set; } = LoadingState.Pause;
         /// <summary>
         /// 需要下载到的点
         /// </summary>
@@ -47,7 +48,7 @@ namespace dotnetCampus.FileDownloader
 
         public override string ToString()
         {
-            return $"[{Number:00}] Progress {DownloadedLength * 100.0 / (RequirementDownloadPoint - StartPoint):0.00} Start={StartPoint} Require={RequirementDownloadPoint} Download={DownloadedLength}/{RequirementDownloadPoint - StartPoint} {Message}";
+            return $"[{Number:00}] Progress {DownloadedLength * 100.0 / (RequirementDownloadPoint - StartPoint):0.00} Start={StartPoint} Require={RequirementDownloadPoint} Download={DownloadedLength}/{RequirementDownloadPoint - StartPoint} {Message} Time={(DateTime.Now - LastDownTime).TotalMilliseconds}";
         }
 
         /// <summary>
@@ -75,5 +76,14 @@ namespace dotnetCampus.FileDownloader
         /// 分段管理
         /// </summary>
         public SegmentManager? SegmentManager { set; get; }
+    }
+    /// <summary>
+    /// 下载状态
+    /// </summary>
+    public enum LoadingState
+    {
+        Runing = 1,
+        Pause = 0,
+        Stop = -1
     }
 }

@@ -60,12 +60,94 @@ namespace dotnetCampus.FileDownloader
         /// 下载链接
         /// </summary>
         public string Url { get; }
-
+        private AsyncQueue<DownloadData> DownloadDataList { get; } = new AsyncQueue<DownloadData>();
         /// <summary>
         /// 下载的文件
         /// </summary>
         public FileInfo File { get; }
+        /// <summary>
+        /// 定时检测的最后时间
+        /// </summary>
+        private DateTime LastTime { get; set; } = DateTime.Now;
+        /// <summary>
+        /// 自旋锁
+        /// </summary>
+        private SpinLock slock = new SpinLock(false);
+        private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(3);
+        private readonly ILogger<SegmentFileDownloader> _logger;
+        private readonly IProgress<DownloadProgress> _progress;
 
+        private bool _isDisposed;
+
+        private IRandomFileWriter FileWriter { set; get; } = null!;
+
+        private FileStream FileStream { set; get; } = null!;
+
+        private TaskCompletionSource<bool> FileDownloadTask { get; } = new TaskCompletionSource<bool>();
+        //private TaskScheduler _taskScheduler = TaskScheduler.Current;
+        private SegmentManager SegmentManager { set; get; } = null!;
+        private int _idGenerator;
+        private int MaxThread = 10;
+
+        /// <summary>
+        /// 每一次分段下载的超时时间，默认10秒
+        /// </summary>
+        public TimeSpan StepTimeOut { get; }
+        private void DownReleaseOnce()
+        {
+            if (DownloadDataList.Count > 0)
+            {
+                if (semaphoreSlim.CurrentCount == 0) semaphoreSlim.Release();
+            }
+        }
+        /// <summary>
+        /// 网速控制开关
+        /// </summary>
+        /// <param name="downloadSegment"></param>
+        /// <returns></returns>
+        public void ControlSwitch(DownloadSegment downloadSegment)
+        {
+            //if (downloadSegment.LoadingState == LoadingState.Stop)
+            //{
+            //    DownReleaseOnce();
+            //}//小于3秒维护现状
+            if ((DateTime.Now - LastTime).TotalSeconds > 3)
+            {
+                //变速器3秒为一周期
+                LastTime = DateTime.Now;
+                LockSetValue(() =>
+                {                    
+                    SegmentManager.GetDownloadSegmentStatus(out DownloadSegment? segment, out int runCount, out double maxReportTime);
+                    int waitCount = DownloadDataList.Count;
+                    Debug.WriteLine($"当前等待数量：{waitCount},待命最大响应时间：{maxReportTime},运行数量：{runCount}");
+                    if (maxReportTime > 10 * 1000 && segment != null && runCount > 1) segment.LoadingState = LoadingState.Pause;
+                    else if (maxReportTime < 600 && waitCount > 0 || runCount < 1) DownReleaseOnce();
+                    //if (maxReportTime < 1000 && waitCount == 0 && runCount < MaxThread)
+                    //{
+                    //    Download(SegmentManager.GetNewDownloadSegment());
+                    //    DownReleaseOnce();
+                    //    //Task.Factory.StartNew(DownloadTask, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
+                    //}
+                });
+                //porter.LastDownTime = DateTime.Now;
+            }
+        }
+        private void LockSetValue(Action action)
+        {
+            if (action != null)
+            {
+                bool lockTaken = false;
+                try
+                {
+                    slock.Enter(ref lockTaken);
+                    action();
+                }
+                finally
+                {
+                    if (lockTaken) slock.Exit(false);
+                }
+            }
+        }
         /// <summary>
         /// 开始下载文件
         /// </summary>
@@ -103,20 +185,20 @@ namespace dotnetCampus.FileDownloader
 
             var supportSegment = await TryDownloadLast(contentLength);
 
-            var threadCount = 1;
+            //var threadCount = 1;
 
             if (supportSegment)
             {
                 // 多创建几个线程下载
-                threadCount = 10;
+                //threadCount = 10;
 
-                for (var i = 0; i < threadCount; i++)
+                for (var i = 0; i < MaxThread; i++)
                 {
                     Download(SegmentManager.GetNewDownloadSegment());
                 }
             }
 
-            for (var i = 0; i < threadCount; i++)
+            for (var i = 0; i < MaxThread; i++)
             {
                 _ = Task.Run(DownloadTask);
             }
@@ -124,19 +206,7 @@ namespace dotnetCampus.FileDownloader
             await FileDownloadTask.Task;
         }
 
-        private readonly ILogger<SegmentFileDownloader> _logger;
-        private readonly IProgress<DownloadProgress> _progress;
-
-        private bool _isDisposed;
-
-        private IRandomFileWriter FileWriter { set; get; } = null!;
-
-        private FileStream FileStream { set; get; } = null!;
-
-        private TaskCompletionSource<bool> FileDownloadTask { get; } = new TaskCompletionSource<bool>();
-
-        private SegmentManager SegmentManager { set; get; } = null!;
-
+       
         /// <summary>
         /// 获取整个下载的长度
         /// </summary>
@@ -159,13 +229,6 @@ namespace dotnetCampus.FileDownloader
 
             return (response, contentLength);
         }
-
-        private int _idGenerator;
-
-        /// <summary>
-        /// 每一次分段下载的超时时间，默认10秒
-        /// </summary>
-        public TimeSpan StepTimeOut { get; }
 
         private async Task<WebResponse?> GetWebResponseAsync(Action<HttpWebRequest>? action = null)
         {
@@ -256,6 +319,7 @@ namespace dotnetCampus.FileDownloader
         {
             while (!SegmentManager.IsFinished())
             {
+                await semaphoreSlim.WaitAsync();
                 var data = await DownloadDataList.DequeueAsync();
 
                 // 没有内容了
@@ -265,6 +329,7 @@ namespace dotnetCampus.FileDownloader
                 }
 
                 var downloadSegment = data.DownloadSegment;
+                downloadSegment.LoadingState = LoadingState.Runing;
 
                 _logger.LogInformation(
                     $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
@@ -288,12 +353,14 @@ namespace dotnetCampus.FileDownloader
 
                 if (downloadSegment.Finished)
                 {
+                    downloadSegment.LoadingState = LoadingState.Stop;
                     // 下载比较快，尝试再分配一段下载
                     if (downloadSegment.RequirementDownloadPoint - downloadSegment.StartPoint > 1024 * 1024)
                     {
                         // 如果当前下载的内容依然是长段的，也就是 RequirementDownloadPoint-StartPoint 长度比较大，那么下载完成后请求新的下载
                         Download(SegmentManager.GetNewDownloadSegment());
                     }
+                    DownReleaseOnce();
                 }
                 else
                 {
@@ -337,6 +404,7 @@ namespace dotnetCampus.FileDownloader
                 _logger.LogDebug("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
                 using var cancellationTokenSource = new CancellationTokenSource(StepTimeOut);
                 // 设置了 WebRequest.Timeout 不能用来修改异步的方法，所以需要使用下面方法
+                downloadSegment.LastDownTime = DateTime.Now;
                 var n = await responseStream.ReadAsync(buffer, 0, length, cancellationTokenSource.Token);
                 _logger.LogDebug("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
                 downloadSegment.Message = "Finish ReadAsync";
@@ -356,9 +424,15 @@ namespace dotnetCampus.FileDownloader
                 downloadSegment.DownloadedLength += n;
 
                 _progress.Report(new DownloadProgress(SegmentManager));
+                //控制开关，如果下载阻塞就先暂停
+                ControlSwitch(downloadSegment);
+                if (downloadSegment.LoadingState == LoadingState.Pause)
+                {
+                    break;
+                }
 
                 if (downloadSegment.Finished)
-                {
+                {                    
                     break;
                 }
             }
@@ -385,8 +459,6 @@ namespace dotnetCampus.FileDownloader
 
             Download(null, downloadSegment);
         }
-
-        private AsyncQueue<DownloadData> DownloadDataList { get; } = new AsyncQueue<DownloadData>();
 
         private async Task FinishDownload()
         {
