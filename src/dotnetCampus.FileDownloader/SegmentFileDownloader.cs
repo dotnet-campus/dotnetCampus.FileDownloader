@@ -94,6 +94,11 @@ namespace dotnetCampus.FileDownloader
         private TimeSpan ControlDelayTime { get; } = TimeSpan.FromSeconds(3);
 
         /// <summary>
+        /// 最大线程数量
+        /// </summary>
+        private int MaxThreadCount { get; } = 10;
+
+        /// <summary>
         /// 网速控制开关
         /// </summary>
         /// <returns></returns>
@@ -109,7 +114,7 @@ namespace dotnetCampus.FileDownloader
                 var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
 
-                _logger.LogDebug("当前等待数量：{0},待命最大响应时间：{1},运行数量：{2}", waitCount, maxReportTime, runCount);
+                _logger.LogDebug("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2}", waitCount, maxReportTime, runCount);
 
                 if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
                 {
@@ -122,7 +127,12 @@ namespace dotnetCampus.FileDownloader
                     // 速度非常快，尝试再开线程，或者当前没有在进行的任务
                     // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
                     _logger.LogDebug("ControlSwitch StartDownloadTask");
-                    StartDownloadTask();
+
+                    // 这里不需要线程安全，如果刚好全部线程都在退出，等待 ControlDelayTime 再次创建
+                    if (_threadCount < MaxThreadCount)
+                    {
+                        StartDownloadTask();
+                    }
                 }
 
                 _logger.LogDebug("Finish ControlSwitch");
@@ -136,8 +146,17 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         private void StartDownloadTask()
         {
-            _ = Task.Run(DownloadTask);
+            _ = Task.Run(DownloadTaskInner);
+
+            async Task DownloadTaskInner()
+            {
+                Interlocked.Increment(ref _threadCount);
+                await DownloadTask();
+                Interlocked.Decrement(ref _threadCount);
+            }
         }
+
+        private int _threadCount;
 
         /// <summary>
         /// 开始下载文件
@@ -176,12 +195,12 @@ namespace dotnetCampus.FileDownloader
 
             var supportSegment = await TryDownloadLast(contentLength);
 
-            int threadCount = 10;
+            int threadCount;
 
             if (supportSegment)
             {
                 // 先根据文件的大小，大概是 1M 让一个线程下载，至少需要开两个线程，最多是 10 个线程
-                threadCount = Math.Max(Math.Min(2, (int) (contentLength / 1024 / 1024)), 10);
+                threadCount = Math.Max(Math.Min(2, (int) (contentLength / 1024 / 1024)), MaxThreadCount);
             }
             else
             {
