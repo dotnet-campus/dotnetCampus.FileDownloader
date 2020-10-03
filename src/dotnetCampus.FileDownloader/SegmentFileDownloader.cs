@@ -104,8 +104,8 @@ namespace dotnetCampus.FileDownloader
 
             while (!SegmentManager.IsFinished())
             {
-                var (segment, runCount, maxReportTime) = SegmentManager
-                    .GetDownloadSegmentStatus();
+                _logger.LogDebug("Start ControlSwitch");
+                var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
 
                 _logger.LogDebug("当前等待数量：{0},待命最大响应时间：{1},运行数量：{2}", waitCount, maxReportTime, runCount);
@@ -114,14 +114,17 @@ namespace dotnetCampus.FileDownloader
                 {
                     // 此时速度太慢
                     segment.LoadingState = DownloadingState.Pause;
+                    _logger.LogDebug("ControlSwitch slowly pause segment={0}", segment.Number);
                 }
                 else if (maxReportTime < TimeSpan.FromMilliseconds(600) && waitCount > 0 || runCount < 1)
                 {
                     // 速度非常快，尝试再开线程，或者当前没有在进行的任务
                     // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
+                    _logger.LogDebug("ControlSwitch StartDownloadTask");
                     StartDownloadTask();
                 }
 
+                _logger.LogDebug("Finish ControlSwitch");
                 //变速器3秒为一周期
                 await Task.Delay(ControlDelayTime);
             }
