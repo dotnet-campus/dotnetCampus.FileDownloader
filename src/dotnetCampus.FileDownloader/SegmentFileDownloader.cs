@@ -506,7 +506,7 @@ namespace dotnetCampus.FileDownloader
 
             await FileWriter.DisposeAsync();
             await FileStream.DisposeAsync();
-            DownloadDataList.Dispose();
+            await DownloadDataList.DisposeAsync();
 
             FileDownloadTask.SetResult(true);
         }
