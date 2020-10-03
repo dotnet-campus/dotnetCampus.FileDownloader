@@ -98,19 +98,22 @@ namespace dotnetCampus.FileDownloader
         /// <returns></returns>
         private async void ControlSwitch()
         {
+            // 使用独立的线程的优势在于不需要等待下载就能进入方法
+            // 可以干掉 LastTime 属性，因此定时是 3 秒
             await Task.Delay(ControlDelayTime);
 
             while (!SegmentManager.IsFinished())
             {
-                SegmentManager.GetDownloadSegmentStatus(out DownloadSegment? segment, out int runCount, out double maxReportTime);
+                var (segment, runCount, maxReportTime) = SegmentManager
+                    .GetDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
                 Debug.WriteLine($"当前等待数量：{waitCount},待命最大响应时间：{maxReportTime},运行数量：{runCount}");
-                if (maxReportTime > 10 * 1000 && segment != null && runCount > 1)
+                if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
                 {
                     // 此时速度太慢
                     segment.LoadingState = DownloadingState.Pause;
                 }
-                else if (maxReportTime < 600 && waitCount > 0 || runCount < 1)
+                else if (maxReportTime < TimeSpan.FromMilliseconds(600) && waitCount > 0 || runCount < 1)
                 {
                     // 速度非常快，尝试再开线程，或者当前没有在进行的任务
                     // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
@@ -170,7 +173,7 @@ namespace dotnetCampus.FileDownloader
             if (supportSegment)
             {
                 // 先根据文件的大小，大概是 1M 让一个线程下载，至少需要开两个线程，最多是 10 个线程
-                var threadCount = (int) (contentLength / 1024 / 1024);
+                var threadCount = (int)(contentLength / 1024 / 1024);
                 _maxThread = Math.Max(Math.Min(2, threadCount), 10);
             }
             else
@@ -423,13 +426,13 @@ namespace dotnetCampus.FileDownloader
                 downloadSegment.DownloadedLength += n;
 
                 _progress.Report(new DownloadProgress(SegmentManager));
-              
+
                 if (downloadSegment.LoadingState == DownloadingState.Pause)
                 {
                     break;
                 }
                 if (downloadSegment.Finished)
-                {                    
+                {
                     break;
                 }
             }
