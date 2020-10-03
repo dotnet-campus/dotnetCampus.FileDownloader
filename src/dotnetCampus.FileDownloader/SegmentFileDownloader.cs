@@ -65,14 +65,11 @@ namespace dotnetCampus.FileDownloader
         /// 下载的文件
         /// </summary>
         public FileInfo File { get; }
-        /// <summary>
-        /// 定时检测的最后时间
-        /// </summary>
-        private DateTime LastTime { get; set; } = DateTime.Now;
-        /// <summary>
-        /// 默认启用3个线程
-        /// </summary>
-        private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(3);
+        ///// <summary>
+        ///// 定时检测的最后时间
+        ///// </summary>
+        //private DateTime LastTime { get; set; } = DateTime.Now;
+
         private readonly ILogger<SegmentFileDownloader> _logger;
         private readonly IProgress<DownloadProgress> _progress;
 
@@ -91,35 +88,48 @@ namespace dotnetCampus.FileDownloader
         /// 每一次分段下载的超时时间，默认10秒
         /// </summary>
         public TimeSpan StepTimeOut { get; }
-        private void DownReleaseOnce()
-        {
-            if (DownloadDataList.Count > 0)
-            {
-                if (semaphoreSlim.CurrentCount == 0) semaphoreSlim.Release();
-            }
-        }
+
+        //变速器3秒为一周期
+        private TimeSpan ControlDelayTime { get; } = TimeSpan.FromSeconds(3);
+
         /// <summary>
         /// 网速控制开关
         /// </summary>
-        /// <param name="downloadSegment"></param>
         /// <returns></returns>
-        private void ControlSwitch(DownloadSegment downloadSegment)
+        private async void ControlSwitch()
         {
-            //小于3秒维护现状
-            if ((DateTime.Now - LastTime).TotalSeconds > 3)
+            await Task.Delay(ControlDelayTime);
+
+            while (!SegmentManager.IsFinished())
             {
-                //变速器3秒为一周期
-                LastTime = DateTime.Now;
-                lock (downloadSegment)
+                SegmentManager.GetDownloadSegmentStatus(out DownloadSegment? segment, out int runCount, out double maxReportTime);
+                int waitCount = DownloadDataList.Count;
+                Debug.WriteLine($"当前等待数量：{waitCount},待命最大响应时间：{maxReportTime},运行数量：{runCount}");
+                if (maxReportTime > 10 * 1000 && segment != null && runCount > 1)
                 {
-                    SegmentManager.GetDownloadSegmentStatus(out DownloadSegment? segment, out int runCount, out double maxReportTime);
-                    int waitCount = DownloadDataList.Count;
-                    Debug.WriteLine($"当前等待数量：{waitCount},待命最大响应时间：{maxReportTime},运行数量：{runCount}");
-                    if (maxReportTime > 10 * 1000 && segment != null && runCount > 1) segment.LoadingState = DownloadingState.Pause;
-                    else if (maxReportTime < 600 && waitCount > 0 || runCount < 1) DownReleaseOnce();
+                    // 此时速度太慢
+                    segment.LoadingState = DownloadingState.Pause;
                 }
+                else if (maxReportTime < 600 && waitCount > 0 || runCount < 1)
+                {
+                    // 速度非常快，尝试再开线程，或者当前没有在进行的任务
+                    // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
+                    StartDownloadTask();
+                }
+
+                //变速器3秒为一周期
+                await Task.Delay(ControlDelayTime);
             }
         }
+
+        /// <summary>
+        /// 开启线程下载
+        /// </summary>
+        private void StartDownloadTask()
+        {
+            _ = Task.Run(DownloadTask);
+        }
+
         /// <summary>
         /// 开始下载文件
         /// </summary>
@@ -157,28 +167,39 @@ namespace dotnetCampus.FileDownloader
 
             var supportSegment = await TryDownloadLast(contentLength);
 
-            //var threadCount = 1;
+            if (supportSegment)
+            {
+                // 先根据文件的大小，大概是 1M 让一个线程下载，至少需要开两个线程，最多是 10 个线程
+                var threadCount = (int) (contentLength / 1024 / 1024);
+                _maxThread = Math.Max(Math.Min(2, threadCount), 10);
+            }
+            else
+            {
+                // 不支持分段下载下，多个线程也没啥用
+                _maxThread = 1;
+            }
 
             if (supportSegment)
             {
                 // 多创建几个线程下载
-                //threadCount = 10;
-
                 for (var i = 0; i < _maxThread; i++)
                 {
                     Download(SegmentManager.GetNewDownloadSegment());
                 }
+
+                //控制开关，如果下载阻塞就先暂停
+                ControlSwitch();
             }
 
+            // 一开始就创建足够量的线程尝试下载
             for (var i = 0; i < _maxThread; i++)
             {
-                _ = Task.Run(DownloadTask);
+                StartDownloadTask();
             }
 
             await FileDownloadTask.Task;
         }
 
-       
         /// <summary>
         /// 获取整个下载的长度
         /// </summary>
@@ -291,7 +312,8 @@ namespace dotnetCampus.FileDownloader
         {
             while (!SegmentManager.IsFinished())
             {
-                await semaphoreSlim.WaitAsync();
+                // 不需要进行等待，就是开始下载
+                //await semaphoreSlim.WaitAsync();
                 var data = await DownloadDataList.DequeueAsync();
 
                 // 没有内容了
@@ -332,12 +354,17 @@ namespace dotnetCampus.FileDownloader
                         // 如果当前下载的内容依然是长段的，也就是 RequirementDownloadPoint-StartPoint 长度比较大，那么下载完成后请求新的下载
                         Download(SegmentManager.GetNewDownloadSegment());
                     }
-                    DownReleaseOnce();
                 }
                 else
                 {
-                    // 如果当前这一段还没完成，那么放回去继续下载
+                    // 如果当前这一段还没完成，那么放回去继续下载，如果是当前下载速度太慢的，暂停一会
                     Download(downloadSegment);
+
+                    if (downloadSegment.LoadingState == DownloadingState.Pause)
+                    {
+                        // 暂停一会，也就是当前线程退出
+                        return;
+                    }
                 }
             }
 
@@ -396,8 +423,7 @@ namespace dotnetCampus.FileDownloader
                 downloadSegment.DownloadedLength += n;
 
                 _progress.Report(new DownloadProgress(SegmentManager));
-                //控制开关，如果下载阻塞就先暂停
-                ControlSwitch(downloadSegment);
+              
                 if (downloadSegment.LoadingState == DownloadingState.Pause)
                 {
                     break;
