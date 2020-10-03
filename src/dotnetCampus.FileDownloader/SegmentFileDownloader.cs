@@ -60,7 +60,9 @@ namespace dotnetCampus.FileDownloader
         /// 下载链接
         /// </summary>
         public string Url { get; }
+
         private AsyncQueue<DownloadData> DownloadDataList { get; } = new AsyncQueue<DownloadData>();
+
         /// <summary>
         /// 下载的文件
         /// </summary>
@@ -178,7 +180,7 @@ namespace dotnetCampus.FileDownloader
             if (supportSegment)
             {
                 // 先根据文件的大小，大概是 1M 让一个线程下载，至少需要开两个线程，最多是 10 个线程
-                var threadCount = (int)(contentLength / 1024 / 1024);
+                var threadCount = (int) (contentLength / 1024 / 1024);
                 _maxThread = Math.Max(Math.Min(2, threadCount), 10);
             }
             else
@@ -243,15 +245,15 @@ namespace dotnetCampus.FileDownloader
                 {
                     var url = Url;
                     _logger.LogDebug("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
-                    var webRequest = (HttpWebRequest)WebRequest.Create(url);
+                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
                     webRequest.Method = "GET";
                     // 加上超时，支持弱网
                     // Timeout设置的是从发出请求开始算起，到与服务器建立连接的时间
                     // ReadWriteTimeout设置的是从建立连接开始，到下载数据完毕所历经的时间
                     // 即使下载速度再慢，只有要在下载，也不能算超时
                     // 如果下载 BufferLength 长度 默认 65535 字节时间超过 10 秒，基本上也断开也差不多
-                    webRequest.Timeout = (int)StepTimeOut.TotalMilliseconds;
-                    webRequest.ReadWriteTimeout = (int)StepTimeOut.TotalMilliseconds;
+                    webRequest.Timeout = (int) StepTimeOut.TotalMilliseconds;
+                    webRequest.ReadWriteTimeout = (int) StepTimeOut.TotalMilliseconds;
 
                     _logger.LogDebug("[GetWebResponseAsync] [{0}] Enter action.", id);
                     action?.Invoke(webRequest);
@@ -436,6 +438,7 @@ namespace dotnetCampus.FileDownloader
                 {
                     break;
                 }
+
                 if (downloadSegment.Finished)
                 {
                     break;
