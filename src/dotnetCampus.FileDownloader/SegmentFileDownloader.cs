@@ -107,7 +107,9 @@ namespace dotnetCampus.FileDownloader
                 var (segment, runCount, maxReportTime) = SegmentManager
                     .GetDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
-                Debug.WriteLine($"当前等待数量：{waitCount},待命最大响应时间：{maxReportTime},运行数量：{runCount}");
+
+                _logger.LogDebug("当前等待数量：{0},待命最大响应时间：{1},运行数量：{2}", waitCount, maxReportTime, runCount);
+
                 if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
                 {
                     // 此时速度太慢
