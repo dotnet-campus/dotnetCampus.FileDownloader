@@ -114,7 +114,7 @@ namespace dotnetCampus.FileDownloader
                 var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
 
-                _logger.LogDebug("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2}", waitCount, maxReportTime, runCount);
+                _logger.LogDebug("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
                 if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
                 {
