@@ -54,20 +54,21 @@ namespace dotnetCampus.FileDownloader
                 return DownloadSegmentList.TrueForAll(segment => segment.Finished);
             }
         }
-        public void GetDownloadSegmentStatus(out DownloadSegment? segment, out int runCount, out double maxReportTime)
+
+        internal (DownloadSegment? segment, int runCount, TimeSpan maxReportTime) GetDownloadSegmentStatus()
         {
             lock (_locker)
             {
                 int maxCount = DownloadSegmentList.Count;
-                maxReportTime = 0;
-                runCount = 0;
-                segment = null;
+                TimeSpan maxReportTime = TimeSpan.MinValue;
+                int runCount = 0;
+                DownloadSegment? segment = null;
                 for (int i = 0; i < maxCount; i++)
                 {
                     DownloadSegment downloadSegment = DownloadSegmentList[i];
                     if (downloadSegment.LoadingState == DownloadingState.Runing)
                     {
-                        double reportTime = (DateTime.Now - downloadSegment.LastDownTime).TotalMilliseconds;
+                        var reportTime = (DateTime.Now - downloadSegment.LastDownTime);
                         if (reportTime >= maxReportTime)
                         {
                             maxReportTime = reportTime;
@@ -76,8 +77,11 @@ namespace dotnetCampus.FileDownloader
                         runCount++;
                     }
                 }
+
+                return (segment, runCount, maxReportTime);
             }
         }
+
         private DownloadSegment? NewDownloadSegment()
         {
             if (DownloadSegmentList.Count == 0)
