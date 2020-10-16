@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void WriteFile()
         {
-            "ÀÊª˙∑÷∂Œ–¥»ÎŒƒº˛£¨ø…“‘∂¡»°µΩ∞¥’’À≥–ÚµƒŒƒº˛".Test(async () =>
+            "√ã√¶¬ª√∫¬∑√ñ¬∂√é√ê¬¥√à√´√é√Ñ¬º√æ¬£¬¨¬ø√â√í√î¬∂√Å√à¬°¬µ¬Ω¬∞¬¥√ï√ï√ã¬≥√ê√≤¬µ√Ñ√é√Ñ¬º√æ".Test(async () =>
             {
                 var file = new FileInfo("File.txt");
 
@@ -40,7 +40,7 @@ namespace FileDownloader.Tests
                         var data = new byte[count];
                         for (int j = 0; j < count; j++)
                         {
-                            data[j] = (byte)('a' + j);
+                            data[j] = (byte) ('a' + j);
                         }
 
                         list.Add((count * i, data));
@@ -48,10 +48,10 @@ namespace FileDownloader.Tests
 
                     foreach (var (startPoint, data) in list)
                     {
-                        str.Append(string.Join("", data.Select(temp => (char)temp)));
+                        str.Append(string.Join("", data.Select(temp => (char) temp)));
                     }
 
-                    // ¥Ú¬“À≥–Ú
+                    // ¬¥√≤√Ç√í√ã¬≥√ê√≤
                     var random = new Random();
 
                     for (int i = 0; i < 100; i++)
@@ -78,7 +78,7 @@ namespace FileDownloader.Tests
             });
 
 
-            "¡¨–¯µƒŒƒº˛–¥»Î£¨ø…“‘–¥»Î¡¨–¯µƒŒƒº˛".Test(async () =>
+            "√Å¬¨√ê√∏¬µ√Ñ√é√Ñ¬º√æ√ê¬¥√à√´¬£¬¨¬ø√â√í√î√ê¬¥√à√´√Å¬¨√ê√∏¬µ√Ñ√é√Ñ¬º√æ".Test(async () =>
             {
                 var file = new FileInfo("File.txt");
 
@@ -101,7 +101,7 @@ namespace FileDownloader.Tests
                         var data = new byte[count];
                         for (int j = 0; j < count; j++)
                         {
-                            data[j] = (byte)('a' + j);
+                            data[j] = (byte) ('a' + j);
                         }
 
                         list.Add((count * i, data));
@@ -110,7 +110,7 @@ namespace FileDownloader.Tests
                     foreach (var (startPoint, data) in list)
                     {
                         _ = randomFileWriter.WriteAsync(startPoint, data);
-                        str.Append(string.Join("", data.Select(temp => (char)temp)));
+                        str.Append(string.Join("", data.Select(temp => (char) temp)));
                     }
                 }
 

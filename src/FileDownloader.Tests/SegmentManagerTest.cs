@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+锘縰sing System.Collections.Generic;
 using System.Linq;
 using dotnetCampus.FileDownloader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,7 +12,7 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void Finished()
         {
-            "分配两段，在全部下载完成之后，那么下载完成".Test(() =>
+            "路脰脜盲脕陆露脦拢卢脭脷脠芦虏驴脧脗脭脴脥锚鲁脡脰庐潞贸拢卢脛脟脙麓脧脗脭脴脥锚鲁脡".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -25,7 +25,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(true, segmentManager.IsFinished());
             });
 
-            "只分配一段，在一段没有完成，那么下载没有完成".Test(() =>
+            "脰禄路脰脜盲脪禄露脦拢卢脭脷脪禄露脦脙禄脫脨脥锚鲁脡拢卢脛脟脙麓脧脗脭脴脙禄脫脨脥锚鲁脡".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -37,7 +37,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(false, segmentManager.IsFinished());
             });
 
-            "只分配一段，在一段下载完成之后，那么下载完成".Test(() =>
+            "脰禄路脰脜盲脪禄露脦拢卢脭脷脪禄露脦脧脗脭脴脥锚鲁脡脰庐潞贸拢卢脛脟脙麓脧脗脭脴脥锚鲁脡".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -53,7 +53,7 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void GetNewDownloadSegment()
         {
-            "在获取第二段的时候，如第一段有下载内容，会在下载内容点之后继续第二段".Test(() =>
+            "脭脷禄帽脠隆碌脷露镁露脦碌脛脢卤潞貌拢卢脠莽碌脷脪禄露脦脫脨脧脗脭脴脛脷脠脻拢卢禄谩脭脷脧脗脭脴脛脷脠脻碌茫脰庐潞贸录脤脨酶碌脷露镁露脦".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -73,7 +73,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, secondDownloadSegment.RequirementDownloadPoint);
             });
 
-            "多次获取将会不断分段，所有分段合起来是文件大小".Test(() =>
+            "露脿麓脦禄帽脠隆陆芦禄谩虏禄露脧路脰露脦拢卢脣霉脫脨路脰露脦潞脧脝冒脌麓脢脟脦脛录镁麓贸脨隆".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -89,7 +89,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, length);
             });
 
-            "在获取第三段的时候，可以获取第一段和第二段的中间".Test(() =>
+            "脭脷禄帽脠隆碌脷脠媒露脦碌脛脢卤潞貌拢卢驴脡脪脭禄帽脠隆碌脷脪禄露脦潞脥碌脷露镁露脦碌脛脰脨录盲".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -103,7 +103,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(250, thirdDownloadSegment.StartPoint);
             });
 
-            "在获取第二段的时候，将修改第一段需要下载的长度，同时第二段从中间开始".Test(() =>
+            "脭脷禄帽脠隆碌脷露镁露脦碌脛脢卤潞貌拢卢陆芦脨脼赂脛碌脷脪禄露脦脨猫脪陋脧脗脭脴碌脛鲁陇露脠拢卢脥卢脢卤碌脷露镁露脦麓脫脰脨录盲驴陋脢录".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -120,7 +120,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, secondDownloadSegment.RequirementDownloadPoint);
             });
 
-            "第一段下载内容的长度是文件的长度".Test(() =>
+            "碌脷脪禄露脦脧脗脭脴脛脷脠脻碌脛鲁陇露脠脢脟脦脛录镁碌脛鲁陇露脠".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -130,7 +130,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, downloadSegment.RequirementDownloadPoint);
             });
 
-            "默认第一段下载内容是从零开始".Test(() =>
+            "脛卢脠脧碌脷脪禄露脦脧脗脭脴脛脷脠脻脢脟麓脫脕茫驴陋脢录".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
