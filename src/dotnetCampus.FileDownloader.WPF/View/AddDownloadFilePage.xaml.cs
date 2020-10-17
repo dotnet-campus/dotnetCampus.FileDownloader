@@ -28,7 +28,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public string FilePath
         {
-            get { return (string)GetValue(FilePathProperty); }
+            get { return (string) GetValue(FilePathProperty); }
             set { SetValue(FilePathProperty, value); }
         }
 
@@ -36,7 +36,7 @@ namespace dotnetCampus.FileDownloader.WPF
             "Url", typeof(string), typeof(AddDownloadFilePage), new PropertyMetadata(default(string),
                 (o, args) =>
                 {
-                    var addDownloadFilePage = (AddDownloadFilePage)o;
+                    var addDownloadFilePage = (AddDownloadFilePage) o;
                     var url = addDownloadFilePage.Url;
 
                     if (string.IsNullOrEmpty(addDownloadFilePage.FilePath))
@@ -67,7 +67,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public string Url
         {
-            get { return (string)GetValue(UrlProperty); }
+            get { return (string) GetValue(UrlProperty); }
             set { SetValue(UrlProperty, value); }
         }
 
