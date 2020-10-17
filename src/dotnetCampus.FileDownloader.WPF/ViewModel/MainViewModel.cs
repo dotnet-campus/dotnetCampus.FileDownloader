@@ -89,7 +89,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
             // 后续优化多任务下载的时候的回收
             _ = Task.Delay(TimeSpan.FromSeconds(3))
-                .ContinueWith(_ => ((FileDownloaderSharedArrayPool)SharedArrayPool).Clean());
+                .ContinueWith(_ => ((FileDownloaderSharedArrayPool) SharedArrayPool).Clean());
         }
 
         private SegmentFileDownloader? CurrentSegmentFileDownloader { set; get; }

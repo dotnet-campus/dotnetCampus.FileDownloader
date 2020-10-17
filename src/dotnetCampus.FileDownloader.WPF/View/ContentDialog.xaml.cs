@@ -28,7 +28,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public string Title
         {
-            get { return (string)GetValue(TitleProperty); }
+            get { return (string) GetValue(TitleProperty); }
             set { SetValue(TitleProperty, value); }
         }
 
@@ -37,11 +37,11 @@ namespace dotnetCampus.FileDownloader.WPF
 
         public UIElement ContentElement
         {
-            get { return (UIElement)GetValue(ContentElementProperty); }
+            get { return (UIElement) GetValue(ContentElementProperty); }
             set { SetValue(ContentElementProperty, value); }
         }
 
-        public event EventHandler Closed = delegate {  };
+        public event EventHandler Closed = delegate { };
 
         private void CloseButton_OnClick(object sender, RoutedEventArgs e)
         {

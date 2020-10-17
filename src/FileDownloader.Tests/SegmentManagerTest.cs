@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.Linq;
 using dotnetCampus.FileDownloader;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,7 +12,7 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void Finished()
         {
-            "·ÖÅäÁ½¶Î£¬ÔÚÈ«²¿ÏÂÔØÍê³ÉÖ®ºó£¬ÄÇÃ´ÏÂÔØÍê³É".Test(() =>
+            "åˆ†é…ä¸¤æ®µï¼Œåœ¨å…¨éƒ¨ä¸‹è½½å®Œæˆä¹‹åŽï¼Œé‚£ä¹ˆä¸‹è½½å®Œæˆ".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -25,7 +25,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(true, segmentManager.IsFinished());
             });
 
-            "Ö»·ÖÅäÒ»¶Î£¬ÔÚÒ»¶ÎÃ»ÓÐÍê³É£¬ÄÇÃ´ÏÂÔØÃ»ÓÐÍê³É".Test(() =>
+            "åªåˆ†é…ä¸€æ®µï¼Œåœ¨ä¸€æ®µæ²¡æœ‰å®Œæˆï¼Œé‚£ä¹ˆä¸‹è½½æ²¡æœ‰å®Œæˆ".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -37,7 +37,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(false, segmentManager.IsFinished());
             });
 
-            "Ö»·ÖÅäÒ»¶Î£¬ÔÚÒ»¶ÎÏÂÔØÍê³ÉÖ®ºó£¬ÄÇÃ´ÏÂÔØÍê³É".Test(() =>
+            "åªåˆ†é…ä¸€æ®µï¼Œåœ¨ä¸€æ®µä¸‹è½½å®Œæˆä¹‹åŽï¼Œé‚£ä¹ˆä¸‹è½½å®Œæˆ".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -53,7 +53,7 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void GetNewDownloadSegment()
         {
-            "ÔÚ»ñÈ¡µÚ¶þ¶ÎµÄÊ±ºò£¬ÈçµÚÒ»¶ÎÓÐÏÂÔØÄÚÈÝ£¬»áÔÚÏÂÔØÄÚÈÝµãÖ®ºó¼ÌÐøµÚ¶þ¶Î".Test(() =>
+            "åœ¨èŽ·å–ç¬¬äºŒæ®µçš„æ—¶å€™ï¼Œå¦‚ç¬¬ä¸€æ®µæœ‰ä¸‹è½½å†…å®¹ï¼Œä¼šåœ¨ä¸‹è½½å†…å®¹ç‚¹ä¹‹åŽç»§ç»­ç¬¬äºŒæ®µ".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -73,7 +73,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, secondDownloadSegment.RequirementDownloadPoint);
             });
 
-            "¶à´Î»ñÈ¡½«»á²»¶Ï·Ö¶Î£¬ËùÓÐ·Ö¶ÎºÏÆðÀ´ÊÇÎÄ¼þ´óÐ¡".Test(() =>
+            "å¤šæ¬¡èŽ·å–å°†ä¼šä¸æ–­åˆ†æ®µï¼Œæ‰€æœ‰åˆ†æ®µåˆèµ·æ¥æ˜¯æ–‡ä»¶å¤§å°".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -89,7 +89,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, length);
             });
 
-            "ÔÚ»ñÈ¡µÚÈý¶ÎµÄÊ±ºò£¬¿ÉÒÔ»ñÈ¡µÚÒ»¶ÎºÍµÚ¶þ¶ÎµÄÖÐ¼ä".Test(() =>
+            "åœ¨èŽ·å–ç¬¬ä¸‰æ®µçš„æ—¶å€™ï¼Œå¯ä»¥èŽ·å–ç¬¬ä¸€æ®µå’Œç¬¬äºŒæ®µçš„ä¸­é—´".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -103,7 +103,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(250, thirdDownloadSegment.StartPoint);
             });
 
-            "ÔÚ»ñÈ¡µÚ¶þ¶ÎµÄÊ±ºò£¬½«ÐÞ¸ÄµÚÒ»¶ÎÐèÒªÏÂÔØµÄ³¤¶È£¬Í¬Ê±µÚ¶þ¶Î´ÓÖÐ¼ä¿ªÊ¼".Test(() =>
+            "åœ¨èŽ·å–ç¬¬äºŒæ®µçš„æ—¶å€™ï¼Œå°†ä¿®æ”¹ç¬¬ä¸€æ®µéœ€è¦ä¸‹è½½çš„é•¿åº¦ï¼ŒåŒæ—¶ç¬¬äºŒæ®µä»Žä¸­é—´å¼€å§‹".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -120,7 +120,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, secondDownloadSegment.RequirementDownloadPoint);
             });
 
-            "µÚÒ»¶ÎÏÂÔØÄÚÈÝµÄ³¤¶ÈÊÇÎÄ¼þµÄ³¤¶È".Test(() =>
+            "ç¬¬ä¸€æ®µä¸‹è½½å†…å®¹çš„é•¿åº¦æ˜¯æ–‡ä»¶çš„é•¿åº¦".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
@@ -130,7 +130,7 @@ namespace FileDownloader.Tests
                 Assert.AreEqual(fileLength, downloadSegment.RequirementDownloadPoint);
             });
 
-            "Ä¬ÈÏµÚÒ»¶ÎÏÂÔØÄÚÈÝÊÇ´ÓÁã¿ªÊ¼".Test(() =>
+            "é»˜è®¤ç¬¬ä¸€æ®µä¸‹è½½å†…å®¹æ˜¯ä»Žé›¶å¼€å§‹".Test(() =>
             {
                 const long fileLength = 1000;
                 var segmentManager = new SegmentManager(fileLength);
