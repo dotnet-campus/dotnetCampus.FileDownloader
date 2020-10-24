@@ -257,7 +257,7 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        protected virtual HttpWebRequest CreateWebRequest(string url) => (HttpWebRequest)WebRequest.Create(url);
+        protected virtual HttpWebRequest CreateWebRequest(string url) => (HttpWebRequest) WebRequest.Create(url);
 
         /// <summary>
         /// 在 <see cref="HttpWebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
