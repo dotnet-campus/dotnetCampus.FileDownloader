@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -16,12 +16,12 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void CreateWebRequest()
         {
-            "¸ø¶¨ÌØÊâµÄWebRequest½«»áÔÚËæºóÊ¹ÓÃ".Test(() =>
+            "ç»™å®šç‰¹æ®Šçš„WebRequestå°†ä¼šåœ¨éšåŽä½¿ç”¨".Test(() =>
             {
                 var mock = new Mock<IMockSegmentFileDownloader>();
                 var url = $"https://blog.lindexi.com";
 
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                var httpWebRequest = (HttpWebRequest) WebRequest.Create(url);
                 mock.Setup(downloader => downloader.CreateWebRequest(It.IsAny<string>())).Returns(() => httpWebRequest);
                 mock.Setup(downloader => downloader.OnWebRequestSet(httpWebRequest))
                     .Returns(() => httpWebRequest);
