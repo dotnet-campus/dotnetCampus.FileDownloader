@@ -252,6 +252,20 @@ namespace dotnetCampus.FileDownloader
             return (response, contentLength);
         }
 
+        /// <summary>
+        /// 通过 Url 创建出对应的 HttpWebRequest 实例
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        protected virtual HttpWebRequest CreateWebRequest(string url) => (HttpWebRequest)WebRequest.Create(url);
+
+        /// <summary>
+        /// 在 <see cref="HttpWebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
+        /// </summary>
+        /// <param name="webRequest"></param>
+        /// <returns></returns>
+        protected virtual HttpWebRequest OnWebRequestSet(HttpWebRequest webRequest) => webRequest;
+
         private async Task<WebResponse?> GetWebResponseAsync(Action<HttpWebRequest>? action = null)
         {
             var id = Interlocked.Increment(ref _idGenerator);
@@ -264,7 +278,7 @@ namespace dotnetCampus.FileDownloader
                 {
                     var url = Url;
                     _logger.LogDebug("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
-                    var webRequest = (HttpWebRequest) WebRequest.Create(url);
+                    var webRequest = CreateWebRequest(url);
                     webRequest.Method = "GET";
                     // 加上超时，支持弱网
                     // Timeout设置的是从发出请求开始算起，到与服务器建立连接的时间
@@ -276,6 +290,7 @@ namespace dotnetCampus.FileDownloader
 
                     _logger.LogDebug("[GetWebResponseAsync] [{0}] Enter action.", id);
                     action?.Invoke(webRequest);
+                    webRequest = OnWebRequestSet(webRequest);
 
                     var stopwatch = Stopwatch.StartNew();
                     _logger.LogDebug("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
