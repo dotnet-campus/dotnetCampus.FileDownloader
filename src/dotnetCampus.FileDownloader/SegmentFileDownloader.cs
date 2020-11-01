@@ -431,7 +431,10 @@ namespace dotnetCampus.FileDownloader
             }
 
             downloadSegment.Message = "Start GetResponseStream";
-            await using var responseStream = response.GetResponseStream();
+#if NETCOREAPP
+            await
+#endif
+                using var responseStream = response.GetResponseStream();
             downloadSegment.Message = "Finish GetResponseStream";
 
             int length = BufferLength;
@@ -520,7 +523,11 @@ namespace dotnetCampus.FileDownloader
             }
 
             await FileWriter.DisposeAsync();
+#if NETCOREAPP
             await FileStream.DisposeAsync();
+#else
+            FileStream.Dispose();
+#endif
             await DownloadDataList.DisposeAsync();
 
             FileDownloadTask.SetResult(true);
