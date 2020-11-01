@@ -31,8 +31,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
-      <None Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
+        <EmbeddedResource Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
+        <None Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
     </ItemGroup>
 
     <ItemGroup>
@@ -52,14 +52,14 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)'=='net45'">
-<PackageReference Include="System.ValueTuple" Version="4.5"></PackageReference>
+        <PackageReference Include="System.ValueTuple" Version="4.5"></PackageReference>
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)'!='net45'">
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.7"></PackageReference>
         <Compile Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
     </ItemGroup>
-<ItemGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-      <Compile Remove="Context_\IAsyncDisposable.cs" />
-</ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+        <Compile Remove="Context_\IAsyncDisposable.cs" />
+    </ItemGroup>
 </Project>
