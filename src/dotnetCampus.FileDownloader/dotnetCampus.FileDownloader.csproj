@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFrameworks>net45;netcoreapp3.1;netstandard2.0</TargetFrameworks>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Nullable>enable</Nullable>
 
@@ -31,7 +31,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="dotnetCampus.AsyncWorkerCollection.Source" Version="1.4.0">
+        <EmbeddedResource Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
+        <None Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="dotnetCampus.AsyncWorkerCollection.Source" Version="1.5.3">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -41,7 +49,17 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
 
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.7"></PackageReference>
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)'=='net45'">
+        <PackageReference Include="System.ValueTuple" Version="4.5"></PackageReference>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)'!='net45'">
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.7"></PackageReference>
+        <Compile Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+        <Compile Remove="Context_\IAsyncDisposable.cs" />
+    </ItemGroup>
 </Project>

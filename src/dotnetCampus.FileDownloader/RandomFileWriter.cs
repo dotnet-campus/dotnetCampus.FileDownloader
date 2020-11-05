@@ -6,7 +6,11 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using dotnetCampus.Threading;
+#if !NETCOREAPP
+using ValueTask = System.Threading.Tasks.Task;
+#else
 using IAsyncDisposable = System.IAsyncDisposable;
+#endif
 
 namespace dotnetCampus.FileDownloader
 {

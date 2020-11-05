@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using dotnetCampus.Threading;
+#if !NETCOREAPP
+using ValueTask = System.Threading.Tasks.Task;
+#endif
 
 namespace dotnetCampus.FileDownloader
 {
