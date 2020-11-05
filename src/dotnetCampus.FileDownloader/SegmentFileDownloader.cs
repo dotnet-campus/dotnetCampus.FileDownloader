@@ -434,7 +434,7 @@ namespace dotnetCampus.FileDownloader
 #if NETCOREAPP
             await
 #endif
-                using var responseStream = response.GetResponseStream();
+            using var responseStream = response.GetResponseStream();
             downloadSegment.Message = "Finish GetResponseStream";
 
             int length = BufferLength;
