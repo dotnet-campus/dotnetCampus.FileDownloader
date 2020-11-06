@@ -6,7 +6,7 @@ namespace dotnetCampus.FileDownloader
     /// 用于记录日志，专门修改命名空间以解决命名空间冲突，此类型仅 .NET Framework 引用
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ILogger<T>: ILogger
+    public interface ILogger<T> : ILogger
     {
 
     }
