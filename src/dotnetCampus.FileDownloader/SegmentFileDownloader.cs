@@ -110,23 +110,23 @@ namespace dotnetCampus.FileDownloader
 
             while (!SegmentManager.IsFinished())
             {
-                _logger.LogDebug("Start ControlSwitch");
+                LogDebugInternal("Start ControlSwitch");
                 var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
 
-                _logger.LogDebug("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
+                LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
                 if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
                 {
                     // 此时速度太慢
                     segment.LoadingState = DownloadingState.Pause;
-                    _logger.LogDebug("ControlSwitch slowly pause segment={0}", segment.Number);
+                    LogDebugInternal("ControlSwitch slowly pause segment={0}", segment.Number);
                 }
                 else if (maxReportTime < TimeSpan.FromMilliseconds(600) && waitCount > 0 || runCount < 1)
                 {
                     // 速度非常快，尝试再开线程，或者当前没有在进行的任务
                     // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
-                    _logger.LogDebug("ControlSwitch StartDownloadTask");
+                    LogDebugInternal("ControlSwitch StartDownloadTask");
 
                     // 这里不需要线程安全，如果刚好全部线程都在退出，等待 ControlDelayTime 再次创建
                     if (_threadCount < MaxThreadCount)
@@ -135,7 +135,7 @@ namespace dotnetCampus.FileDownloader
                     }
                 }
 
-                _logger.LogDebug("Finish ControlSwitch");
+                LogDebugInternal("Finish ControlSwitch");
                 //变速器3秒为一周期
                 await Task.Delay(ControlDelayTime);
             }
@@ -266,6 +266,17 @@ namespace dotnetCampus.FileDownloader
         /// <returns></returns>
         protected virtual HttpWebRequest OnWebRequestSet(HttpWebRequest webRequest) => webRequest;
 
+        /// <summary>
+        /// 这是给我自己开发调试用的
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="args"></param>
+        [Conditional("DEBUG")]
+        private void LogDebugInternal(string message, params object[] args)
+        {
+            _logger.LogDebug(message, args);
+        }
+
         private async Task<WebResponse?> GetWebResponseAsync(Action<HttpWebRequest>? action = null)
         {
             var id = Interlocked.Increment(ref _idGenerator);
@@ -277,7 +288,7 @@ namespace dotnetCampus.FileDownloader
                 try
                 {
                     var url = Url;
-                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
+                    LogDebugInternal("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
                     var webRequest = CreateWebRequest(url);
                     webRequest.Method = "GET";
                     // 加上超时，支持弱网
@@ -288,15 +299,15 @@ namespace dotnetCampus.FileDownloader
                     webRequest.Timeout = (int) StepTimeOut.TotalMilliseconds;
                     webRequest.ReadWriteTimeout = (int) StepTimeOut.TotalMilliseconds;
 
-                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Enter action.", id);
+                    LogDebugInternal("[GetWebResponseAsync] [{0}] Enter action.", id);
                     action?.Invoke(webRequest);
                     webRequest = OnWebRequestSet(webRequest);
 
                     var stopwatch = Stopwatch.StartNew();
-                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
+                    LogDebugInternal("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
                     var response = await webRequest.GetResponseAsync();
                     stopwatch.Stop();
-                    _logger.LogDebug("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
+                    LogDebugInternal("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
                         stopwatch.ElapsedMilliseconds);
 
                     return response;
@@ -328,7 +339,7 @@ namespace dotnetCampus.FileDownloader
                 }
 
                 // 后续需要配置不断下降时间
-                _logger.LogDebug("[GetWebResponseAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
+                LogDebugInternal("[GetWebResponseAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
                 await Task.Delay(retryDelayTime);
             }
 
@@ -442,17 +453,17 @@ namespace dotnetCampus.FileDownloader
 
             while (!downloadSegment.Finished)
             {
-                _logger.LogDebug("[DownloadSegmentInner] Start Rent Array. {0}", downloadSegment);
+                LogDebugInternal("[DownloadSegmentInner] Start Rent Array. {0}", downloadSegment);
                 var buffer = SharedArrayPool.Rent(length);
-                _logger.LogDebug("[DownloadSegmentInner] Finish Rent Array. {0}", downloadSegment);
+                LogDebugInternal("[DownloadSegmentInner] Finish Rent Array. {0}", downloadSegment);
 
                 downloadSegment.Message = "Start ReadAsync";
-                _logger.LogDebug("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
+                LogDebugInternal("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
                 using var cancellationTokenSource = new CancellationTokenSource(StepTimeOut);
                 // 设置了 WebRequest.Timeout 不能用来修改异步的方法，所以需要使用下面方法
                 downloadSegment.LastDownTime = DateTime.Now;
                 var n = await responseStream.ReadAsync(buffer, 0, length, cancellationTokenSource.Token);
-                _logger.LogDebug("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
+                LogDebugInternal("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
                 downloadSegment.Message = "Finish ReadAsync";
 
                 if (n <= 0)
@@ -463,7 +474,7 @@ namespace dotnetCampus.FileDownloader
                 LogDownloadSegment(downloadSegment);
 
                 downloadSegment.Message = "QueueWrite";
-                _logger.LogDebug("[DownloadSegmentInner] QueueWrite. Start {0} Length {1}",
+                LogDebugInternal("[DownloadSegmentInner] QueueWrite. Start {0} Length {1}",
                     downloadSegment.CurrentDownloadPoint, n);
                 FileWriter.QueueWrite(downloadSegment.CurrentDownloadPoint, buffer, 0, n);
 
@@ -491,7 +502,7 @@ namespace dotnetCampus.FileDownloader
 
         private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
         {
-            _logger.LogDebug("[Download] Enqueue Download. {0}", downloadSegment);
+            LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
             DownloadDataList.Enqueue(new DownloadData(webResponse, downloadSegment));
         }
 
