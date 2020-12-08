@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using dotnetCampus.FileDownloader.Utils;
 using dotnetCampus.Threading;
 using Microsoft.Extensions.Logging;
 
@@ -254,14 +255,14 @@ namespace dotnetCampus.FileDownloader
         }
 
         /// <summary>
-        /// 通过 Url 创建出对应的 HttpWebRequest 实例
+        /// 通过 Url 创建出对应的 <see cref="WebRequest"/> 实例
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
         protected virtual WebRequest CreateWebRequest(string url) => (WebRequest) WebRequest.Create(url);
 
         /// <summary>
-        /// 在 <see cref="HttpWebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
+        /// 在 <see cref="WebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
         /// </summary>
         /// <param name="webRequest"></param>
         /// <returns></returns>
@@ -366,14 +367,7 @@ namespace dotnetCampus.FileDownloader
 
             var response = await GetWebResponseAsync(webRequest =>
             {
-                if (webRequest is HttpWebRequest httpWebRequest)
-                {
-                    httpWebRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
-                }
-                else
-                {
-                    // 如果这是在调试下，那么是预期的
-                }
+                webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
             });
             return response;
         }
@@ -568,10 +562,7 @@ namespace dotnetCampus.FileDownloader
 
             var responseLast = await GetWebResponseAsync(webRequest =>
             {
-                if (webRequest is HttpWebRequest httpWebRequest)
-                {
-                    httpWebRequest.AddRange(startPoint, contentLength);
-                }
+                webRequest.AddRange(startPoint, contentLength);
             });
 
             if (responseLast == null)
