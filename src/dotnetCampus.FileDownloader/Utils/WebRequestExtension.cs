@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader.Utils
 {
@@ -12,7 +8,7 @@ namespace dotnetCampus.FileDownloader.Utils
     {
         public static void AddRange(this WebRequest webRequest, int from, int to)
         {
-            webRequest.AddRange("bytes", (long) from, (long) to);
+            webRequest.AddRange("bytes", from, to);
         }
 
   
@@ -23,10 +19,6 @@ namespace dotnetCampus.FileDownloader.Utils
 
         public static void AddRange(this WebRequest webRequest, string rangeSpecifier, long from, long to)
         {
-            //
-            // Do some range checking before assembling the header
-            //
-
             if (rangeSpecifier == null)
             {
                 throw new ArgumentNullException(nameof(rangeSpecifier));
@@ -81,7 +73,7 @@ namespace dotnetCampus.FileDownloader.Utils
                 }
                 curRange = string.Empty;
             }
-            curRange += from.ToString();
+            curRange += @from;
             if (to != null)
             {
                 curRange += "-" + to;
