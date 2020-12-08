@@ -201,8 +201,7 @@ namespace dotnetCampus.FileDownloader
             if (supportSegment)
             {
                 // 先根据文件的大小，大概是 1M 让一个线程下载，至少需要开两个线程，最多是 10 个线程
-                // 最大和最小写反了
-                threadCount = Math.Max(Math.Min(2, (int) (contentLength / 1024 / 1024)), MaxThreadCount);
+                threadCount = Math.Min(MaxThreadCount, Math.Max(2, (int) (contentLength / 1024 / 1024)));
             }
             else
             {
