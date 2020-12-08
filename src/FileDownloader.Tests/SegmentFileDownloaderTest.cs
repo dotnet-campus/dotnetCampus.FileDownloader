@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Cache;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -56,6 +57,11 @@ namespace FileDownloader.Tests
             {
             }
 
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(Read(buffer, offset, count));
+            }
+
             public override int Read(byte[] buffer, int offset, int count)
             {
                 Thread.Sleep(100);
@@ -91,7 +97,7 @@ namespace FileDownloader.Tests
             {
             }
 
-            protected override HttpWebRequest CreateWebRequest(string url)
+            protected override WebRequest CreateWebRequest(string url)
             {
                 var fakeWebResponse = new FakeWebResponse()
                 {
@@ -115,12 +121,12 @@ namespace FileDownloader.Tests
 
             public IMockSegmentFileDownloader MockSegmentFileDownloader { get; }
 
-            protected override HttpWebRequest CreateWebRequest(string url)
+            protected override WebRequest CreateWebRequest(string url)
             {
                 return MockSegmentFileDownloader.CreateWebRequest(url);
             }
 
-            protected override HttpWebRequest OnWebRequestSet(HttpWebRequest webRequest)
+            protected override WebRequest OnWebRequestSet(WebRequest webRequest)
             {
                 return MockSegmentFileDownloader.OnWebRequestSet(webRequest);
             }
@@ -128,27 +134,34 @@ namespace FileDownloader.Tests
 
         public interface IMockSegmentFileDownloader
         {
-            HttpWebRequest CreateWebRequest(string url);
-            HttpWebRequest OnWebRequestSet(HttpWebRequest webRequest);
+            WebRequest CreateWebRequest(string url);
+            WebRequest OnWebRequestSet(WebRequest webRequest);
         }
     }
 
-    class FakeHttpWebRequest : HttpWebRequest
+    class FakeHttpWebRequest : WebRequest
     {
-        public FakeHttpWebRequest(SerializationInfo serializationInfo, StreamingContext streamingContext) : base(serializationInfo, streamingContext)
-        {
-        }
-
-        public FakeHttpWebRequest(SerializationInfo serializationInfo, StreamingContext streamingContext, FakeWebResponse fakeWebResponse) : base(serializationInfo, streamingContext)
+        public FakeHttpWebRequest(FakeWebResponse fakeWebResponse)
         {
             FakeWebResponse = fakeWebResponse;
         }
 
-        public FakeHttpWebRequest(FakeWebResponse fakeWebResponse)
-        : this(new SerializationInfo(typeof(FakeHttpWebRequest), new FormatterConverter()), new StreamingContext(StreamingContextStates.All), fakeWebResponse)
+        public override Task<WebResponse> GetResponseAsync()
         {
-
+            return Task.FromResult(GetResponse());
         }
+
+        public override string Method { get; set; }
+        public override RequestCachePolicy CachePolicy { get; set; }
+        public override string ConnectionGroupName { get; set; }
+        public override long ContentLength { get; set; }
+        public override string ContentType { get; set; }
+        public override ICredentials Credentials { get; set; }
+        public override WebHeaderCollection Headers { get; set; }
+        public override bool PreAuthenticate { get; set; }
+        public override Uri RequestUri { get; }
+        public override int Timeout { get; set; }
+        public override bool UseDefaultCredentials { get; set; }
 
         private FakeWebResponse FakeWebResponse { get; }
 
