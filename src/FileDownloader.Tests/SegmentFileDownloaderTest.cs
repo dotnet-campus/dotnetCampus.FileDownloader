@@ -40,11 +40,11 @@ namespace FileDownloader.Tests
                 mock.Verify(downloader => downloader.CreateWebRequest(It.IsAny<string>()), Times.AtLeastOnce);
             });
 
-            "测试进入弱网环境下载，能成功下载文件".Test(async () =>
+            "测试进入慢网环境下载，能成功下载文件".Test(() =>
             {
                 var url = $"https://blog.lindexi.com";
                 var file = new FileInfo(Path.GetTempFileName());
-                var slowlySegmentFileDownloader = new SlowlySegmentFileDownloader(url, file);
+                var slowlySegmentFileDownloader = new SlowSegmentFileDownloader(url, file);
                 var task = slowlySegmentFileDownloader.DownloadFileAsync();
 
                 Task.WaitAny(task, Task.Delay(TimeSpan.FromSeconds(20)));
@@ -61,7 +61,7 @@ namespace FileDownloader.Tests
             });
         }
 
-        class SlowlyStream : Stream
+        class SlowStream : Stream
         {
             public override void Flush()
             {
@@ -94,16 +94,16 @@ namespace FileDownloader.Tests
                 throw new NotImplementedException();
             }
 
-            public override bool CanRead { get; }
-            public override bool CanSeek { get; }
-            public override bool CanWrite { get; }
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
             public override long Length => 100;
             public override long Position { get; set; }
         }
 
-        class SlowlySegmentFileDownloader : SegmentFileDownloader
+        class SlowSegmentFileDownloader : SegmentFileDownloader
         {
-            public SlowlySegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader>? logger = null, IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null, int bufferLength = UInt16.MaxValue, TimeSpan? stepTimeOut = null) : base(url, file, logger, progress, sharedArrayPool, bufferLength, stepTimeOut)
+            public SlowSegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader>? logger = null, IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null, int bufferLength = UInt16.MaxValue, TimeSpan? stepTimeOut = null) : base(url, file, logger, progress, sharedArrayPool, bufferLength, stepTimeOut)
             {
             }
 
@@ -111,7 +111,7 @@ namespace FileDownloader.Tests
             {
                 var fakeWebResponse = new FakeWebResponse()
                 {
-                    Stream = new SlowlyStream()
+                    Stream = new SlowStream()
                 };
 
                 return new FakeHttpWebRequest(fakeWebResponse);
