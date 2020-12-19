@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using dotnetCampus.Threading;
@@ -246,11 +247,39 @@ namespace dotnetCampus.FileDownloader
 
             var contentLength = response.ContentLength;
 
+            TryParseServerSuggestionFileName(response);
+
             _logger.LogInformation(
                 $"完成获取文件长度，文件长度 {contentLength} {contentLength / 1024}KB {contentLength / 1024.0 / 1024.0:0.00}MB");
 
             return (response, contentLength);
         }
+
+        private void TryParseServerSuggestionFileName(WebResponse response)
+        {
+            try
+            {
+                var header = response.Headers["Content-Disposition"];
+                if (string.IsNullOrEmpty(header))
+                {
+                    return;
+                }
+
+                var contentDisposition = new ContentDisposition(header);
+
+                var fileName = contentDisposition.FileName;
+                ServerSuggestionFileName = fileName;
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "尝试从服务器获取文件名失败");
+            }
+        }
+
+        /// <summary>
+        /// 服务器端返回的文件名
+        /// </summary>
+        public string? ServerSuggestionFileName { get; private set; }
 
         /// <summary>
         /// 通过 Url 创建出对应的 HttpWebRequest 实例
