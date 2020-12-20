@@ -97,7 +97,7 @@ namespace dotnetCampus.FileDownloader
             {
                 // 重新加个名字，理论上这个名字不会重叠
                 finallyFile = new FileInfo(Path.Combine(finallyFile.Directory.FullName,
-                    Path.GetFileNameWithoutExtension(finallyFile.FullName), Path.GetRandomFileName(),
+                    Path.GetFileNameWithoutExtension(finallyFile.FullName)+ Path.GetRandomFileName()+
                     finallyFile.Extension));
             }
 
