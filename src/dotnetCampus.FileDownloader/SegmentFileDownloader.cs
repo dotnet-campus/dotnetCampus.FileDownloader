@@ -305,7 +305,7 @@ namespace dotnetCampus.FileDownloader
 
                     var stopwatch = Stopwatch.StartNew();
                     LogDebugInternal("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
-                    var response = await webRequest.GetResponseAsync();
+                    var response = await GetResponseAsync(webRequest);
                     stopwatch.Stop();
                     LogDebugInternal("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
                         stopwatch.ElapsedMilliseconds);
@@ -345,6 +345,14 @@ namespace dotnetCampus.FileDownloader
 
             return null;
         }
+
+        /// <summary>
+        /// 给继承的类可以从 <paramref name="request"/> 获取消息
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        protected virtual Task<WebResponse> GetResponseAsync(WebRequest request)
+            => request.GetResponseAsync();
 
         /// <summary>
         /// 尝试获取链接响应
