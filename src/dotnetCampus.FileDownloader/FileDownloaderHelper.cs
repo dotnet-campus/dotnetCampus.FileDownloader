@@ -70,7 +70,7 @@ namespace dotnetCampus.FileDownloader
             tempFolder.Create();
 
             // 创建临时文件
-            var fileName = FileNameHelper.GuessFileNameFromUrl(url,fallbackName:Path.GetRandomFileName());
+            var fileName = FileNameHelper.GuessFileNameFromUrl(url, fallbackName: Path.GetRandomFileName());
 
             var downloadFile = new FileInfo(Path.Combine(tempFolder.FullName, fileName));
             var segmentFileDownloader = new InnerSegmentFileDownloader(url, downloadFile, logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
@@ -97,7 +97,7 @@ namespace dotnetCampus.FileDownloader
             {
                 // 重新加个名字，理论上这个名字不会重叠
                 finallyFile = new FileInfo(Path.Combine(finallyFile.Directory.FullName,
-                    Path.GetFileNameWithoutExtension(finallyFile.FullName)+ Path.GetRandomFileName()+
+                    Path.GetFileNameWithoutExtension(finallyFile.FullName) + Path.GetRandomFileName() +
                     finallyFile.Extension));
             }
 
