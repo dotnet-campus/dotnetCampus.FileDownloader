@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using dotnetCampus.FileDownloader.Utils;
 using dotnetCampus.Threading;
 using Microsoft.Extensions.Logging;
 
@@ -200,7 +201,7 @@ namespace dotnetCampus.FileDownloader
             if (supportSegment)
             {
                 // 先根据文件的大小，大概是 1M 让一个线程下载，至少需要开两个线程，最多是 10 个线程
-                threadCount = Math.Max(Math.Min(2, (int) (contentLength / 1024 / 1024)), MaxThreadCount);
+                threadCount = Math.Min(MaxThreadCount, Math.Max(2, (int) (contentLength / 1024 / 1024)));
             }
             else
             {
@@ -253,18 +254,18 @@ namespace dotnetCampus.FileDownloader
         }
 
         /// <summary>
-        /// 通过 Url 创建出对应的 HttpWebRequest 实例
+        /// 通过 Url 创建出对应的 <see cref="WebRequest"/> 实例
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        protected virtual HttpWebRequest CreateWebRequest(string url) => (HttpWebRequest) WebRequest.Create(url);
+        protected virtual WebRequest CreateWebRequest(string url) => (WebRequest) WebRequest.Create(url);
 
         /// <summary>
-        /// 在 <see cref="HttpWebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
+        /// 在 <see cref="WebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
         /// </summary>
         /// <param name="webRequest"></param>
         /// <returns></returns>
-        protected virtual HttpWebRequest OnWebRequestSet(HttpWebRequest webRequest) => webRequest;
+        protected virtual WebRequest OnWebRequestSet(WebRequest webRequest) => webRequest;
 
         /// <summary>
         /// 这是给我自己开发调试用的
@@ -277,7 +278,7 @@ namespace dotnetCampus.FileDownloader
             _logger.LogDebug(message, args);
         }
 
-        private async Task<WebResponse?> GetWebResponseAsync(Action<HttpWebRequest>? action = null)
+        private async Task<WebResponse?> GetWebResponseAsync(Action<WebRequest>? action = null)
         {
             var id = Interlocked.Increment(ref _idGenerator);
 
@@ -297,7 +298,12 @@ namespace dotnetCampus.FileDownloader
                     // 即使下载速度再慢，只有要在下载，也不能算超时
                     // 如果下载 BufferLength 长度 默认 65535 字节时间超过 10 秒，基本上也断开也差不多
                     webRequest.Timeout = (int) StepTimeOut.TotalMilliseconds;
-                    webRequest.ReadWriteTimeout = (int) StepTimeOut.TotalMilliseconds;
+
+                    if (webRequest is HttpWebRequest httpWebRequest)
+                    {
+                        // ReadWriteTimeout设置的是从建立连接开始，到下载数据完毕所历经的时间
+                        httpWebRequest.ReadWriteTimeout = (int) StepTimeOut.TotalMilliseconds;
+                    }
 
                     LogDebugInternal("[GetWebResponseAsync] [{0}] Enter action.", id);
                     action?.Invoke(webRequest);
@@ -367,7 +373,9 @@ namespace dotnetCampus.FileDownloader
             // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
 
             var response = await GetWebResponseAsync(webRequest =>
-                webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
+            {
+                webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
+            });
             return response;
         }
 
