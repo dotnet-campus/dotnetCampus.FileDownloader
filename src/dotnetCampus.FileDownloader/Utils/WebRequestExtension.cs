@@ -11,7 +11,7 @@ namespace dotnetCampus.FileDownloader.Utils
             webRequest.AddRange("bytes", from, to);
         }
 
-  
+
         public static void AddRange(this WebRequest webRequest, long from, long to)
         {
             webRequest.AddRange("bytes", from, to);
@@ -31,8 +31,8 @@ namespace dotnetCampus.FileDownloader.Utils
             {
                 throw new ArgumentOutOfRangeException(nameof(from), "传入的 From 比 To 大");
             }
-         
-            if (!AddRange(webRequest,rangeSpecifier, from.ToString(NumberFormatInfo.InvariantInfo), to.ToString(NumberFormatInfo.InvariantInfo)))
+
+            if (!AddRange(webRequest, rangeSpecifier, from.ToString(NumberFormatInfo.InvariantInfo), to.ToString(NumberFormatInfo.InvariantInfo)))
             {
                 throw new InvalidOperationException();
             }
@@ -50,13 +50,13 @@ namespace dotnetCampus.FileDownloader.Utils
                 throw new ArgumentNullException(nameof(rangeSpecifier));
             }
 
-            if (!AddRange(webRequest,rangeSpecifier, range.ToString(NumberFormatInfo.InvariantInfo), (range >= 0) ? "" : null))
+            if (!AddRange(webRequest, rangeSpecifier, range.ToString(NumberFormatInfo.InvariantInfo), (range >= 0) ? "" : null))
             {
                 throw new InvalidOperationException();
             }
         }
 
-        private static bool AddRange(WebRequest webRequest,string rangeSpecifier, string from, string? to)
+        private static bool AddRange(WebRequest webRequest, string rangeSpecifier, string from, string? to)
         {
             var webHeaderCollection = webRequest.Headers;
             string? curRange = webHeaderCollection[HttpKnownHeaderNames.Range];
