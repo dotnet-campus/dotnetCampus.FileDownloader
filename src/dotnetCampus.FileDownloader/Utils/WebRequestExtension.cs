@@ -9,6 +9,7 @@ namespace dotnetCampus.FileDownloader.Utils
         public static void AddRange(this WebRequest webRequest, int from, int to)
         {
 #if NET45
+            // 在 NET45 下，只能通过 HttpWebRequest 的方式设置
             if (webRequest is HttpWebRequest httpWebRequest)
             {
                 httpWebRequest.AddRange(from, to);
@@ -26,6 +27,7 @@ namespace dotnetCampus.FileDownloader.Utils
         public static void AddRange(this WebRequest webRequest, long from, long to)
         {
 #if NET45
+            // 在 NET45 下，只能通过 HttpWebRequest 的方式设置
             if (webRequest is HttpWebRequest httpWebRequest)
             {
                 httpWebRequest.AddRange(from, to);
