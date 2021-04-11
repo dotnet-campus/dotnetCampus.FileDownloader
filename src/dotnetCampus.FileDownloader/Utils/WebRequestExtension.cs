@@ -8,13 +8,36 @@ namespace dotnetCampus.FileDownloader.Utils
     {
         public static void AddRange(this WebRequest webRequest, int from, int to)
         {
-            webRequest.AddRange("bytes", from, to);
+#if NET45
+            if (webRequest is HttpWebRequest httpWebRequest)
+            {
+                httpWebRequest.AddRange(from, to);
+                return;
+            }
+            else
+            {
+                throw new ArgumentException($"仅支持给 HttpWebRequest 设置 Range 长度");
+            }
+#else
+            webRequest.AddRange(HttpKnownHeaderNames.Bytes, from, to);
+#endif
         }
-
 
         public static void AddRange(this WebRequest webRequest, long from, long to)
         {
-            webRequest.AddRange("bytes", from, to);
+#if NET45
+            if (webRequest is HttpWebRequest httpWebRequest)
+            {
+                httpWebRequest.AddRange(from, to);
+                return;
+            }
+            else
+            {
+                throw new ArgumentException($"仅支持给 HttpWebRequest 设置 Range 长度");
+            }
+#else
+            webRequest.AddRange(HttpKnownHeaderNames.Bytes, from, to);
+#endif
         }
 
         public static void AddRange(this WebRequest webRequest, string rangeSpecifier, long from, long to)
@@ -23,16 +46,19 @@ namespace dotnetCampus.FileDownloader.Utils
             {
                 throw new ArgumentNullException(nameof(rangeSpecifier));
             }
+
             if ((from < 0) || (to < 0))
             {
                 throw new ArgumentOutOfRangeException(from < 0 ? nameof(from) : nameof(to), "Range 太小了");
             }
+
             if (from > to)
             {
                 throw new ArgumentOutOfRangeException(nameof(from), "传入的 From 比 To 大");
             }
 
-            if (!AddRange(webRequest, rangeSpecifier, from.ToString(NumberFormatInfo.InvariantInfo), to.ToString(NumberFormatInfo.InvariantInfo)))
+            if (!AddRange(webRequest, rangeSpecifier, from.ToString(NumberFormatInfo.InvariantInfo),
+                to.ToString(NumberFormatInfo.InvariantInfo)))
             {
                 throw new InvalidOperationException();
             }
@@ -40,7 +66,24 @@ namespace dotnetCampus.FileDownloader.Utils
 
         public static void AddRange(this WebRequest webRequest, string rangeSpecifier, int range)
         {
+#if NET45
+            if (webRequest is HttpWebRequest httpWebRequest)
+            {
+                if (!rangeSpecifier.Equals(HttpKnownHeaderNames.Bytes, StringComparison.Ordinal))
+                {
+                    throw new ArgumentException($"仅支持给 HttpWebRequest 设置 {HttpKnownHeaderNames.Bytes} 单位的长度");
+                }
+
+                httpWebRequest.AddRange(range);
+                return;
+            }
+            else
+            {
+                throw new ArgumentException($"仅支持给 HttpWebRequest 设置 Range 长度");
+            }
+#else
             webRequest.AddRange(rangeSpecifier, (long) range);
+#endif
         }
 
         public static void AddRange(this WebRequest webRequest, string rangeSpecifier, long range)
@@ -50,7 +93,8 @@ namespace dotnetCampus.FileDownloader.Utils
                 throw new ArgumentNullException(nameof(rangeSpecifier));
             }
 
-            if (!AddRange(webRequest, rangeSpecifier, range.ToString(NumberFormatInfo.InvariantInfo), (range >= 0) ? "" : null))
+            if (!AddRange(webRequest, rangeSpecifier, range.ToString(NumberFormatInfo.InvariantInfo),
+                (range >= 0) ? "" : null))
             {
                 throw new InvalidOperationException();
             }
@@ -67,17 +111,21 @@ namespace dotnetCampus.FileDownloader.Utils
             }
             else
             {
-                if (!string.Equals(curRange.Substring(0, curRange.IndexOf('=')), rangeSpecifier, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(curRange.Substring(0, curRange.IndexOf('=')), rangeSpecifier,
+                    StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }
+
                 curRange = string.Empty;
             }
+
             curRange += @from;
             if (to != null)
             {
                 curRange += "-" + to;
             }
+
             webHeaderCollection[HttpKnownHeaderNames.Range] = curRange;
             return true;
         }
@@ -85,6 +133,8 @@ namespace dotnetCampus.FileDownloader.Utils
         internal static class HttpKnownHeaderNames
         {
             public const string Range = "Range";
+
+            public const string Bytes = "bytes";
         }
     }
 }
