@@ -37,3 +37,13 @@ var segmentFileDownloader = new SegmentFileDownloader(url, file);
 
 await segmentFileDownloader.DownloadFileAsync();
 ```
+
+## Downloader by AduDownload
+
+![](docs/images/AduDownload_with_FileDownloader_1.0.1.png)
+
+[AduDownload with FileDownloader.zip](https://github.com/dotnet-campus/dotnetCampus.FileDownloader/releases/download/AduDownload_1.0.1/AduDownload.with.FileDownloader.zip)
+
+## Thanks
+
+- [@AduSkin](https://github.com/AduSkin) [AduDownload](https://gitee.com/aduskin/AduDownload)
