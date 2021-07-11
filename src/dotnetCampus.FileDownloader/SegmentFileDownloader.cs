@@ -100,8 +100,12 @@ namespace dotnetCampus.FileDownloader
         private int MaxThreadCount { get; } = 10;
 
         /// <summary>
-        /// 网速控制开关
+        /// 网速控制开关，作用是在弱网下减少线程数量，等待网络速度恢复时，才加大线程数量，用于提升性能
         /// </summary>
+        /// 在网络很弱时，网络的响应很慢时，开启多个线程只会空白运行，不会加快任何速度，此时将会逐步降低为采用 1 个线程进行下载
+        /// 
+        /// 核心逻辑是通过网络的响应时间距离当前时间的距离判断，拿出距离最大的任务，如果时间距离超过了 10 秒，设置任务为暂停，释放此线程
+        /// 感谢 [@maplewei](https://github.com/maplewei) 提供的方法
         /// <returns></returns>
         private async void ControlSwitch()
         {
@@ -135,6 +139,15 @@ namespace dotnetCampus.FileDownloader
                         StartDownloadTask();
                     }
                 }
+                else if (_threadCount == 0)
+                {
+                    // 这是多线程占用的坑，为了减少同步，因此放在这重新设置值
+                    if(segment?.LoadingState == DownloadingState.Runing)
+                    {
+                        segment.LoadingState = DownloadingState.Pause;
+                    }
+                    StartDownloadTask();
+                }
 
                 LogDebugInternal("Finish ControlSwitch");
                 //变速器3秒为一周期
@@ -152,8 +165,14 @@ namespace dotnetCampus.FileDownloader
             async Task DownloadTaskInner()
             {
                 Interlocked.Increment(ref _threadCount);
-                await DownloadTask();
-                Interlocked.Decrement(ref _threadCount);
+                try
+                {
+                    await DownloadTask();
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _threadCount);
+                }
             }
         }
 
@@ -276,6 +295,7 @@ namespace dotnetCampus.FileDownloader
         private void LogDebugInternal(string message, params object[] args)
         {
             _logger.LogDebug(message, args);
+            Debug.WriteLine(message, args);
         }
 
         private async Task<WebResponse?> GetWebResponseAsync(Action<WebRequest>? action = null)
@@ -323,7 +343,7 @@ namespace dotnetCampus.FileDownloader
                     // 如超时或 403 等服务器返回的错误，此时修改重试时间
                     // $exception	{"The operation has timed out."}
                     // $exception	{"The remote server returned an error: (403) Forbidden."}
-                    _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
+                    _logger.LogInformation($"[{id}] 第{i}次获取 WebResponse 失败 {e}");
 
                     retryDelayTime = TimeSpan.FromSeconds(1);
                 }
@@ -409,6 +429,7 @@ namespace dotnetCampus.FileDownloader
                 }
                 catch (Exception e)
                 {
+                    // TaskCanceledException 读取超时，网络速度不够
                     // error System.IO.IOException:  Received an unexpected EOF or 0 bytes from the transport stream.
 
                     _logger.LogInformation(
