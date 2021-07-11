@@ -55,6 +55,10 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
+        /// <summary>
+        /// 获取最大等待时间的下载段状态
+        /// </summary>
+        /// <returns></returns>
         internal (DownloadSegment? segment, int runCount, TimeSpan maxReportTime) GetDownloadSegmentStatus()
         {
             lock (_locker)
