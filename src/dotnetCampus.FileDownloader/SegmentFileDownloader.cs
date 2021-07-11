@@ -116,16 +116,16 @@ namespace dotnetCampus.FileDownloader
             while (!SegmentManager.IsFinished())
             {
                 LogDebugInternal("Start ControlSwitch");
-                var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
+                var (maxWaitReportTimeDownloadSegment, runCount, maxReportTime) = SegmentManager.GetMaxWaitReportTimeDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
 
                 LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
-                if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
+                if (maxReportTime > TimeSpan.FromSeconds(10) && maxWaitReportTimeDownloadSegment != null && runCount > 1)
                 {
                     // 此时速度太慢
-                    segment.LoadingState = DownloadingState.Pause;
-                    LogDebugInternal("ControlSwitch slowly pause segment={0}", segment.Number);
+                    maxWaitReportTimeDownloadSegment.LoadingState = DownloadingState.Pause;
+                    LogDebugInternal("ControlSwitch slowly pause segment={0}", maxWaitReportTimeDownloadSegment.Number);
                 }
                 else if (maxReportTime < TimeSpan.FromMilliseconds(600) && waitCount > 0 || runCount < 1)
                 {
@@ -142,9 +142,9 @@ namespace dotnetCampus.FileDownloader
                 else if (_threadCount == 0)
                 {
                     // 这是多线程占用的坑，为了减少同步，因此放在这重新设置值
-                    if(segment?.LoadingState == DownloadingState.Runing)
+                    if(maxWaitReportTimeDownloadSegment?.LoadingState == DownloadingState.Runing)
                     {
-                        segment.LoadingState = DownloadingState.Pause;
+                        maxWaitReportTimeDownloadSegment.LoadingState = DownloadingState.Pause;
                     }
                     StartDownloadTask();
                 }
