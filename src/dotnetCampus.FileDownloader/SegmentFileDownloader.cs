@@ -171,7 +171,7 @@ namespace dotnetCampus.FileDownloader
 
             _logger.LogInformation($"ContentLength={contentLength}");
 
-            if (contentLength < 0)
+            if (contentLength <= 0)
             {
                 // contentLength == -1
                 // 当前非下载内容，没有存在长度
