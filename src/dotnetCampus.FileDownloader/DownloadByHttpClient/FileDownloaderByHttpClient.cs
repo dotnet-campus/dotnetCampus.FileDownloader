@@ -169,7 +169,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     {
         _ = Task.Run(DownloadTaskInner);
 
-        async Task DownloadTaskInner()
+        async ValueTask DownloadTaskInner()
         {
             Interlocked.Increment(ref _threadCount);
             await DownloadTask();
@@ -183,7 +183,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// 开始下载文件
     /// </summary>
     /// <returns></returns>
-    public async Task DownloadFileAsync()
+    public async ValueTask DownloadFileAsync()
     {
         _logger.LogInformation($"Start download Url={Url} File={File.FullName}");
 
@@ -388,7 +388,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         return response;
     }
 
-    private async Task DownloadTask()
+    private async ValueTask DownloadTask()
     {
         while (!SegmentManager.IsFinished())
         {
@@ -458,7 +458,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <param name="downloadSegment"></param>
     /// <returns></returns>
     /// 这个方法如果触发异常，将会在上一层进行重试
-    private async Task DownloadSegmentInner(HttpResponseMessage? response, DownloadSegment downloadSegment)
+    private async ValueTask DownloadSegmentInner(HttpResponseMessage? response, DownloadSegment downloadSegment)
     {
         if (response == null)
         {
@@ -537,7 +537,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         Download(null, downloadSegment);
     }
 
-    private async Task FinishDownload()
+    private async ValueTask FinishDownload()
     {
         if (_isDisposed)
         {
@@ -565,7 +565,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         FileDownloadTask.SetResult(true);
     }
 
-    private async Task<bool> TryDownloadLast(long contentLength)
+    private async ValueTask<bool> TryDownloadLast(long contentLength)
     {
         // 尝试下载后部分，如果可以下载后续的 100 个字节，那么这个链接支持分段下载
         const int downloadLength = 100;
