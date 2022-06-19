@@ -92,10 +92,6 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// 下载的文件
     /// </summary>
     public FileInfo File { get; }
-    ///// <summary>
-    ///// 定时检测的最后时间
-    ///// </summary>
-    //private DateTime LastTime { get; set; } = DateTime.Now;
 
     private readonly ILogger<SegmentFileDownloader> _logger;
     private readonly IProgress<DownloadProgress> _progress;
@@ -258,18 +254,18 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// 获取整个下载的长度
     /// </summary>
     /// <returns></returns>
-    private async Task<(WebResponse response, long contentLength)> GetContentLength()
+    private async ValueTask<(HttpResponseMessage response, long contentLength)> GetContentLength()
     {
         _logger.LogInformation("开始获取整个下载长度");
 
-        var response = await GetWebResponseAsync();
+        HttpResponseMessage? response = await GetWebResponseAsync();
 
         if (response == null)
         {
             return default;
         }
 
-        var contentLength = response.ContentLength;
+        var contentLength = response.Content.Headers.ContentLength ?? 0;
 
         _logger.LogInformation(
             $"完成获取文件长度，文件长度 {contentLength} {contentLength / 1024}KB {contentLength / 1024.0 / 1024.0:0.00}MB");
@@ -289,7 +285,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="webRequest"></param>
     /// <returns></returns>
-    protected virtual WebRequest OnWebRequestSet(WebRequest webRequest) => webRequest;
+    protected virtual HttpRequestMessage OnWebRequestSet(HttpRequestMessage webRequest) => webRequest;
 
     /// <summary>
     /// 这是给我自己开发调试用的
@@ -302,7 +298,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         _logger.LogDebug(message, args);
     }
 
-    private async Task<WebResponse?> GetWebResponseAsync(Action<WebRequest>? action = null)
+    private async ValueTask<HttpResponseMessage?> GetWebResponseAsync(Action<HttpRequestMessage>? action = null)
     {
         var id = Interlocked.Increment(ref _idGenerator);
 
@@ -314,28 +310,16 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             {
                 var url = Url;
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
-                var webRequest = CreateWebRequest(url);
-                webRequest.Method = "GET";
-                // 加上超时，支持弱网
-                // Timeout设置的是从发出请求开始算起，到与服务器建立连接的时间
-                // ReadWriteTimeout设置的是从建立连接开始，到下载数据完毕所历经的时间
-                // 即使下载速度再慢，只有要在下载，也不能算超时
-                // 如果下载 BufferLength 长度 默认 65535 字节时间超过 10 秒，基本上也断开也差不多
-                webRequest.Timeout = (int) StepTimeOut.TotalMilliseconds;
 
-                if (webRequest is HttpWebRequest httpWebRequest)
-                {
-                    // ReadWriteTimeout设置的是从建立连接开始，到下载数据完毕所历经的时间
-                    httpWebRequest.ReadWriteTimeout = (int) StepTimeOut.TotalMilliseconds;
-                }
+                HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, url);
 
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Enter action.", id);
-                action?.Invoke(webRequest);
-                webRequest = OnWebRequestSet(webRequest);
+                action?.Invoke(httpRequestMessage);
+                httpRequestMessage = OnWebRequestSet(httpRequestMessage);
 
                 var stopwatch = Stopwatch.StartNew();
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
-                var response = await GetResponseAsync(webRequest);
+                var response = await GetResponseAsync(httpRequestMessage);
                 stopwatch.Stop();
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
                     stopwatch.ElapsedMilliseconds);
@@ -381,8 +365,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    protected virtual Task<WebResponse> GetResponseAsync(WebRequest request)
-        => request.GetResponseAsync();
+    protected virtual Task<HttpResponseMessage> GetResponseAsync(HttpRequestMessage request)
+        => HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
     /// <summary>
     /// 尝试获取链接响应
