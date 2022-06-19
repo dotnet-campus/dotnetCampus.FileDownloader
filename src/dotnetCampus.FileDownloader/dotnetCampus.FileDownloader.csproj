@@ -61,7 +61,7 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.7"></PackageReference>
         <Compile Remove="Context_\Logger_\Microsoft.Extensions.Logging.ForNETFx\**" />
     </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+    <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp3.1' or '$(TargetFramework)'=='net6.0'">
         <Compile Remove="Context_\IAsyncDisposable.cs" />
     </ItemGroup>
 </Project>
