@@ -258,7 +258,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     {
         _logger.LogInformation("开始获取整个下载长度");
 
-        HttpResponseMessage? response = await GetWebResponseAsync();
+        HttpResponseMessage? response = await GetHttpResponseMessageAsync();
 
         if (response == null)
         {
@@ -274,18 +274,18 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     }
 
     /// <summary>
-    /// 通过 Url 创建出对应的 <see cref="WebRequest"/> 实例
+    /// 通过 Url 创建出对应的 <see cref="HttpRequestMessage"/> 实例
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    protected virtual HttpRequestMessage CreateWebRequest(string url) => new HttpRequestMessage(HttpMethod.Get, url);
+    protected virtual HttpRequestMessage CreateHttpRequestMessage(string url) => new HttpRequestMessage(HttpMethod.Get, url);
 
     /// <summary>
-    /// 在 <see cref="WebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
+    /// 在 <see cref="HttpRequestMessage"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
     /// </summary>
-    /// <param name="webRequest"></param>
+    /// <param name="httpRequestMessage"></param>
     /// <returns></returns>
-    protected virtual HttpRequestMessage OnWebRequestSet(HttpRequestMessage webRequest) => webRequest;
+    protected virtual HttpRequestMessage OnHttpRequestMessageSet(HttpRequestMessage httpRequestMessage) => httpRequestMessage;
 
     /// <summary>
     /// 这是给我自己开发调试用的
@@ -298,7 +298,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         _logger.LogDebug(message, args);
     }
 
-    private async ValueTask<HttpResponseMessage?> GetWebResponseAsync(Action<HttpRequestMessage>? action = null)
+    private async ValueTask<HttpResponseMessage?> GetHttpResponseMessageAsync(Action<HttpRequestMessage>? action = null)
     {
         var id = Interlocked.Increment(ref _idGenerator);
 
@@ -309,13 +309,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             try
             {
                 var url = Url;
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
+                LogDebugInternal("[GetWebResponseAsync] [{0}] Create HttpRequestMessage. Retry Count {0}", id, i);
 
-                HttpRequestMessage httpRequestMessage = CreateWebRequest(url);
+                HttpRequestMessage httpRequestMessage = CreateHttpRequestMessage(url);
 
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Enter action.", id);
                 action?.Invoke(httpRequestMessage);
-                httpRequestMessage = OnWebRequestSet(httpRequestMessage);
+                httpRequestMessage = OnHttpRequestMessageSet(httpRequestMessage);
 
                 var stopwatch = Stopwatch.StartNew();
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
@@ -380,10 +380,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
 
-        var response = await GetWebResponseAsync(webRequest =>
+        var response = await GetHttpResponseMessageAsync(httpRequestMessage =>
         {
-            webRequest.Headers.Range.Ranges.Clear();
-            webRequest.Headers.Range.Ranges.Add(new System.Net.Http.Headers.RangeItemHeaderValue(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
+            httpRequestMessage.Headers.Range.Ranges.Clear();
+            httpRequestMessage.Headers.Range.Ranges.Add(new System.Net.Http.Headers.RangeItemHeaderValue(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
         });
         return response;
     }
@@ -482,7 +482,6 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             downloadSegment.Message = "Start ReadAsync";
             LogDebugInternal("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
             using var cancellationTokenSource = new CancellationTokenSource(StepTimeOut);
-            // 设置了 WebRequest.Timeout 不能用来修改异步的方法，所以需要使用下面方法
             downloadSegment.LastDownTime = DateTime.Now;
             var n = await responseStream.ReadAsync(buffer, 0, length, cancellationTokenSource.Token);
             LogDebugInternal("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
@@ -573,9 +572,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         var startPoint = contentLength - downloadLength;
 
-        var responseLast = await GetWebResponseAsync(webRequest =>
+        var responseLast = await GetHttpResponseMessageAsync(httpRequestMessage =>
         {
-            //webRequest.AddRange(startPoint, contentLength);
+            httpRequestMessage.Headers.Range.Ranges.Clear();
+            httpRequestMessage.Headers.Range.Ranges.Add(new System.Net.Http.Headers.RangeItemHeaderValue(startPoint, contentLength));
         });
 
         if (responseLast == null)
