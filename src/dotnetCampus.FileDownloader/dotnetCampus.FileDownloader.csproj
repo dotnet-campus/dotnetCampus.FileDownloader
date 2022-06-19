@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net45;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>net45;netcoreapp3.1;netstandard2.0;net6.0</TargetFrameworks>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Nullable>enable</Nullable>
 
@@ -36,9 +36,6 @@
     </ItemGroup>
 
     <ItemGroup>
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="dotnetCampus.AsyncWorkerCollection.Source" Version="1.5.3">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -53,6 +50,9 @@
 
     <ItemGroup Condition="'$(TargetFramework)'=='net45'">
         <PackageReference Include="System.ValueTuple" Version="4.5"></PackageReference>
+
+        <!-- 这个文件夹只是给 .NET 高版本使用 -->
+        <Compile Remove="DownloadByHttpClient\**\*.cs"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)'!='net45'">
