@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using dotnetCampus.Threading;
@@ -56,6 +57,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         _shouldDisposeHttpClient = httpClient is null;
         HttpClient = httpClient ?? new HttpClient();
+
+        DownloadDataList = Channel.CreateUnbounded<DownloadData>(new UnboundedChannelOptions()
+        {
+            SingleReader = true,
+            AllowSynchronousContinuations = true,
+        });
     }
 
     /// <summary>
@@ -86,7 +93,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     public string Url { get; }
 
-    private AsyncQueue<DownloadData> DownloadDataList { get; } = new AsyncQueue<DownloadData>();
+    private Channel<DownloadData> DownloadDataList { get; }
 
     /// <summary>
     /// 下载的文件
@@ -133,8 +140,11 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         {
             LogDebugInternal("Start ControlSwitch");
             var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
-            int waitCount = DownloadDataList.Count;
-
+#if NET6_0_OR_GREATER
+            int waitCount = DownloadDataList.Reader.Count;
+#else
+            int waitCount = 1;
+#endif
             LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
             if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
@@ -393,8 +403,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         while (!SegmentManager.IsFinished())
         {
             // 不需要进行等待，就是开始下载
-            //await semaphoreSlim.WaitAsync();
-            var data = await DownloadDataList.DequeueAsync();
+            var data = await DownloadDataList.Reader.ReadAsync();
 
             // 没有内容了
             if (SegmentManager.IsFinished())
@@ -521,10 +530,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
     }
 
-    private void Download(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
+    private async void Download(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
     {
         LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
-        DownloadDataList.Enqueue(new DownloadData(webResponse, downloadSegment));
+        await DownloadDataList.Writer.WriteAsync(new DownloadData(webResponse, downloadSegment));
     }
 
     private void Download(DownloadSegment? downloadSegment)
@@ -555,12 +564,9 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         }
 
         await FileWriter.DisposeAsync();
-#if NETCOREAPP
         await FileStream.DisposeAsync();
-#else
-            FileStream.Dispose();
-#endif
-        await DownloadDataList.DisposeAsync();
+
+        DownloadDataList.Writer.Complete();
 
         FileDownloadTask.SetResult(true);
     }
