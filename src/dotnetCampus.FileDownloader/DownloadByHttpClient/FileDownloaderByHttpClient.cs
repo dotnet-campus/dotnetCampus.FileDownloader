@@ -278,7 +278,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    protected virtual WebRequest CreateWebRequest(string url) => (WebRequest) WebRequest.Create(url);
+    protected virtual HttpRequestMessage CreateWebRequest(string url) => new HttpRequestMessage(HttpMethod.Get, url);
 
     /// <summary>
     /// 在 <see cref="WebRequest"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
@@ -311,7 +311,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                 var url = Url;
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Create WebRequest. Retry Count {0}", id, i);
 
-                HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+                HttpRequestMessage httpRequestMessage = CreateWebRequest(url);
 
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Enter action.", id);
                 action?.Invoke(httpRequestMessage);
