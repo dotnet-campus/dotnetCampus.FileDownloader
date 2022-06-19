@@ -524,7 +524,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
     }
 
-    private void Download(WebResponse? webResponse, DownloadSegment downloadSegment)
+    private void Download(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
     {
         LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
         DownloadDataList.Enqueue(new DownloadData(webResponse, downloadSegment));
@@ -610,13 +610,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
     private class DownloadData
     {
-        public DownloadData(WebResponse? webResponse, DownloadSegment downloadSegment)
+        public DownloadData(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
         {
             WebResponse = webResponse;
             DownloadSegment = downloadSegment;
         }
 
-        public WebResponse? WebResponse { get; }
+        public HttpResponseMessage? WebResponse { get; }
 
         public DownloadSegment DownloadSegment { get; }
     }
