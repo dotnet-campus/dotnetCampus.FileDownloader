@@ -373,7 +373,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="downloadSegment"></param>
     /// <returns></returns>
-    private async Task<WebResponse?> GetWebResponse(DownloadSegment downloadSegment)
+    private async ValueTask<HttpResponseMessage?> GetWebResponse(DownloadSegment downloadSegment)
     {
         _logger.LogInformation(
             $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
@@ -382,7 +382,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         var response = await GetWebResponseAsync(webRequest =>
         {
-            //webRequest.AddRange(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
+            webRequest.Headers.Range.Ranges.Clear();
+            webRequest.Headers.Range.Ranges.Add(new System.Net.Http.Headers.RangeItemHeaderValue(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
         });
         return response;
     }
@@ -457,7 +458,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <param name="downloadSegment"></param>
     /// <returns></returns>
     /// 这个方法如果触发异常，将会在上一层进行重试
-    private async Task DownloadSegmentInner(WebResponse? response, DownloadSegment downloadSegment)
+    private async Task DownloadSegmentInner(HttpResponseMessage? response, DownloadSegment downloadSegment)
     {
         if (response == null)
         {
@@ -466,10 +467,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         }
 
         downloadSegment.Message = "Start GetResponseStream";
-#if NETCOREAPP
-        await
-#endif
-        using var responseStream = response.GetResponseStream();
+        await using var responseStream = await response.Content.ReadAsStreamAsync();
         downloadSegment.Message = "Finish GetResponseStream";
 
         int length = BufferLength;
@@ -585,7 +583,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             return false;
         }
 
-        if (responseLast.ContentLength == downloadLength)
+        if (responseLast.Content.Headers.ContentLength == downloadLength)
         {
             var downloadSegment = new DownloadSegment(startPoint, contentLength);
             SegmentManager.RegisterDownloadSegment(downloadSegment);
