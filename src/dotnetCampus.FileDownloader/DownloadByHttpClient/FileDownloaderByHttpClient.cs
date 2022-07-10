@@ -26,7 +26,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="url">下载链接，不对下载链接是否有效进行校对</param>
     /// <param name="file">下载的文件路径</param>
-    /// <param name="httpClient">用于通讯的 HttpClient 对象</param>
+    /// <param name="httpClient">用于通讯的 HttpClient 对象。传入的对象将不会在 <see cref="SegmentFileDownloaderByHttpClient"/> 里被释放。如不传入，则在 <see cref="SegmentFileDownloaderByHttpClient"/> 里自动创建和释放</param>
     /// <param name="logger">下载时的内部日志，默认将使用 Debug 输出</param>
     /// <param name="progress">下载进度</param>
     /// <param name="sharedArrayPool">共享缓存数组池，默认使用 ArrayPool 池</param>
@@ -68,7 +68,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <summary>
     /// 是否需要释放 HttpClient 对象。如果是外部传入的，那就不需要释放，交给外部去进行释放
     /// </summary>
-    private bool _shouldDisposeHttpClient;
+    private readonly bool _shouldDisposeHttpClient;
 
     private HttpClient HttpClient { get; }
 
