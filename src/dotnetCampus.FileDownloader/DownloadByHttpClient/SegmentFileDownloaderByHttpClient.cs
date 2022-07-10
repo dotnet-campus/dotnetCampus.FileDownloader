@@ -405,7 +405,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         while (!SegmentManager.IsFinished())
         {
             // 不需要进行等待，就是开始下载
-            DownloadData? data = null;
+            DownloadData data;
             try
             {
                 data = await DownloadDataList.Reader.ReadAsync();
@@ -424,12 +424,6 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             // 没有内容了
             if (SegmentManager.IsFinished())
             {
-                return;
-            }
-
-            if(data is null)
-            {
-                // 理论上不会进入这里
                 return;
             }
 
