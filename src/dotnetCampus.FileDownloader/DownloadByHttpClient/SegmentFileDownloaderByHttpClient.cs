@@ -140,12 +140,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         {
             LogDebugInternal("Start ControlSwitch");
             var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
-#if NET6_0_OR_GREATER
-            int waitCount = DownloadDataList.Reader.Count;
-#else
-            int waitCount = 1;
-#endif
-            LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
+
+            LogDebugInternal("ControlSwitch 待命最大响应时间：{1},运行数量：{2},运行线程{3}", maxReportTime, runCount, _threadCount);
 
             if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
             {
@@ -153,7 +149,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                 segment.LoadingState = DownloadingState.Pause;
                 LogDebugInternal("ControlSwitch slowly pause segment={0}", segment.Number);
             }
-            else if (maxReportTime < TimeSpan.FromMilliseconds(600) && waitCount > 0 || runCount < 1)
+            else if (maxReportTime < TimeSpan.FromMilliseconds(600) || runCount < 1)
             {
                 // 速度非常快，尝试再开线程，或者当前没有在进行的任务
                 // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
