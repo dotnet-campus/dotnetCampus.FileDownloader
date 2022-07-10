@@ -392,8 +392,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         var response = await GetHttpResponseMessageAsync(httpRequestMessage =>
         {
-            httpRequestMessage.Headers.Range.Ranges.Clear();
-            httpRequestMessage.Headers.Range.Ranges.Add(new System.Net.Http.Headers.RangeItemHeaderValue(downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint));
+            SetRange(httpRequestMessage, downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
         });
         return response;
     }
@@ -580,8 +579,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         var responseLast = await GetHttpResponseMessageAsync(httpRequestMessage =>
         {
-            httpRequestMessage.Headers.Range.Ranges.Clear();
-            httpRequestMessage.Headers.Range.Ranges.Add(new System.Net.Http.Headers.RangeItemHeaderValue(startPoint, contentLength));
+            var fromPoint = startPoint;
+            var toPoint = contentLength;
+
+            SetRange(httpRequestMessage, fromPoint, toPoint);
         });
 
         if (responseLast == null)
@@ -600,6 +601,17 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         }
 
         return false;
+    }
+
+    private static void SetRange(HttpRequestMessage httpRequestMessage, long fromPoint, long toPoint)
+    {
+        if (httpRequestMessage.Headers.Range?.Ranges is null)
+        {
+            httpRequestMessage.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue();
+        }
+
+        httpRequestMessage.Headers.Range.Ranges.Clear();
+        httpRequestMessage.Headers.Range.Ranges.Add(new System.Net.Http.Headers.RangeItemHeaderValue(fromPoint, toPoint));
     }
 
     /// <inheritdoc/>
