@@ -411,6 +411,11 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                 data = await DownloadDataList.Reader.ReadAsync();
                 Interlocked.Decrement(ref _workTaskCount);
             }
+            catch (ChannelClosedException)
+            {
+                // 调用了 FinishDownload 表示完成
+                return;
+            }
             catch (OperationCanceledException)
             {
                 // 也就是相当于完成了
