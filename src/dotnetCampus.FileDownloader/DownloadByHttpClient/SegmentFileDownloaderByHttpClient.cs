@@ -61,7 +61,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         DownloadDataList = Channel.CreateUnbounded<DownloadData>(new UnboundedChannelOptions()
         {
-            SingleReader = true,
+            SingleReader = false,
             AllowSynchronousContinuations = true,
         });
     }
