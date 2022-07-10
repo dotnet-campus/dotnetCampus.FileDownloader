@@ -96,6 +96,11 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     private Channel<DownloadData> DownloadDataList { get; }
 
     /// <summary>
+    /// 被加入到 <see cref="DownloadDataList"/> 的下载数量
+    /// </summary>
+    private int _workTaskCount;
+
+    /// <summary>
     /// 下载的文件
     /// </summary>
     public FileInfo File { get; }
@@ -140,11 +145,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         {
             LogDebugInternal("Start ControlSwitch");
             var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
-#if NET6_0_OR_GREATER
-            int waitCount = DownloadDataList.Reader.Count;
-#else
-            int waitCount = 1;
-#endif
+            var waitCount = _workTaskCount;
+
             LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
             if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
@@ -403,6 +405,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         {
             // 不需要进行等待，就是开始下载
             var data = await DownloadDataList.Reader.ReadAsync();
+            Interlocked.Decrement(ref _workTaskCount);
 
             // 没有内容了
             if (SegmentManager.IsFinished())
@@ -533,6 +536,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     {
         LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
         await DownloadDataList.Writer.WriteAsync(new DownloadData(webResponse, downloadSegment));
+        Interlocked.Increment(ref _workTaskCount);
     }
 
     private void Download(DownloadSegment? downloadSegment)
