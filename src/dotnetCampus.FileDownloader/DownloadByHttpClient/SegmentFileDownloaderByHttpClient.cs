@@ -32,11 +32,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <param name="sharedArrayPool">共享缓存数组池，默认使用 ArrayPool 池</param>
     /// <param name="bufferLength">缓存的数组长度，默认是 65535 的长度</param>
     /// <param name="stepTimeOut">每一步 每一分段下载超时时间 默认 10 秒</param>
+    /// <param name="breakpointResumptionTransmissionRecordFile">断点续下的信息记录文件，如为空将不带上断点续下功能</param>
     public SegmentFileDownloaderByHttpClient(string url, FileInfo file,
         HttpClient? httpClient = null,
         ILogger<SegmentFileDownloader>? logger = null,
             IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
-            int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null)
+            int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null, FileInfo? breakpointResumptionTransmissionRecordFile = null)
     {
         _logger = logger ?? new DebugSegmentFileDownloaderLogger();
         _progress = progress ?? new Progress<DownloadProgress>();
@@ -404,12 +405,26 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         while (!SegmentManager.IsFinished())
         {
             // 不需要进行等待，就是开始下载
-            var data = await DownloadDataList.Reader.ReadAsync();
-            Interlocked.Decrement(ref _workTaskCount);
-
+            DownloadData? data = null;
+            try
+            {
+                data = await DownloadDataList.Reader.ReadAsync();
+                Interlocked.Decrement(ref _workTaskCount);
+            }
+            catch (OperationCanceledException)
+            {
+                // 也就是相当于完成了
+                return;
+            }
             // 没有内容了
             if (SegmentManager.IsFinished())
             {
+                return;
+            }
+
+            if(data is null)
+            {
+                // 理论上不会进入这里
                 return;
             }
 
@@ -551,6 +566,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
     private async ValueTask FinishDownload()
     {
+        LogDebugInternal($"FinishDownload");
+
         if (_isDisposed)
         {
             return;
