@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
 using dotnetCampus.Threading;
 
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         _progress = progress ?? new Progress<DownloadProgress>();
         SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
         StepTimeOut = stepTimeOut ?? TimeSpan.FromSeconds(10);
-
+        BreakpointResumptionTransmissionRecordFile = breakpointResumptionTransmissionRecordFile;
         if (string.IsNullOrEmpty(url))
         {
             throw new ArgumentNullException(nameof(url));
@@ -123,6 +124,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// 每一次分段下载的超时时间，默认10秒
     /// </summary>
     public TimeSpan StepTimeOut { get; }
+    /// <summary>
+    /// 断点续传记录文件
+    /// </summary>
+    private FileInfo? BreakpointResumptionTransmissionRecordFile { get; }
 
     //变速器3秒为一周期
     private TimeSpan ControlDelayTime { get; } = TimeSpan.FromSeconds(3);
@@ -218,7 +223,18 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
         FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
-        SegmentManager = new SegmentManager(contentLength);
+        if(BreakpointResumptionTransmissionRecordFile is null)
+        {
+            // 没有断点续传
+            SegmentManager = new SegmentManager(contentLength);
+        }
+        else
+        {
+            // 有断点续传
+            var manager = new BreakPointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, contentLength);
+            // 有断点续传情况下，先读取断点续传文件，通过此文件获取到需要下载的内容
+            SegmentManager = manager.CreateSegmentManager();
+        }
 
         _progress.Report(new DownloadProgress($"file length = {contentLength}", SegmentManager));
 
