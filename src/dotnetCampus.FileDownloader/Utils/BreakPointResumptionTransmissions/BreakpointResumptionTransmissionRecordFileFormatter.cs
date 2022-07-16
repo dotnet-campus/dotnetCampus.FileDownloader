@@ -122,9 +122,10 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         binaryWriter.Write(dataRange.Length);
     }
 
-    private long GetHeader()
+    private static long GetHeader()
     {
         // 文件头是 dotnet campus File Downloader BreakPointResumptionTransmissionInfo 几个单词的首个字符 DCFBPRTI 缩写的 ASCII 值
+        // 刚好将这个 ASCII 的 byte 数组转换为一个 long 的值
         //var headerByteList = System.Text.Encoding.ASCII.GetBytes("DCFBPRTI");
         // var headerByteList = new byte[] { 68, 67, 70, 66, 80, 82, 84, 73 };
         //return BitConverter.ToInt64(headerByteList)
