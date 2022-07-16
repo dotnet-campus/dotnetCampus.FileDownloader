@@ -45,6 +45,11 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         // 后续的信息就需要循环读取
         while (success)
         {
+            // 后续的信息一个信息由三个 Int64 组成
+            // 第一个是 DataType
+            // 第二个是 起始点
+            // 第三个是 长度
+            // 每段下载完成写入文件，将会记录写入的起始点和长度，通过起始点和长度 的列表可以算出当前还有哪些内容还没下载完成。如此即可实现断点续传功能
             (success, data) = Read();
             if(!success)
             {
@@ -91,10 +96,18 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         }
     }
 
-    public void Write(Stream stream, BreakPointResumptionTransmissionInfo info)
+    public void Write(BinaryWriter binaryWriter, BreakPointResumptionTransmissionInfo info)
     {
         var header = GetHeader();
+        binaryWriter.Write(header);
 
+        // 写入下载的文件长度，用于下次下载时，判断文件下载的长度不对，可以炸掉
+        binaryWriter.Write((long) DataType.DownloadFileLength);
+
+        if (info.DownloadedInfo is not null)
+        {
+            // 预期是不会进入这里，因此代码先不写
+        }
     }
 
     private long GetHeader()
