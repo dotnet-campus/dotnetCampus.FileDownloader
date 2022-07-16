@@ -112,7 +112,7 @@ namespace dotnetCampus.FileDownloader
             while (!SegmentManager.IsFinished())
             {
                 LogDebugInternal("Start ControlSwitch");
-                var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
+                var (segment, runCount, maxReportTime) = SegmentManager.GetMaxWaitReportTimeDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
 
                 LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);

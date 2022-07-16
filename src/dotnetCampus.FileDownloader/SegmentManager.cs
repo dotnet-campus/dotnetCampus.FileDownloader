@@ -63,7 +63,7 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        internal (DownloadSegment? segment, int runCount, TimeSpan maxReportTime) GetDownloadSegmentStatus()
+        internal (DownloadSegment? segment, int runCount, TimeSpan maxReportTime) GetMaxWaitReportTimeDownloadSegmentStatus()
         {
             lock (_locker)
             {
