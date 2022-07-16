@@ -107,6 +107,10 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         if (info.DownloadedInfo is not null)
         {
             // 预期是不会进入这里，因此代码先不写
+            foreach(var downloadedInfo in info.DownloadedInfo)
+            {
+                AppendDataRange(binaryWriter, downloadedInfo);
+            }
         }
     }
 
