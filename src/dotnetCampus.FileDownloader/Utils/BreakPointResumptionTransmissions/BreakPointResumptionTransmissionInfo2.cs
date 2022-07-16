@@ -5,9 +5,9 @@ namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionMana
 /// <summary>
 /// 断点续传信息
 /// </summary>
-class BreakpointResumptionTransmissionInfo
+class BreakPointResumptionTransmissionInfo
 {
-    public BreakpointResumptionTransmissionInfo(long downloadLength, List<(long startPoint, long length)>? downloadedInfo = null)
+    public BreakPointResumptionTransmissionInfo(long downloadLength, List<(long startPoint, long length)>? downloadedInfo = null)
     {
         DownloadLength = downloadLength;
         DownloadedInfo = downloadedInfo;
