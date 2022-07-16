@@ -110,6 +110,13 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         }
     }
 
+    public void AppendDataRange(BinaryWriter binaryWriter, DataRange dataRange)
+    {
+        binaryWriter.Write((long) DataType.DownloadedInfo);
+        binaryWriter.Write(dataRange.StartPoint);
+        binaryWriter.Write(dataRange.Length);
+    }
+
     private long GetHeader()
     {
         // 文件头是 dotnet campus File Downloader BreakPointResumptionTransmissionInfo 几个单词的首个字符 DCFBPRTI 缩写的 ASCII 值
