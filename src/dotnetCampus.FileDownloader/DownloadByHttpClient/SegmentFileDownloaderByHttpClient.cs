@@ -190,8 +190,14 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         async ValueTask DownloadTaskInner()
         {
             Interlocked.Increment(ref _threadCount);
-            await DownloadTask();
-            Interlocked.Decrement(ref _threadCount);
+            try
+            {
+                await DownloadTask();
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _threadCount);
+            }
         }
     }
 
