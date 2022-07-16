@@ -103,6 +103,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
 
         // 写入下载的文件长度，用于下次下载时，判断文件下载的长度不对，可以炸掉
         binaryWriter.Write((long) DataType.DownloadFileLength);
+        binaryWriter.Write(info.DownloadLength);
 
         if (info.DownloadedInfo is not null)
         {
