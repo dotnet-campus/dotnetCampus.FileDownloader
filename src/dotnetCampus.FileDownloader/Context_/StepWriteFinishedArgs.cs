@@ -2,8 +2,18 @@
 
 namespace dotnetCampus.FileDownloader
 {
+    /// <summary>
+    /// 每一步写入完成的事件参数
+    /// </summary>
     public class StepWriteFinishedArgs : EventArgs
     {
+        /// <summary>
+        /// 每一步写入完成的事件参数
+        /// </summary>
+        /// <param name="fileStartPoint"></param>
+        /// <param name="dataOffset"></param>
+        /// <param name="data"></param>
+        /// <param name="dataLength"></param>
         public StepWriteFinishedArgs(long fileStartPoint, int dataOffset, byte[] data, int dataLength)
         {
             FileStartPoint = fileStartPoint;
