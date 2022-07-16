@@ -53,7 +53,7 @@ readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
             return true;
         }
 
-        if (a.StartPoint <= b.StartPoint && a.LastPoint > b.StartPoint)
+        if (a.StartPoint <= b.StartPoint && a.LastPoint >= b.StartPoint)
         {
             var lastPoint = Math.Max(a.LastPoint, b.LastPoint);
             var length = lastPoint - a.StartPoint;
