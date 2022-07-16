@@ -19,6 +19,14 @@ namespace dotnetCampus.FileDownloader
         }
 
         /// <summary>
+        /// 创建文件分段管理
+        /// </summary>
+        public SegmentManager(List<DownloadSegment> downloadSegmentList)
+        {
+            DownloadSegmentList.AddRange(downloadSegmentList);
+        }
+
+        /// <summary>
         /// 下载文件长度
         /// </summary>
         public long FileLength { get; }
