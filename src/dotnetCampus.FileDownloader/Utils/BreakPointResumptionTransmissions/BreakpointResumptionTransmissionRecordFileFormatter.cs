@@ -40,7 +40,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         }
         var downloadLength = data;
 
-        List<(long startPoint, long length)> downloadedInfo = new();
+        List<DataRange> downloadedInfo = new();
 
         // 后续的信息就需要循环读取
         while (success)
@@ -73,7 +73,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
                 return null;
             }
             var length = data;
-            downloadedInfo.Add((startPoint, length));
+            downloadedInfo.Add(new DataRange(startPoint, length));
         }
 
         return new BreakPointResumptionTransmissionInfo(downloadLength, downloadedInfo);

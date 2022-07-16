@@ -8,7 +8,7 @@ namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionMana
 /// </summary>
 class BreakPointResumptionTransmissionInfo
 {
-    public BreakPointResumptionTransmissionInfo(long downloadLength, List<(long startPoint, long length)>? downloadedInfo = null)
+    public BreakPointResumptionTransmissionInfo(long downloadLength, List<DataRange>? downloadedInfo = null)
     {
         DownloadLength = downloadLength;
         DownloadedInfo = downloadedInfo;
@@ -22,5 +22,5 @@ class BreakPointResumptionTransmissionInfo
     /// <summary>
     /// 已经下载的信息
     /// </summary>
-    public List<(long startPoint, long length)>? DownloadedInfo { get; }
+    public List<DataRange>? DownloadedInfo { get; }
 }
