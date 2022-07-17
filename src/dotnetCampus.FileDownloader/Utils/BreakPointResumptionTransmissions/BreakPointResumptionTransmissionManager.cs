@@ -105,17 +105,13 @@ internal class BreakPointResumptionTransmissionManager
     /// <returns></returns>
     internal List<DownloadSegment> GetDownloadSegmentList(List<DataRange> downloadedInfo)
     {
-        // 使用 SortedList 排个序
-        var list = new SortedList<long, DataRange>(downloadedInfo.Count);
-        downloadedInfo.ForEach(x => list.Add(x.StartPoint, x));
+        downloadedInfo.Sort(new DataRangeComparer());
+        var list = downloadedInfo;
 
         var downloadSegmentList = new List<DownloadSegment>();
-        int i = 0;
-        foreach (var item in list)
+        for (var i = 0; i < list.Count; i++)
         {
-            // 不能通过 list[i] 获取，索引期望输入的是 Key 的值而不是下标
-            //var current = list[i];
-            var current = item.Value;
+            var current = list[i];
 
             if (i == 0)
             {
@@ -158,11 +154,17 @@ internal class BreakPointResumptionTransmissionManager
                     downloadSegmentList.Add(new DownloadSegment(current.LastPoint, current.LastPoint + length));
                 }
             }
-
-            i++;
         }
 
         return downloadSegmentList;
+    }
+
+    class DataRangeComparer : IComparer<DataRange>
+    {
+        public int Compare(DataRange x, DataRange y)
+        {
+            return x.StartPoint.CompareTo(y.StartPoint);
+        }
     }
 
     private BreakpointResumptionTransmissionRecordFileFormatter? Formatter { set; get; }
