@@ -34,18 +34,18 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <param name="sharedArrayPool">共享缓存数组池，默认使用 ArrayPool 池</param>
     /// <param name="bufferLength">缓存的数组长度，默认是 65535 的长度</param>
     /// <param name="stepTimeOut">每一步 每一分段下载超时时间 默认 10 秒</param>
-    /// <param name="breakpointResumptionTransmissionRecordFile">断点续下的信息记录文件，如为空将不带上断点续下功能。下载完成，自动删除断点续传记录文件</param>
+    /// <param name="breakPointResumptionTransmissionRecordFile">断点续下的信息记录文件，如为空将不带上断点续下功能。下载完成，自动删除断点续传记录文件</param>
     public SegmentFileDownloaderByHttpClient(string url, FileInfo file,
         HttpClient? httpClient = null,
         ILogger<SegmentFileDownloader>? logger = null,
             IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
-            int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null, FileInfo? breakpointResumptionTransmissionRecordFile = null)
+            int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null, FileInfo? breakPointResumptionTransmissionRecordFile = null)
     {
         _logger = logger ?? new DebugSegmentFileDownloaderLogger();
         _progress = progress ?? new Progress<DownloadProgress>();
         SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
         StepTimeOut = stepTimeOut ?? TimeSpan.FromSeconds(10);
-        BreakpointResumptionTransmissionRecordFile = breakpointResumptionTransmissionRecordFile;
+        BreakpointResumptionTransmissionRecordFile = breakPointResumptionTransmissionRecordFile;
         if (string.IsNullOrEmpty(url))
         {
             throw new ArgumentNullException(nameof(url));
