@@ -53,47 +53,7 @@ internal class BreakPointResumptionTransmissionManager
             var list = new SortedList<long, DataRange>(info.DownloadedInfo.Count);
             info.DownloadedInfo.ForEach(x => list.Add(x.StartPoint, x));
 
-            var downloadSegmentList = new List<DownloadSegment>();
-            for (int i = 0; i < list.Count; i++)
-            {
-                var current = list[i];
-
-                if(i==0)
-                {
-                    // 第零个要处理距离开始的距离
-                    var length = current.StartPoint - 0;
-                    if (length == 0)
-                    {
-                        // 证明第零处理了，啥都不用做
-                    }
-                    else
-                    {
-                        // 还没下载第零加入下载
-                        downloadSegmentList.Add(new DownloadSegment(0, length));
-                    }
-                }
-
-                var currentDownloadSegment = new DownloadSegment(current.StartPoint, current.Length)
-                {
-                    DownloadedLength = current.Length,
-                    LoadingState=DownloadingState.Finished,
-                };
-                downloadSegmentList.Add(currentDownloadSegment);
-
-                if(i== list.Count-1)
-                {
-                    // 最后一段需要处理和下载长度的距离
-                    var length = DownloadLength - current.LastPoint;
-                    if(length==0)
-                    {
-                        // 证明下载到最后
-                    }
-                    else
-                    {
-                        downloadSegmentList.Add(new DownloadSegment(current.LastPoint, length));
-                    }
-                }
-            }
+            var downloadSegmentList = GetDownloadSegmentList(list);
 
             SegmentManager segmentManager = new SegmentManager(downloadSegmentList);
             for (var i = 0; i < downloadSegmentList.Count; i++)
@@ -139,6 +99,58 @@ internal class BreakPointResumptionTransmissionManager
         }
 
         return new SegmentManager(DownloadLength);
+    }
+
+    /// <summary>
+    /// 通过断点续传的信息获取下载的内容
+    /// </summary>
+    /// <param name="list"></param>
+    /// <returns></returns>
+    internal List<DownloadSegment> GetDownloadSegmentList(SortedList<long, DataRange> list)
+    {
+        var downloadSegmentList = new List<DownloadSegment>();
+        for (int i = 0; i < list.Count; i++)
+        {
+            var current = list[i];
+
+            if (i == 0)
+            {
+                // 第零个要处理距离开始的距离
+                var length = current.StartPoint - 0;
+                if (length == 0)
+                {
+                    // 证明第零处理了，啥都不用做
+                }
+                else
+                {
+                    // 还没下载第零加入下载
+                    downloadSegmentList.Add(new DownloadSegment(0, length));
+                }
+            }
+
+            var currentDownloadSegment = new DownloadSegment(current.StartPoint, current.Length)
+            {
+                DownloadedLength = current.Length,
+                LoadingState = DownloadingState.Finished,
+            };
+            downloadSegmentList.Add(currentDownloadSegment);
+
+            if (i == list.Count - 1)
+            {
+                // 最后一段需要处理和下载长度的距离
+                var length = DownloadLength - current.LastPoint;
+                if (length == 0)
+                {
+                    // 证明下载到最后
+                }
+                else
+                {
+                    downloadSegmentList.Add(new DownloadSegment(current.LastPoint, length));
+                }
+            }
+        }
+
+        return downloadSegmentList;
     }
 
     private BreakpointResumptionTransmissionRecordFileFormatter? Formatter { set; get; }
