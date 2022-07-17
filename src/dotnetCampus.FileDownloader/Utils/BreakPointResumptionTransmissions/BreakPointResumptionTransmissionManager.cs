@@ -50,10 +50,7 @@ internal class BreakPointResumptionTransmissionManager
 
         if (info is not null && info.DownloadLength == DownloadLength && info.DownloadedInfo is not null && info.DownloadedInfo.Count > 0)
         {
-            var list = new SortedList<long, DataRange>(info.DownloadedInfo.Count);
-            info.DownloadedInfo.ForEach(x => list.Add(x.StartPoint, x));
-
-            var downloadSegmentList = GetDownloadSegmentList(list);
+            var downloadSegmentList = GetDownloadSegmentList(info.DownloadedInfo);
 
             SegmentManager segmentManager = new SegmentManager(downloadSegmentList);
             for (var i = 0; i < downloadSegmentList.Count; i++)
@@ -104,14 +101,21 @@ internal class BreakPointResumptionTransmissionManager
     /// <summary>
     /// 通过断点续传的信息获取下载的内容
     /// </summary>
-    /// <param name="list"></param>
+    /// <param name="downloadedInfo"></param>
     /// <returns></returns>
-    internal List<DownloadSegment> GetDownloadSegmentList(SortedList<long, DataRange> list)
+    internal List<DownloadSegment> GetDownloadSegmentList(List<DataRange> downloadedInfo)
     {
+        // 使用 SortedList 排个序
+        var list = new SortedList<long, DataRange>(downloadedInfo.Count);
+        downloadedInfo.ForEach(x => list.Add(x.StartPoint, x));
+
         var downloadSegmentList = new List<DownloadSegment>();
-        for (int i = 0; i < list.Count; i++)
+        int i = 0;
+        foreach (var item in list)
         {
-            var current = list[i];
+            // 不能通过 list[i] 获取，索引期望输入的是 Key 的值而不是下标
+            //var current = list[i];
+            var current = item.Value;
 
             if (i == 0)
             {
@@ -124,18 +128,23 @@ internal class BreakPointResumptionTransmissionManager
                 else
                 {
                     // 还没下载第零加入下载
-                    downloadSegmentList.Add(new DownloadSegment(0, length));
+                    var startPoint = 0;
+                    downloadSegmentList.Add(new DownloadSegment(startPoint, startPoint + length));
                 }
             }
 
-            var currentDownloadSegment = new DownloadSegment(current.StartPoint, current.Length)
+            var currentDownloadSegment = new DownloadSegment(current.StartPoint, current.StartPoint + current.Length)
             {
                 DownloadedLength = current.Length,
                 LoadingState = DownloadingState.Finished,
             };
             downloadSegmentList.Add(currentDownloadSegment);
 
-            if (i == list.Count - 1)
+            if (i != list.Count - 1)
+            {
+                // 不是最后一段之前，需要处理段之间的需要下载内容
+            }
+            else //if (i == list.Count - 1)
             {
                 // 最后一段需要处理和下载长度的距离
                 var length = DownloadLength - current.LastPoint;
@@ -145,9 +154,12 @@ internal class BreakPointResumptionTransmissionManager
                 }
                 else
                 {
-                    downloadSegmentList.Add(new DownloadSegment(current.LastPoint, length));
+                    Debug.Assert(current.LastPoint + length == DownloadLength);
+                    downloadSegmentList.Add(new DownloadSegment(current.LastPoint, current.LastPoint + length));
                 }
             }
+
+            i++;
         }
 
         return downloadSegmentList;
