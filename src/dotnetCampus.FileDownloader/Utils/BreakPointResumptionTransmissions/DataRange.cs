@@ -106,4 +106,6 @@ readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
             return (StartPoint.GetHashCode() * 397) ^ Length.GetHashCode();
         }
     }
+
+    public override string ToString() => $"Start={StartPoint};Length={Length}";
 }

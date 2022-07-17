@@ -63,22 +63,24 @@ internal class BreakPointResumptionTransmissionManager
                 {
                     var next = downloadSegmentList[i + 1];
                     // 当前的下载到的最后一个点，需要等于下一段的起始。否则将会存在一段没有下载
-                    var lastPoint = item.RequirementDownloadPoint + item.DownloadedLength;
-                    if (lastPoint != next.RequirementDownloadPoint)
-                    {
-                        // 证明有锅，存在一段没有被下载
-                        Debugger.Break();
-                    }
+                    var lastPoint = item.RequirementDownloadPoint;
+                    //Assert.AreEqual(lastPoint, next.StartPoint);
+                    //if (lastPoint != next.RequirementDownloadPoint)
+                    //{
+                    //    // 证明有锅，存在一段没有被下载
+                    //    Debugger.Break();
+                    //}
                 }
                 else
                 {
                     // 最后一段应该下载的点等于下载长度
-                    var lastPoint = item.RequirementDownloadPoint + item.DownloadedLength;
-                    if (lastPoint != DownloadLength)
-                    {
-                        // 证明有锅，最后一段没有下载
-                        Debugger.Break();
-                    }
+                    var lastPoint = item.RequirementDownloadPoint;
+                    //Assert.AreEqual(lastPoint, DownloadLength);
+                    //if (lastPoint != DownloadLength)
+                    //{
+                    //    // 证明有锅，最后一段没有下载
+                    //    Debugger.Break();
+                    //}
                 }
 #endif
                 item.SegmentManager = segmentManager;
@@ -139,6 +141,18 @@ internal class BreakPointResumptionTransmissionManager
             if (i != list.Count - 1)
             {
                 // 不是最后一段之前，需要处理段之间的需要下载内容
+                var next = list[i + 1];
+                // 求当前和下一段之间是否有需要下载的
+                var length = next.StartPoint - current.LastPoint;
+
+                if (length == 0)
+                {
+                    // 证明这两段是连续的，啥都不用做
+                }
+                else
+                {
+                    downloadSegmentList.Add(new DownloadSegment(current.LastPoint, next.StartPoint));
+                }
             }
             else //if (i == list.Count - 1)
             {
