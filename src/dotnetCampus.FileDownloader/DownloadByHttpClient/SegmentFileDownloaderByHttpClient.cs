@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -365,6 +366,20 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                     stopwatch.ElapsedMilliseconds);
 
                 return response;
+            }
+            catch(HttpRequestException e)
+            {
+                if(e.InnerException is SocketException socketException)
+                {
+                    // 如果是找不到主机，那就不用继续下载了
+                    if(socketException.ErrorCode == 11001)
+                    {
+                        // 不知道这样的主机
+                        throw;
+                    }
+                }
+
+                _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
             }
             catch (WebException e)
             {
