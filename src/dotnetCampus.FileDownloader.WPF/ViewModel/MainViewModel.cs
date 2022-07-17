@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -79,7 +80,16 @@ namespace dotnetCampus.FileDownloader.WPF
             var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, new FileInfo(file), _httpClient, logger, progress,
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
             CurrentSegmentFileDownloader = segmentFileDownloader;
-            await segmentFileDownloader.DownloadFileAsync();
+            try
+            {
+                await segmentFileDownloader.DownloadFileAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                Debugger.Launch();
+                Debugger.Break();
+            }
 
             // 下载完成逻辑
             progress.Stop();
