@@ -80,9 +80,11 @@ namespace dotnetCampus.FileDownloader.WPF
             var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, new FileInfo(file), _httpClient, logger, progress,
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
             CurrentSegmentFileDownloader = segmentFileDownloader;
+            bool success = false;
             try
             {
                 await segmentFileDownloader.DownloadFileAsync();
+                success = true;
             }
             catch (Exception e)
             {
@@ -94,8 +96,16 @@ namespace dotnetCampus.FileDownloader.WPF
             // 下载完成逻辑
             progress.Stop();
 
-            downloadFileInfo.DownloadSpeed = "";
-            downloadFileInfo.DownloadProcess = "完成";
+            if (success)
+            {
+                downloadFileInfo.DownloadSpeed = "";
+                downloadFileInfo.DownloadProcess = "完成";
+            }
+            else
+            {
+                downloadFileInfo.DownloadSpeed = "";
+                downloadFileInfo.DownloadProcess = "失败";
+            }
             downloadFileInfo.IsFinished = true;
 
             _ = DownloadFileListManager.WriteDownloadedFileListToFileAsync(DownloadFileInfoList.ToList());
