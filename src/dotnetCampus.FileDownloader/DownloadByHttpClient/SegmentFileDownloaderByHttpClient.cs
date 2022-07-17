@@ -150,7 +150,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     {
         // 使用独立的线程的优势在于不需要等待下载就能进入方法
         // 可以干掉 LastTime 属性，因此定时是 3 秒
-        await Task.Delay(ControlDelayTime);
+        await Task.Delay(ControlDelayTime).ConfigureAwait(false);
 
         while (!SegmentManager.IsFinished())
         {
@@ -181,7 +181,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
             LogDebugInternal("Finish ControlSwitch");
             //变速器3秒为一周期
-            await Task.Delay(ControlDelayTime);
+            await Task.Delay(ControlDelayTime).ConfigureAwait(false);
         }
     }
 
@@ -197,7 +197,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             Interlocked.Increment(ref _threadCount);
             try
             {
-                await DownloadTask();
+                await DownloadTask().ConfigureAwait(false);
             }
             finally
             {
@@ -299,7 +299,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     {
         _logger.LogInformation("开始获取整个下载长度");
 
-        HttpResponseMessage? response = await GetHttpResponseMessageAsync();
+        HttpResponseMessage? response = await GetHttpResponseMessageAsync().ConfigureAwait(false);
 
         if (response == null)
         {
@@ -360,7 +360,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
                 var stopwatch = Stopwatch.StartNew();
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
-                var response = await GetResponseAsync(httpRequestMessage);
+                var response = await GetResponseAsync(httpRequestMessage).ConfigureAwait(false);
                 stopwatch.Stop();
                 LogDebugInternal("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
                     stopwatch.ElapsedMilliseconds);
@@ -412,7 +412,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
             // 后续需要配置不断下降时间
             LogDebugInternal("[GetWebResponseAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
-            await Task.Delay(retryDelayTime);
+            await Task.Delay(retryDelayTime).ConfigureAwait(false);
         }
 
         return null;
@@ -441,7 +441,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         var response = await GetHttpResponseMessageAsync(httpRequestMessage =>
         {
             SetRange(httpRequestMessage, downloadSegment.CurrentDownloadPoint, downloadSegment.RequirementDownloadPoint);
-        });
+        }).ConfigureAwait(false);
         return response;
     }
 
@@ -453,7 +453,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             DownloadData data;
             try
             {
-                data = await DownloadDataList.Reader.ReadAsync();
+                data = await DownloadDataList.Reader.ReadAsync().ConfigureAwait(false);
                 Interlocked.Decrement(ref _workTaskCount);
             }
             catch (ChannelClosedException)
@@ -479,12 +479,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                 $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
             downloadSegment.Message = "Start GetWebResponse";
-            using var response = data.WebResponse ?? await GetWebResponse(downloadSegment);
+            using var response = data.WebResponse ?? await GetWebResponse(downloadSegment).ConfigureAwait(false);
             downloadSegment.Message = "Finish GetWebResponse";
 
             try
             {
-                await DownloadSegmentInner(response, downloadSegment);
+                await DownloadSegmentInner(response, downloadSegment).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -518,7 +518,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             }
         }
 
-        await FinishDownload();
+        await FinishDownload().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -537,7 +537,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         }
 
         downloadSegment.Message = "Start GetResponseStream";
-        await using var responseStream = await response.Content.ReadAsStreamAsync();
+        await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         downloadSegment.Message = "Finish GetResponseStream";
 
         int length = BufferLength;
@@ -553,7 +553,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             LogDebugInternal("[DownloadSegmentInner] Start ReadAsync. {0}", downloadSegment);
             using var cancellationTokenSource = new CancellationTokenSource(StepTimeOut);
             downloadSegment.LastDownTime = DateTime.Now;
-            var n = await responseStream.ReadAsync(buffer, 0, length, cancellationTokenSource.Token);
+            var n = await responseStream.ReadAsync(buffer, 0, length, cancellationTokenSource.Token).ConfigureAwait(false);
             LogDebugInternal("[DownloadSegmentInner] Finish ReadAsync. Length {0} {1}", n, downloadSegment);
             downloadSegment.Message = "Finish ReadAsync";
 
@@ -594,7 +594,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     private async void Download(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
     {
         LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
-        await DownloadDataList.Writer.WriteAsync(new DownloadData(webResponse, downloadSegment));
+        await DownloadDataList.Writer.WriteAsync(new DownloadData(webResponse, downloadSegment)).ConfigureAwait(false);
         Interlocked.Increment(ref _workTaskCount);
     }
 
@@ -627,8 +627,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             _isDisposed = true;
         }
 
-        await FileWriter.DisposeAsync();
-        await FileStream.DisposeAsync();
+        await FileWriter.DisposeAsync().ConfigureAwait(false);
+        await FileStream.DisposeAsync().ConfigureAwait(false);
 
         DownloadDataList.Writer.Complete();
 
@@ -662,7 +662,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             var toPoint = contentLength;
 
             SetRange(httpRequestMessage, fromPoint, toPoint);
-        });
+        }).ConfigureAwait(false);
 
         if (responseLast == null)
         {
