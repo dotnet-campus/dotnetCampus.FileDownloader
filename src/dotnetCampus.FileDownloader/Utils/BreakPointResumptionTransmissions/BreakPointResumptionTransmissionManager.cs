@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
 
 /// <summary>
 /// 断点续传管理
 /// </summary>
-internal class BreakPointResumptionTransmissionManager
+internal class BreakPointResumptionTransmissionManager : IDisposable
 {
     public BreakPointResumptionTransmissionManager(FileInfo breakpointResumptionTransmissionRecordFile, IRandomFileWriter fileWriter, long contentLength)
     {
@@ -64,23 +61,21 @@ internal class BreakPointResumptionTransmissionManager
                     var next = downloadSegmentList[i + 1];
                     // 当前的下载到的最后一个点，需要等于下一段的起始。否则将会存在一段没有下载
                     var lastPoint = item.RequirementDownloadPoint;
-                    //Assert.AreEqual(lastPoint, next.StartPoint);
-                    //if (lastPoint != next.RequirementDownloadPoint)
-                    //{
-                    //    // 证明有锅，存在一段没有被下载
-                    //    Debugger.Break();
-                    //}
+                    if (lastPoint != next.StartPoint)
+                    {
+                        // 证明有锅，存在一段没有被下载
+                        Debugger.Break();
+                    }
                 }
                 else
                 {
                     // 最后一段应该下载的点等于下载长度
                     var lastPoint = item.RequirementDownloadPoint;
-                    //Assert.AreEqual(lastPoint, DownloadLength);
-                    //if (lastPoint != DownloadLength)
-                    //{
-                    //    // 证明有锅，最后一段没有下载
-                    //    Debugger.Break();
-                    //}
+                    if (lastPoint != DownloadLength)
+                    {
+                        // 证明有锅，最后一段没有下载
+                        Debugger.Break();
+                    }
                 }
 #endif
                 item.SegmentManager = segmentManager;
@@ -195,14 +190,26 @@ internal class BreakPointResumptionTransmissionManager
     /// <remarks>理论上每次只有单个线程可以进入，刚好是写入文件的线程才能访问此方法</remarks>
     private void RecordDownloaded(StepWriteFinishedArgs args)
     {
+        if(_isDisposed)
+        {
+            return;
+        }
+
         if (Formatter is null || FileStream is null || BinaryWriter is null)
         {
             throw new InvalidOperationException("必须在调用 CreateSegmentManager 完成之后才能进入 RecordDownloaded 方法");
         }
 
-        // 如果全部下载完成了？
-
-
         throw new NotImplementedException();
     }
+
+    public void Dispose()
+    {
+        _isDisposed = true;
+        FileStream?.Dispose();
+        FileStream = null;
+        BinaryWriter = null;
+    }
+
+    private bool _isDisposed;
 }

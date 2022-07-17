@@ -118,6 +118,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
     private TaskCompletionSource<bool> FileDownloadTask { get; } = new TaskCompletionSource<bool>();
     private SegmentManager SegmentManager { set; get; } = null!;
+    /// <summary>
+    /// 断点续传控制器，仅在有断点续传需求时才不为空
+    /// </summary>
+    private BreakPointResumptionTransmissionManager? BreakPointResumptionTransmissionManager { set; get; }
     private int _idGenerator;
 
     /// <summary>
@@ -240,6 +244,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             var manager = new BreakPointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, contentLength);
             // 有断点续传情况下，先读取断点续传文件，通过此文件获取到需要下载的内容
             SegmentManager = manager.CreateSegmentManager();
+            BreakPointResumptionTransmissionManager = manager;
         }
 
         _progress.Report(new DownloadProgress($"file length = {contentLength}", SegmentManager));
@@ -608,6 +613,20 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         await FileStream.DisposeAsync();
 
         DownloadDataList.Writer.Complete();
+
+        BreakPointResumptionTransmissionManager?.Dispose();
+        // 默认下载完成删除断点续传文件
+        try
+        {
+            if (BreakpointResumptionTransmissionRecordFile is not null && System.IO.File.Exists(BreakpointResumptionTransmissionRecordFile.FullName))
+            {
+                System.IO.File.Delete(BreakpointResumptionTransmissionRecordFile.FullName);
+            }
+        }
+        catch
+        {
+            // 不给删除就不删除咯
+        }
 
         FileDownloadTask.SetResult(true);
     }
