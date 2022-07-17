@@ -77,8 +77,11 @@ namespace dotnetCampus.FileDownloader.WPF
 
             _ = DownloadFileListManager.WriteDownloadedFileListToFileAsync(DownloadFileInfoList.ToList());
 
+            // 断点续传文件
+            var breakPointResumptionTransmissionRecordFile = file + ".dat";
+
             var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, new FileInfo(file), _httpClient, logger, progress,
-                sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
+                sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength, breakPointResumptionTransmissionRecordFile: new FileInfo(breakPointResumptionTransmissionRecordFile));
             CurrentSegmentFileDownloader = segmentFileDownloader;
             bool success = false;
             try
