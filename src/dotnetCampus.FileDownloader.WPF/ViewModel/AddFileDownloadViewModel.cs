@@ -11,8 +11,8 @@ namespace dotnetCampus.FileDownloader.WPF
         {
             // 下面是测试使用的链接
 #if DEBUG
-            CurrentDownloadUrl = "https://download.jetbrains.8686c.com/resharper/ReSharperUltimate.2020.1.3/JetBrains.ReSharperUltimate.2020.1.3.exe";
-            CurrentDownloadFilePath = "JetBrains.ReSharperUltimate.2020.1.3.exe";
+            CurrentDownloadUrl = "https://download.visualstudio.microsoft.com/download/pr/c246f2b8-da39-4b12-b87d-bf89b6b51298/2d43d4ded4b6a0c4d1a0b52f0b9a3b30/dotnet-sdk-6.0.302-win-x64.exe";
+            CurrentDownloadFilePath = "dotnet-sdk-6.0.302-win-x64.exe";
 #endif
         }
 
