@@ -145,9 +145,10 @@ internal class BreakPointResumptionTransmissionManager
                 // 求当前和下一段之间是否有需要下载的
                 var length = next.StartPoint - current.LastPoint;
 
-                if (length == 0)
+                if (length <= 0)
                 {
                     // 证明这两段是连续的，啥都不用做
+                    // 如果小于零，证明两段有重叠，这是可以支持的，也就是存在有一段由于多线程原因，重复下载两次
                 }
                 else
                 {
@@ -158,9 +159,10 @@ internal class BreakPointResumptionTransmissionManager
             {
                 // 最后一段需要处理和下载长度的距离
                 var length = DownloadLength - current.LastPoint;
-                if (length == 0)
+                if (length <= 0)
                 {
                     // 证明下载到最后
+                    // 如果小于零，那只能证明给定的断点续传数据有毒
                 }
                 else
                 {

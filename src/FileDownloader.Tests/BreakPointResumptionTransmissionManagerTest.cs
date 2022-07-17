@@ -18,6 +18,23 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void GetDownloadSegmentList()
         {
+            "传入下载长度 100 分段分别为 10-20 和 20-30 和 50-55 到 GetDownloadSegmentList 方法，可以获取需要下载的段".Test(() =>
+            {
+                const int DownloadLength = 100;
+                var mock = new Mock<IRandomFileWriter>();
+                var manager = new BreakPointResumptionTransmissionManager(new System.IO.FileInfo("Foo"), mock.Object, DownloadLength);
+
+                List<DataRange> list = new List<DataRange>()
+                {
+                    new DataRange(10,10),// 10-20
+                    new DataRange(20,10),// 20-30
+                    new DataRange(50,5),// 50-55
+                };
+                var downloadSegmentList = manager.GetDownloadSegmentList(list);
+
+                AssertDownloadSegmentList(DownloadLength, downloadSegmentList);
+            });
+
             "传入下载长度 100 分段分别为 10-20 和 20-30 和 30-50 到 GetDownloadSegmentList 方法，可以获取需要下载的段".Test(() =>
             {
                 const int DownloadLength = 100;
