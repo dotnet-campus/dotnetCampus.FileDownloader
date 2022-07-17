@@ -216,7 +216,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     {
         _logger.LogInformation($"Start download Url={Url} File={File.FullName}");
 
-        var (response, contentLength) = await GetContentLength();
+        var (response, contentLength) = await GetContentLength().ConfigureAwait(false);
 
         _logger.LogInformation($"ContentLength={contentLength}");
 
@@ -255,7 +255,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         // 下载第一段
         Download(response, downloadSegment!);
 
-        var supportSegment = await TryDownloadLast(contentLength);
+        var supportSegment = await TryDownloadLast(contentLength).ConfigureAwait(false);
 
         int threadCount;
 
@@ -288,7 +288,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             StartDownloadTask();
         }
 
-        await FileDownloadTask.Task;
+        await FileDownloadTask.Task.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -369,7 +369,9 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             }
             catch(HttpRequestException e)
             {
-                if(e.InnerException is SocketException socketException)
+                _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
+
+                if (e.InnerException is SocketException socketException)
                 {
                     // 如果是找不到主机，那就不用继续下载了
                     if(socketException.ErrorCode == 11001)
@@ -379,7 +381,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                     }
                 }
 
-                _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
+                // 其他情况，再多等一会
+                retryDelayTime = TimeSpan.FromSeconds(1);
             }
             catch (WebException e)
             {
