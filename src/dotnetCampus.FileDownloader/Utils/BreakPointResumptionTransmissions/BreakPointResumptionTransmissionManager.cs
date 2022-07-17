@@ -200,7 +200,7 @@ internal class BreakPointResumptionTransmissionManager : IDisposable
             throw new InvalidOperationException("必须在调用 CreateSegmentManager 完成之后才能进入 RecordDownloaded 方法");
         }
 
-        throw new NotImplementedException();
+        Formatter.AppendDataRange(BinaryWriter, new DataRange(args.FileStartPoint, args.DataLength));
     }
 
     public void Dispose()
