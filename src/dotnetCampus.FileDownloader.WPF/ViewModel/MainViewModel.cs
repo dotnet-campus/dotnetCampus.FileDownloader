@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -76,16 +77,38 @@ namespace dotnetCampus.FileDownloader.WPF
 
             _ = DownloadFileListManager.WriteDownloadedFileListToFileAsync(DownloadFileInfoList.ToList());
 
+            // 断点续传文件
+            var breakPointResumptionTransmissionRecordFile = file + ".dat";
+
             var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, new FileInfo(file), _httpClient, logger, progress,
-                sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
+                sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength, breakPointResumptionTransmissionRecordFile: new FileInfo(breakPointResumptionTransmissionRecordFile));
             CurrentSegmentFileDownloader = segmentFileDownloader;
-            await segmentFileDownloader.DownloadFileAsync();
+            bool success = false;
+            try
+            {
+                await segmentFileDownloader.DownloadFileAsync();
+                success = true;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                Debugger.Launch();
+                Debugger.Break();
+            }
 
             // 下载完成逻辑
             progress.Stop();
 
-            downloadFileInfo.DownloadSpeed = "";
-            downloadFileInfo.DownloadProcess = "完成";
+            if (success)
+            {
+                downloadFileInfo.DownloadSpeed = "";
+                downloadFileInfo.DownloadProcess = "完成";
+            }
+            else
+            {
+                downloadFileInfo.DownloadSpeed = "";
+                downloadFileInfo.DownloadProcess = "失败";
+            }
             downloadFileInfo.IsFinished = true;
 
             _ = DownloadFileListManager.WriteDownloadedFileListToFileAsync(DownloadFileInfoList.ToList());

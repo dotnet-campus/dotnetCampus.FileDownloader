@@ -19,6 +19,14 @@ namespace dotnetCampus.FileDownloader
         }
 
         /// <summary>
+        /// 创建文件分段管理
+        /// </summary>
+        public SegmentManager(List<DownloadSegment> downloadSegmentList)
+        {
+            DownloadSegmentList.AddRange(downloadSegmentList);
+        }
+
+        /// <summary>
         /// 下载文件长度
         /// </summary>
         public long FileLength { get; }
@@ -55,7 +63,11 @@ namespace dotnetCampus.FileDownloader
             }
         }
 
-        internal (DownloadSegment? segment, int runCount, TimeSpan maxReportTime) GetDownloadSegmentStatus()
+        /// <summary>
+        /// 获取最大等待时间的下载段状态
+        /// </summary>
+        /// <returns>最大等待时间对应的段，当前依然在运行的段的数量，最大的等待响应时间</returns>
+        internal (DownloadSegment? maxWaitReportTimeDownloadSegment, int runCount, TimeSpan maxReportTime) GetMaxWaitReportTimeDownloadSegmentStatus()
         {
             lock (_locker)
             {

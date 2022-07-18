@@ -68,10 +68,6 @@ namespace dotnetCampus.FileDownloader
         /// 下载的文件
         /// </summary>
         public FileInfo File { get; }
-        ///// <summary>
-        ///// 定时检测的最后时间
-        ///// </summary>
-        //private DateTime LastTime { get; set; } = DateTime.Now;
 
         private readonly ILogger<SegmentFileDownloader> _logger;
         private readonly IProgress<DownloadProgress> _progress;
@@ -91,17 +87,40 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         public TimeSpan StepTimeOut { get; }
 
-        //变速器3秒为一周期
-        private TimeSpan ControlDelayTime { get; } = TimeSpan.FromSeconds(3);
-
         /// <summary>
         /// 最大线程数量
         /// </summary>
         private int MaxThreadCount { get; } = 10;
 
+        #region 网速控制开关
+
         /// <summary>
-        /// 网速控制开关
+        /// 变速器
         /// </summary>
+        /// 默认3秒为一周期，每次将会根据当前网络响应时间决定下载线程数量。网络响应时间很慢，减少线程数量，提升性能
+        private TimeSpan ControlDelayTime { get; } = TimeSpan.FromSeconds(3);
+
+        /// <summary>
+        /// 表示网络响应速度慢的时间，超过此时间表示当前网络响应速度慢
+        /// <para>默认是 10 秒，如果等待 10 秒都没有下载到任何内容，那证明这个网络响应速度慢，可以减少一些线程</para>
+        /// <para>这是经验值</para>
+        /// </summary>
+        private TimeSpan MinSlowlyResponseTime { get; } = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// 表示网络响应速度快的时间，小于此时间表示当前网络响应速度快
+        /// <para>默认是 600ms 如果每次都在此时间内能下载到内容，那么加上一些线程，让下载速度更快。依然受到 <see cref="MaxThreadCount"/> 的限制</para>
+        /// <para>这是经验值</para>
+        /// </summary>
+        private TimeSpan MaxFastResponseTime { get; } = TimeSpan.FromMilliseconds(600);
+
+        /// <summary>
+        /// 网速控制开关，作用是在弱网下减少线程数量，等待网络速度恢复时，才加大线程数量，用于提升性能
+        /// </summary>
+        /// 在网络很弱时，网络的响应很慢时，开启多个线程只会空白运行，不会加快任何速度，此时将会逐步降低为采用 1 个线程进行下载
+        /// 
+        /// 核心逻辑是通过网络的响应时间距离当前时间的距离判断，拿出距离最大的任务，如果时间距离超过了 10 秒，设置任务为暂停，释放此线程
+        /// 感谢 [@maplewei](https://github.com/maplewei) 提供的方法
         /// <returns></returns>
         private async void ControlSwitch()
         {
@@ -112,26 +131,41 @@ namespace dotnetCampus.FileDownloader
             while (!SegmentManager.IsFinished())
             {
                 LogDebugInternal("Start ControlSwitch");
-                var (segment, runCount, maxReportTime) = SegmentManager.GetDownloadSegmentStatus();
+                var (maxWaitReportTimeDownloadSegment, runCount, maxReportTime) = SegmentManager.GetMaxWaitReportTimeDownloadSegmentStatus();
                 int waitCount = DownloadDataList.Count;
 
                 LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
-                if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
+                if (maxReportTime > MinSlowlyResponseTime && maxWaitReportTimeDownloadSegment != null && runCount > 1)
                 {
-                    // 此时速度太慢
-                    segment.LoadingState = DownloadingState.Pause;
-                    LogDebugInternal("ControlSwitch slowly pause segment={0}", segment.Number);
+                    // 此时速度太慢，运行的线程也超过一个，那么将太长时间没有响应的任务暂停
+                    // 这样可以减少下载器占用的线程数量，网络响应慢不是网络下载速度慢，如果下载速度慢，那依然是有响应的，此时多个线程也拿不到响应，不如减少线程数量，提升性能
+                    maxWaitReportTimeDownloadSegment.LoadingState = DownloadingState.Pause;
+                    LogDebugInternal("ControlSwitch slowly pause segment={0}", maxWaitReportTimeDownloadSegment.Number);
                 }
-                else if (maxReportTime < TimeSpan.FromMilliseconds(600) && waitCount > 0 || runCount < 1)
+                else
                 {
-                    // 速度非常快，尝试再开线程，或者当前没有在进行的任务
-                    // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
-                    LogDebugInternal("ControlSwitch StartDownloadTask");
-
-                    // 这里不需要线程安全，如果刚好全部线程都在退出，等待 ControlDelayTime 再次创建
-                    if (_threadCount < MaxThreadCount)
+                    if (maxReportTime < MaxFastResponseTime && waitCount > 0 || runCount < 1)
                     {
+                        // 速度非常快，尝试再开线程，或者当前没有在进行的任务
+                        // 如果此时是刚好全部完成了，而 runCount 是 0 进入 StartDownloadTask 也将会啥都不做
+                        LogDebugInternal("ControlSwitch StartDownloadTask");
+
+                        // 这里不需要线程安全，如果刚好全部线程都在退出，等待 ControlDelayTime 再次创建
+                        if (_threadCount < MaxThreadCount)
+                        {
+                            StartDownloadTask();
+                        }
+                    }
+                    // 如果全部线程都在退出完成，那么重新创建线程
+                    else if (_threadCount == 0)
+                    {
+                        // 网络很弱，响应速度很慢，此时逐步减少线程的过程，刚好遇到线程退出。此时也许有任务依然状态是在执行，但是没有线程去执行这个任务。解决方法就是暂停掉对应的任务，然后重新开启线程，在开启的线程决定如何启动任务
+                        // 这是多线程占用的坑，为了减少同步，因此放在这重新设置值
+                        if(maxWaitReportTimeDownloadSegment?.LoadingState == DownloadingState.Runing)
+                        {
+                            maxWaitReportTimeDownloadSegment.LoadingState = DownloadingState.Pause;
+                        }
                         StartDownloadTask();
                     }
                 }
@@ -141,6 +175,7 @@ namespace dotnetCampus.FileDownloader
                 await Task.Delay(ControlDelayTime);
             }
         }
+        #endregion
 
         /// <summary>
         /// 开启线程下载
@@ -152,8 +187,14 @@ namespace dotnetCampus.FileDownloader
             async Task DownloadTaskInner()
             {
                 Interlocked.Increment(ref _threadCount);
-                await DownloadTask();
-                Interlocked.Decrement(ref _threadCount);
+                try
+                {
+                    await DownloadTask();
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _threadCount);
+                }
             }
         }
 
@@ -276,6 +317,7 @@ namespace dotnetCampus.FileDownloader
         private void LogDebugInternal(string message, params object[] args)
         {
             _logger.LogDebug(message, args);
+            Debug.WriteLine(message, args);
         }
 
         private async Task<WebResponse?> GetWebResponseAsync(Action<WebRequest>? action = null)
@@ -323,7 +365,7 @@ namespace dotnetCampus.FileDownloader
                     // 如超时或 403 等服务器返回的错误，此时修改重试时间
                     // $exception	{"The operation has timed out."}
                     // $exception	{"The remote server returned an error: (403) Forbidden."}
-                    _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
+                    _logger.LogInformation($"[{id}] 第{i}次获取 WebResponse 失败 {e}");
 
                     retryDelayTime = TimeSpan.FromSeconds(1);
                 }
@@ -409,6 +451,7 @@ namespace dotnetCampus.FileDownloader
                 }
                 catch (Exception e)
                 {
+                    // TaskCanceledException 读取超时，网络速度不够
                     // error System.IO.IOException:  Received an unexpected EOF or 0 bytes from the transport stream.
 
                     _logger.LogInformation(
