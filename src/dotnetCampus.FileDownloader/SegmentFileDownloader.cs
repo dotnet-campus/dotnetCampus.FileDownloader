@@ -162,7 +162,7 @@ namespace dotnetCampus.FileDownloader
                     {
                         // 网络很弱，响应速度很慢，此时逐步减少线程的过程，刚好遇到线程退出。此时也许有任务依然状态是在执行，但是没有线程去执行这个任务。解决方法就是暂停掉对应的任务，然后重新开启线程，在开启的线程决定如何启动任务
                         // 这是多线程占用的坑，为了减少同步，因此放在这重新设置值
-                        if(maxWaitReportTimeDownloadSegment?.LoadingState == DownloadingState.Runing)
+                        if (maxWaitReportTimeDownloadSegment?.LoadingState == DownloadingState.Runing)
                         {
                             maxWaitReportTimeDownloadSegment.LoadingState = DownloadingState.Pause;
                         }

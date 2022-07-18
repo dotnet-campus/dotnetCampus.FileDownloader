@@ -234,7 +234,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
         FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
-        if(BreakpointResumptionTransmissionRecordFile is null)
+        if (BreakpointResumptionTransmissionRecordFile is null)
         {
             // 没有断点续传
             SegmentManager = new SegmentManager(contentLength);
@@ -367,14 +367,14 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
                 return response;
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 _logger.LogInformation($"[{id}] 第{i}次获取长度失败 {e}");
 
                 if (e.InnerException is SocketException socketException)
                 {
                     // 如果是找不到主机，那就不用继续下载了
-                    if(socketException.ErrorCode == 11001)
+                    if (socketException.ErrorCode == 11001)
                     {
                         // 不知道这样的主机
                         throw;
