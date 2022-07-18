@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using dotnetCampus.FileDownloader.WPF.Model;
 using dotnetCampus.FileDownloader.WPF.Utils;
@@ -44,6 +45,8 @@ namespace dotnetCampus.FileDownloader.WPF
 
         private ISharedArrayPool SharedArrayPool { get; } = new FileDownloaderSharedArrayPool();
 
+        private readonly HttpClient _httpClient = new HttpClient();
+
         public async void AddDownloadFile()
         {
             var url = AddFileDownloadViewModel.CurrentDownloadUrl;
@@ -73,7 +76,7 @@ namespace dotnetCampus.FileDownloader.WPF
 
             _ = DownloadFileListManager.WriteDownloadedFileListToFileAsync(DownloadFileInfoList.ToList());
 
-            var segmentFileDownloader = new SegmentFileDownloader(url, new FileInfo(file), logger, progress,
+            var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, new FileInfo(file), _httpClient, logger, progress,
                 sharedArrayPool: SharedArrayPool, bufferLength: FileDownloaderSharedArrayPool.BufferLength);
             CurrentSegmentFileDownloader = segmentFileDownloader;
             await segmentFileDownloader.DownloadFileAsync();
@@ -92,7 +95,7 @@ namespace dotnetCampus.FileDownloader.WPF
                 .ContinueWith(_ => ((FileDownloaderSharedArrayPool) SharedArrayPool).Clean());
         }
 
-        private SegmentFileDownloader? CurrentSegmentFileDownloader { set; get; }
+        private SegmentFileDownloaderByHttpClient? CurrentSegmentFileDownloader { set; get; }
 
         private readonly ILoggerFactory _loggerFactory;
 
