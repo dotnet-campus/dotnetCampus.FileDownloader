@@ -15,8 +15,8 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         var header = GetHeader();
         // 设计上刚好可以复用 buffer 的值去进行读取
         var buffer = new byte[sizeof(long)];
-        (bool success,long data) = Read();
-        if(!success || data != header)
+        (bool success, long data) = Read();
+        if (!success || data != header)
         {
             // 如果读取不到 Header 的长度的内容，那返回空即可，让上层业务处理
             // 如果有任何和 Header 不相同的，返回空即可，证明此记录内容不对
@@ -51,12 +51,12 @@ class BreakpointResumptionTransmissionRecordFileFormatter
             // 第三个是 长度
             // 每段下载完成写入文件，将会记录写入的起始点和长度，通过起始点和长度 的列表可以算出当前还有哪些内容还没下载完成。如此即可实现断点续传功能
             (success, data) = Read();
-            if(!success)
+            if (!success)
             {
                 // 读取完成
                 break;
             }
-            if(data != (long) DataType.DownloadedInfo)
+            if (data != (long) DataType.DownloadedInfo)
             {
                 // 记录里面包含错误的数据，立刻返回
                 // 如果在有错误的数据情况下，还不重新建立记录文件，那将会导致后续下载记录的内容被无效
@@ -83,15 +83,15 @@ class BreakpointResumptionTransmissionRecordFileFormatter
 
         return new BreakPointResumptionTransmissionInfo(downloadLength, downloadedInfo);
 
-        (bool success,long data) Read()
+        (bool success, long data) Read()
         {
-           var readCount = stream.Read(buffer,0,buffer.Length);
+            var readCount = stream.Read(buffer, 0, buffer.Length);
             if (readCount != buffer.Length)
             {
-                return (false,default(long));
+                return (false, default(long));
             }
 
-            var data = BitConverter.ToInt64(buffer,0);
+            var data = BitConverter.ToInt64(buffer, 0);
             return (true, data);
         }
     }
@@ -108,7 +108,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         if (info.DownloadedInfo is not null)
         {
             // 预期是不会进入这里，因此代码先不写
-            foreach(var downloadedInfo in info.DownloadedInfo)
+            foreach (var downloadedInfo in info.DownloadedInfo)
             {
                 AppendDataRange(binaryWriter, downloadedInfo);
             }

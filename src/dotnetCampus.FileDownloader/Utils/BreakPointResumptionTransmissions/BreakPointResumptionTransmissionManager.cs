@@ -190,7 +190,7 @@ internal class BreakPointResumptionTransmissionManager : IDisposable
     /// <remarks>理论上每次只有单个线程可以进入，刚好是写入文件的线程才能访问此方法</remarks>
     private void RecordDownloaded(StepWriteFinishedArgs args)
     {
-        if(_isDisposed)
+        if (_isDisposed)
         {
             return;
         }
