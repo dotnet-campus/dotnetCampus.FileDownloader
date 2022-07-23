@@ -1,4 +1,5 @@
-﻿using dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
+﻿
+using dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
