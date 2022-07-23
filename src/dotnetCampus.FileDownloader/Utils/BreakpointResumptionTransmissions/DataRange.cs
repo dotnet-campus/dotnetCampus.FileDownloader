@@ -103,7 +103,7 @@ readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
     {
         unchecked
         {
-            return StartPoint.GetHashCode() * 397 ^ Length.GetHashCode();
+            return (StartPoint.GetHashCode() * 397) ^ Length.GetHashCode();
         }
     }
 
