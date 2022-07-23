@@ -100,7 +100,7 @@ namespace FileDownloader.Tests
             public override long Length => 100;
             public override long Position { get; set; }
         }
-
+#nullable enable
         class SlowSegmentFileDownloader : SegmentFileDownloader
         {
             public SlowSegmentFileDownloader(string url, FileInfo file, ILogger<SegmentFileDownloader>? logger = null, IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null, int bufferLength = UInt16.MaxValue, TimeSpan? stepTimeOut = null) : base(url, file, logger, progress, sharedArrayPool, bufferLength, stepTimeOut)
@@ -141,6 +141,7 @@ namespace FileDownloader.Tests
                 return MockSegmentFileDownloader.OnWebRequestSet(webRequest);
             }
         }
+#nullable restore
 
         public interface IMockSegmentFileDownloader
         {

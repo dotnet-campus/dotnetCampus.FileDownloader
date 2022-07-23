@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 
 using dotnetCampus.FileDownloader;
-using dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
 using dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
