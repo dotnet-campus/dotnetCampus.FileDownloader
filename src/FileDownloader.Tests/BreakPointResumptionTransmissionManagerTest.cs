@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using dotnetCampus.FileDownloader;
 using dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
+using dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,7 +23,7 @@ namespace FileDownloader.Tests
             {
                 const int DownloadLength = 100;
                 var mock = new Mock<IRandomFileWriter>();
-                var manager = new BreakPointResumptionTransmissionManager(new System.IO.FileInfo("Foo"), mock.Object, DownloadLength);
+                var manager = new BreakpointResumptionTransmissionManager(new System.IO.FileInfo("Foo"), mock.Object, DownloadLength);
 
                 List<DataRange> list = new List<DataRange>()
                 {
@@ -39,7 +40,7 @@ namespace FileDownloader.Tests
             {
                 const int DownloadLength = 100;
                 var mock = new Mock<IRandomFileWriter>();
-                var manager = new BreakPointResumptionTransmissionManager(new System.IO.FileInfo("Foo"), mock.Object, DownloadLength);
+                var manager = new BreakpointResumptionTransmissionManager(new System.IO.FileInfo("Foo"), mock.Object, DownloadLength);
 
                 List<DataRange> list = new List<DataRange>()
                 {
@@ -56,7 +57,7 @@ namespace FileDownloader.Tests
             {
                 const int DownloadLength = 100;
                 var mock = new Mock<IRandomFileWriter>();
-                var manager = new BreakPointResumptionTransmissionManager(new System.IO.FileInfo("Foo"), mock.Object, DownloadLength);
+                var manager = new BreakpointResumptionTransmissionManager(new System.IO.FileInfo("Foo"), mock.Object, DownloadLength);
 
                 List<DataRange> list = new List<DataRange>()
                 {

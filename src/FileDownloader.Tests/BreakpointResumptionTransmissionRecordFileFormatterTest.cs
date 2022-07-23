@@ -2,6 +2,7 @@
 using System.IO;
 
 using dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
+using dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -30,7 +31,7 @@ namespace FileDownloader.Tests
                     new DataRange(100,2)
                 };
 
-                var info = new BreakPointResumptionTransmissionInfo(downloadLength, downloadedInfo);
+                var info = new BreakpointResumptionTransmissionInfo(downloadLength, downloadedInfo);
                 formatter.Write(writer, info);
 
                 memoryStream.Seek(0, SeekOrigin.Begin);

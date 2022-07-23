@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
+namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
 {
@@ -91,7 +91,7 @@ readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
             return true;
         }
 
-        if (obj.GetType() != this.GetType())
+        if (obj.GetType() != GetType())
         {
             return false;
         }
@@ -103,7 +103,7 @@ readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
     {
         unchecked
         {
-            return (StartPoint.GetHashCode() * 397) ^ Length.GetHashCode();
+            return StartPoint.GetHashCode() * 397 ^ Length.GetHashCode();
         }
     }
 

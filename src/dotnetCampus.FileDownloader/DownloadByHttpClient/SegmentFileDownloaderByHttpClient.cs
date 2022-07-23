@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
+using dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 using dotnetCampus.Threading;
 
 using Microsoft.Extensions.Logging;
@@ -122,7 +122,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <summary>
     /// 断点续传控制器，仅在有断点续传需求时才不为空
     /// </summary>
-    private BreakPointResumptionTransmissionManager? BreakPointResumptionTransmissionManager { set; get; }
+    private BreakpointResumptionTransmissionManager? BreakPointResumptionTransmissionManager { set; get; }
     private int _idGenerator;
 
     /// <summary>
@@ -242,7 +242,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         else
         {
             // 有断点续传
-            var manager = new BreakPointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, contentLength);
+            var manager = new BreakpointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, contentLength);
             // 有断点续传情况下，先读取断点续传文件，通过此文件获取到需要下载的内容
             SegmentManager = manager.CreateSegmentManager();
             BreakPointResumptionTransmissionManager = manager;

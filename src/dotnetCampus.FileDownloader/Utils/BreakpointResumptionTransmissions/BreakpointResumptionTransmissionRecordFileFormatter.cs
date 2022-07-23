@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
+namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 /// <summary>
 /// 断点续传记录文件格式化器
@@ -10,12 +10,12 @@ namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionMana
 /// 文件格式：【文件头】【下载文件的下载长度】【各个已下载的数据段信息】
 class BreakpointResumptionTransmissionRecordFileFormatter
 {
-    public BreakPointResumptionTransmissionInfo? Read(Stream stream)
+    public BreakpointResumptionTransmissionInfo? Read(Stream stream)
     {
         var header = GetHeader();
         // 设计上刚好可以复用 buffer 的值去进行读取
         var buffer = new byte[sizeof(long)];
-        (bool success, long data) = Read();
+        (var success, var data) = Read();
         if (!success || data != header)
         {
             // 如果读取不到 Header 的长度的内容，那返回空即可，让上层业务处理
@@ -81,7 +81,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
             downloadedInfo.Add(new DataRange(startPoint, length));
         }
 
-        return new BreakPointResumptionTransmissionInfo(downloadLength, downloadedInfo);
+        return new BreakpointResumptionTransmissionInfo(downloadLength, downloadedInfo);
 
         (bool success, long data) Read()
         {
@@ -96,7 +96,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         }
     }
 
-    public void Write(BinaryWriter binaryWriter, BreakPointResumptionTransmissionInfo info)
+    public void Write(BinaryWriter binaryWriter, BreakpointResumptionTransmissionInfo info)
     {
         var header = GetHeader();
         binaryWriter.Write(header);
