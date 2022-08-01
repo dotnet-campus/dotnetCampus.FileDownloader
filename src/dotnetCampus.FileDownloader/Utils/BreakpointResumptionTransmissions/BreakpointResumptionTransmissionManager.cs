@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
+namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 /// <summary>
 /// 断点续传管理
 /// </summary>
-internal class BreakPointResumptionTransmissionManager : IDisposable
+internal class BreakpointResumptionTransmissionManager : IDisposable
 {
-    public BreakPointResumptionTransmissionManager(FileInfo breakpointResumptionTransmissionRecordFile, IRandomFileWriter fileWriter, long contentLength)
+    public BreakpointResumptionTransmissionManager(FileInfo breakpointResumptionTransmissionRecordFile, IRandomFileWriter fileWriter, long contentLength)
     {
         BreakpointResumptionTransmissionRecordFile = breakpointResumptionTransmissionRecordFile;
         DownloadLength = contentLength;
@@ -43,13 +43,13 @@ internal class BreakPointResumptionTransmissionManager : IDisposable
         // 进行一些初始化逻辑
         Formatter = new BreakpointResumptionTransmissionRecordFileFormatter();
 
-        BreakPointResumptionTransmissionInfo? info = Formatter.Read(FileStream);
+        var info = Formatter.Read(FileStream);
 
         if (info is not null && info.DownloadLength == DownloadLength && info.DownloadedInfo is not null && info.DownloadedInfo.Count > 0)
         {
             var downloadSegmentList = GetDownloadSegmentList(info.DownloadedInfo);
 
-            SegmentManager segmentManager = new SegmentManager(downloadSegmentList);
+            var segmentManager = new SegmentManager(downloadSegmentList);
             for (var i = 0; i < downloadSegmentList.Count; i++)
             {
                 var item = downloadSegmentList[i];
@@ -88,7 +88,7 @@ internal class BreakPointResumptionTransmissionManager : IDisposable
             // 那就忽略此断点续传文件
             // 清空原有的文件，如果原来是没有创建的文件的，那本来就是 0 的值
             FileStream.SetLength(0);
-            Formatter.Write(BinaryWriter, new BreakPointResumptionTransmissionInfo(DownloadLength));
+            Formatter.Write(BinaryWriter, new BreakpointResumptionTransmissionInfo(DownloadLength));
             return new SegmentManager(DownloadLength);
         }
 

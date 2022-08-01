@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace dotnetCampus.FileDownloader.Utils.BreakPointResumptionTransmissionManager;
+namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 /// <summary>
 /// 断点续传信息
 /// </summary>
-class BreakPointResumptionTransmissionInfo
+class BreakpointResumptionTransmissionInfo
 {
-    public BreakPointResumptionTransmissionInfo(long downloadLength, List<DataRange>? downloadedInfo = null)
+    public BreakpointResumptionTransmissionInfo(long downloadLength, List<DataRange>? downloadedInfo = null)
     {
         DownloadLength = downloadLength;
         DownloadedInfo = downloadedInfo;
