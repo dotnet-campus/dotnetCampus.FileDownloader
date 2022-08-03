@@ -17,4 +17,16 @@
     <ItemGroup>
         <ProjectReference Include="..\dotnetCampus.FileDownloader\dotnetCampus.FileDownloader.csproj" />
     </ItemGroup>
+
+    <Target Name="HackBeforePackToolValidation" BeforeTargets="_PackToolValidation">
+        <PropertyGroup>
+            <TargetPlatformIdentifier></TargetPlatformIdentifier>
+        </PropertyGroup>
+    </Target>
+
+    <Target Name="HackAfterPackToolValidation" AfterTargets="_PackToolValidation">
+        <PropertyGroup>
+            <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
+        </PropertyGroup>
+    </Target>
 </Project>
