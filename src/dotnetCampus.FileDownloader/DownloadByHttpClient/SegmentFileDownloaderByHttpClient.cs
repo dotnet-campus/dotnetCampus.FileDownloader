@@ -431,7 +431,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="downloadSegment"></param>
     /// <returns></returns>
-    private async ValueTask<HttpResponseMessage?> GetWebResponse(DownloadSegment downloadSegment)
+    private async ValueTask<HttpResponseMessage?> GetHttpResponseMessageAsync(DownloadSegment downloadSegment)
     {
         _logger.LogInformation(
             $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
@@ -479,7 +479,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                 $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
             downloadSegment.Message = "Start GetWebResponse";
-            using var response = data.WebResponse ?? await GetWebResponse(downloadSegment).ConfigureAwait(false);
+            using var response = data.HttpResponseMessage ?? await GetHttpResponseMessageAsync(downloadSegment).ConfigureAwait(false);
             downloadSegment.Message = "Finish GetWebResponse";
 
             try
@@ -591,10 +591,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
     }
 
-    private async void Download(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
+    private async void Download(HttpResponseMessage? httpResponseMessage, DownloadSegment downloadSegment)
     {
         LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
-        await DownloadDataList.Writer.WriteAsync(new DownloadData(webResponse, downloadSegment)).ConfigureAwait(false);
+        await DownloadDataList.Writer.WriteAsync(new DownloadData(httpResponseMessage, downloadSegment)).ConfigureAwait(false);
         Interlocked.Increment(ref _workTaskCount);
     }
 
@@ -705,13 +705,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
     private class DownloadData
     {
-        public DownloadData(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
+        public DownloadData(HttpResponseMessage? httpResponseMessage, DownloadSegment downloadSegment)
         {
-            WebResponse = webResponse;
+            HttpResponseMessage = httpResponseMessage;
             DownloadSegment = downloadSegment;
         }
 
-        public HttpResponseMessage? WebResponse { get; }
+        public HttpResponseMessage? HttpResponseMessage { get; }
 
         public DownloadSegment DownloadSegment { get; }
     }
