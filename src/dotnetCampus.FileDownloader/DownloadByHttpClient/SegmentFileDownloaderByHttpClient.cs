@@ -350,19 +350,19 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             try
             {
                 var url = Url;
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Create HttpRequestMessage. Retry Count {0}", id, i);
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Create HttpRequestMessage. Retry Count {0}", id, i);
 
                 HttpRequestMessage httpRequestMessage = CreateHttpRequestMessage(url);
 
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Enter action.", id);
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Enter action.", id);
                 action?.Invoke(httpRequestMessage);
                 httpRequestMessage = OnHttpRequestMessageSet(httpRequestMessage);
 
                 var stopwatch = Stopwatch.StartNew();
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Start GetResponseAsync.", id);
                 var response = await GetResponseAsync(httpRequestMessage).ConfigureAwait(false);
                 stopwatch.Stop();
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
                     stopwatch.ElapsedMilliseconds);
 
                 return response;
@@ -411,7 +411,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             }
 
             // 后续需要配置不断下降时间
-            LogDebugInternal("[GetWebResponseAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
+            LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
             await Task.Delay(retryDelayTime).ConfigureAwait(false);
         }
 
@@ -434,7 +434,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     private async ValueTask<HttpResponseMessage?> GetHttpResponseMessageAsync(DownloadSegment downloadSegment)
     {
         _logger.LogInformation(
-            $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
+            $"Start Get GetHttpResponseMessageAsync{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
         // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
 
@@ -478,9 +478,9 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             _logger.LogInformation(
                 $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
-            downloadSegment.Message = "Start GetWebResponse";
+            downloadSegment.Message = "Start GetHttpResponseMessage";
             using var response = data.HttpResponseMessage ?? await GetHttpResponseMessageAsync(downloadSegment).ConfigureAwait(false);
-            downloadSegment.Message = "Finish GetWebResponse";
+            downloadSegment.Message = "Finish GetHttpResponseMessage";
 
             try
             {
