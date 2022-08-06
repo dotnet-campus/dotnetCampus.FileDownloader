@@ -484,7 +484,14 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
             try
             {
-                await DownloadSegmentInner(response, downloadSegment).ConfigureAwait(false);
+                if(response is not null)
+                {
+                    await DownloadSegmentInner(response, downloadSegment).ConfigureAwait(false);
+                }
+                else
+                {
+                    // 如果是空，那将在下面的逻辑放入消费，等待重新下载
+                }
             }
             catch (Exception e)
             {
@@ -528,14 +535,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <param name="downloadSegment"></param>
     /// <returns></returns>
     /// 这个方法如果触发异常，将会在上一层进行重试
-    private async ValueTask DownloadSegmentInner(HttpResponseMessage? response, DownloadSegment downloadSegment)
+    private async ValueTask DownloadSegmentInner(HttpResponseMessage response, DownloadSegment downloadSegment)
     {
-        if (response == null)
-        {
-            // 继续下一次
-            throw new WebResponseException("Can not response");
-        }
-
         downloadSegment.Message = "Start GetResponseStream";
         await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         downloadSegment.Message = "Finish GetResponseStream";
