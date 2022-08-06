@@ -495,7 +495,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             }
             catch (Exception e)
             {
+                // 已知异常列表
                 // error System.IO.IOException:  Received an unexpected EOF or 0 bytes from the transport stream.
+                // +		$exception	{"The operation was canceled."}	System.Threading.Tasks.TaskCanceledException
+                // 由于方法的逻辑限制了范围，这里可以放心使用捕获所有异常
 
                 _logger.LogInformation(
                     $"Download {downloadSegment.StartPoint}-{downloadSegment.RequirementDownloadPoint} error {e}");
