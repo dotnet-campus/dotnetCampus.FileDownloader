@@ -479,12 +479,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                 $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
             downloadSegment.Message = "Start GetHttpResponseMessage";
-            using var response = data.HttpResponseMessage ?? await GetHttpResponseMessageAsync(downloadSegment).ConfigureAwait(false);
-            downloadSegment.Message = "Finish GetHttpResponseMessage";
 
             try
             {
-                if(response is not null)
+                using var response = data.HttpResponseMessage ?? await GetHttpResponseMessageAsync(downloadSegment).ConfigureAwait(false);
+                downloadSegment.Message = "Finish GetHttpResponseMessage";
+
+                if (response is not null)
                 {
                     await DownloadSegmentInner(response, downloadSegment).ConfigureAwait(false);
                 }
