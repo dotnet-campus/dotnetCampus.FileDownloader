@@ -160,7 +160,15 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
             LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
-            if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
+            if (_threadCount == 0 && maxReportTime > TimeSpan.FromSeconds(10))
+            {
+                // 如果跑着跑着，线程都休息了，那也应该多加点线程来跑
+                // 不立刻开始，因为此时的网络应该有锅，等一等再开始
+                LogDebugInternal("ControlSwitch StartDownloadTask. ThreadCount={0}", _threadCount);
+
+                StartDownloadTask();
+            }
+            else if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
             {
                 // 此时速度太慢
                 segment.LoadingState = DownloadingState.Pause;
@@ -198,6 +206,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             try
             {
                 await DownloadTask().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                // 这里是后台线程的顶层了，应该接所有的异常
+                _logger.LogError(e, $"[DownloadTaskInner] Throw unhandle exception. Type={e.GetType().FullName} Message={e.Message}");
+                // 既然这里挂掉了，理论上需要补充一个线程才对。但是为了减少诡异的递归，将启动新线程的任务交给速度控制器 网速控制开关 的逻辑进行统一开启
             }
             finally
             {
