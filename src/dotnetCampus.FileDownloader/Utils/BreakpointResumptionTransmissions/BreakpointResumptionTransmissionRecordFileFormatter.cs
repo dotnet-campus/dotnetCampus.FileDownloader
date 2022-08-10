@@ -85,6 +85,9 @@ class BreakpointResumptionTransmissionRecordFileFormatter
 
         (bool success, long data) Read()
         {
+            // 用于调试读取失败时，读取到哪个内容
+            var originPosition = stream.Position;
+
             var readCount = stream.Read(buffer, 0, buffer.Length);
             if (readCount != buffer.Length)
             {

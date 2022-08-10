@@ -160,7 +160,15 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
             LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
-            if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
+            if (_threadCount == 0 && maxReportTime > TimeSpan.FromSeconds(10))
+            {
+                // 如果跑着跑着，线程都休息了，那也应该多加点线程来跑
+                // 不立刻开始，因为此时的网络应该有锅，等一等再开始
+                LogDebugInternal("ControlSwitch StartDownloadTask. ThreadCount={0}", _threadCount);
+
+                StartDownloadTask();
+            }
+            else if (maxReportTime > TimeSpan.FromSeconds(10) && segment != null && runCount > 1)
             {
                 // 此时速度太慢
                 segment.LoadingState = DownloadingState.Pause;
@@ -198,6 +206,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             try
             {
                 await DownloadTask().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                // 这里是后台线程的顶层了，应该接所有的异常
+                _logger.LogError(e, $"[DownloadTaskInner] Throw unhandle exception. Type={e.GetType().FullName} Message={e.Message}");
+                // 既然这里挂掉了，理论上需要补充一个线程才对。但是为了减少诡异的递归，将启动新线程的任务交给速度控制器 网速控制开关 的逻辑进行统一开启
             }
             finally
             {
@@ -350,19 +364,19 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             try
             {
                 var url = Url;
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Create HttpRequestMessage. Retry Count {0}", id, i);
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Create HttpRequestMessage. Retry Count {0}", id, i);
 
                 HttpRequestMessage httpRequestMessage = CreateHttpRequestMessage(url);
 
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Enter action.", id);
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Enter action.", id);
                 action?.Invoke(httpRequestMessage);
                 httpRequestMessage = OnHttpRequestMessageSet(httpRequestMessage);
 
                 var stopwatch = Stopwatch.StartNew();
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Start GetResponseAsync.", id);
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Start GetResponseAsync.", id);
                 var response = await GetResponseAsync(httpRequestMessage).ConfigureAwait(false);
                 stopwatch.Stop();
-                LogDebugInternal("[GetWebResponseAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
+                LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Finish GetResponseAsync. Cost time {1} ms", id,
                     stopwatch.ElapsedMilliseconds);
 
                 return response;
@@ -411,7 +425,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             }
 
             // 后续需要配置不断下降时间
-            LogDebugInternal("[GetWebResponseAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
+            LogDebugInternal("[GetHttpResponseMessageAsync] [{0}] Delay {1} ms", id, retryDelayTime.TotalMilliseconds);
             await Task.Delay(retryDelayTime).ConfigureAwait(false);
         }
 
@@ -431,10 +445,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="downloadSegment"></param>
     /// <returns></returns>
-    private async ValueTask<HttpResponseMessage?> GetWebResponse(DownloadSegment downloadSegment)
+    private async ValueTask<HttpResponseMessage?> GetHttpResponseMessageAsync(DownloadSegment downloadSegment)
     {
         _logger.LogInformation(
-            $"Start Get WebResponse{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
+            $"Start Get GetHttpResponseMessageAsync{downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
         // 为什么不使用 StartPoint 而是使用 CurrentDownloadPoint 是因为需要处理重试
 
@@ -478,17 +492,28 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             _logger.LogInformation(
                 $"Download {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
 
-            downloadSegment.Message = "Start GetWebResponse";
-            using var response = data.WebResponse ?? await GetWebResponse(downloadSegment).ConfigureAwait(false);
-            downloadSegment.Message = "Finish GetWebResponse";
+            downloadSegment.Message = "Start GetHttpResponseMessage";
 
             try
             {
-                await DownloadSegmentInner(response, downloadSegment).ConfigureAwait(false);
+                using var response = data.HttpResponseMessage ?? await GetHttpResponseMessageAsync(downloadSegment).ConfigureAwait(false);
+                downloadSegment.Message = "Finish GetHttpResponseMessage";
+
+                if (response is not null)
+                {
+                    await DownloadSegmentInner(response, downloadSegment).ConfigureAwait(false);
+                }
+                else
+                {
+                    // 如果是空，那将在下面的逻辑放入消费，等待重新下载
+                }
             }
             catch (Exception e)
             {
+                // 已知异常列表
                 // error System.IO.IOException:  Received an unexpected EOF or 0 bytes from the transport stream.
+                // +		$exception	{"The operation was canceled."}	System.Threading.Tasks.TaskCanceledException
+                // 由于方法的逻辑限制了范围，这里可以放心使用捕获所有异常
 
                 _logger.LogInformation(
                     $"Download {downloadSegment.StartPoint}-{downloadSegment.RequirementDownloadPoint} error {e}");
@@ -528,14 +553,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <param name="downloadSegment"></param>
     /// <returns></returns>
     /// 这个方法如果触发异常，将会在上一层进行重试
-    private async ValueTask DownloadSegmentInner(HttpResponseMessage? response, DownloadSegment downloadSegment)
+    private async ValueTask DownloadSegmentInner(HttpResponseMessage response, DownloadSegment downloadSegment)
     {
-        if (response == null)
-        {
-            // 继续下一次
-            throw new WebResponseException("Can not response");
-        }
-
         downloadSegment.Message = "Start GetResponseStream";
         await using var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         downloadSegment.Message = "Finish GetResponseStream";
@@ -591,10 +610,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             $"Download  {downloadSegment.CurrentDownloadPoint * 100.0 / downloadSegment.RequirementDownloadPoint:0.00} Thread {Thread.CurrentThread.ManagedThreadId} {downloadSegment.StartPoint}-{downloadSegment.CurrentDownloadPoint}/{downloadSegment.RequirementDownloadPoint}");
     }
 
-    private async void Download(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
+    private async void Download(HttpResponseMessage? httpResponseMessage, DownloadSegment downloadSegment)
     {
         LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
-        await DownloadDataList.Writer.WriteAsync(new DownloadData(webResponse, downloadSegment)).ConfigureAwait(false);
+        await DownloadDataList.Writer.WriteAsync(new DownloadData(httpResponseMessage, downloadSegment)).ConfigureAwait(false);
         Interlocked.Increment(ref _workTaskCount);
     }
 
@@ -705,13 +724,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
     private class DownloadData
     {
-        public DownloadData(HttpResponseMessage? webResponse, DownloadSegment downloadSegment)
+        public DownloadData(HttpResponseMessage? httpResponseMessage, DownloadSegment downloadSegment)
         {
-            WebResponse = webResponse;
+            HttpResponseMessage = httpResponseMessage;
             DownloadSegment = downloadSegment;
         }
 
-        public HttpResponseMessage? WebResponse { get; }
+        public HttpResponseMessage? HttpResponseMessage { get; }
 
         public DownloadSegment DownloadSegment { get; }
     }
