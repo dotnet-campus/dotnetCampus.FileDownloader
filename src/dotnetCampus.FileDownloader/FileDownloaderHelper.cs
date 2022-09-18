@@ -186,9 +186,10 @@ namespace dotnetCampus.FileDownloader
             /// <param name="fallbackName">当无法猜出文件名，或文件名长度过长时，将取此名字。</param>
             /// <returns>猜出的文件名。</returns>
 #if NETCOREAPP3_0 || NETCOREAPP3_1 || NETCOREAPP5_0 || NET5_0 || NET6_0
-        [return: NotNullIfNotNull("fallbackName")]
+            [return: NotNullIfNotNull("fallbackName")]
 #endif
-            public static string? GuessFileNameFromUrl(string url, int? limitedFileNameLength = null, string? fallbackName = null)
+            public static string? GuessFileNameFromUrl(string url, int? limitedFileNameLength = null,
+                string? fallbackName = null)
             {
                 var lastSlash = url.LastIndexOf('/') + 1;
                 var lastQuery = url.IndexOf('?');
