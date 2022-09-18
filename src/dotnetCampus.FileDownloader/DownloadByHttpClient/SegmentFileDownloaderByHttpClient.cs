@@ -34,18 +34,18 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <param name="sharedArrayPool">共享缓存数组池，默认使用 ArrayPool 池</param>
     /// <param name="bufferLength">缓存的数组长度，默认是 65535 的长度</param>
     /// <param name="stepTimeOut">每一步 每一分段下载超时时间 默认 10 秒</param>
-    /// <param name="breakPointResumptionTransmissionRecordFile">断点续下的信息记录文件，如为空将不带上断点续下功能。下载完成，自动删除断点续传记录文件</param>
+    /// <param name="breakpointResumptionTransmissionRecordFile">断点续下的信息记录文件，如为空将不带上断点续下功能。下载完成，自动删除断点续传记录文件</param>
     public SegmentFileDownloaderByHttpClient(string url, FileInfo file,
         HttpClient? httpClient = null,
         ILogger<SegmentFileDownloader>? logger = null,
             IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
-            int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null, FileInfo? breakPointResumptionTransmissionRecordFile = null)
+            int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null, FileInfo? breakpointResumptionTransmissionRecordFile = null)
     {
         _logger = logger ?? new DebugSegmentFileDownloaderLogger();
         _progress = progress ?? new Progress<DownloadProgress>();
         SharedArrayPool = sharedArrayPool ?? new SharedArrayPool();
         StepTimeOut = stepTimeOut ?? TimeSpan.FromSeconds(10);
-        BreakpointResumptionTransmissionRecordFile = breakPointResumptionTransmissionRecordFile;
+        BreakpointResumptionTransmissionRecordFile = breakpointResumptionTransmissionRecordFile;
         if (string.IsNullOrEmpty(url))
         {
             throw new ArgumentNullException(nameof(url));
@@ -122,7 +122,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// <summary>
     /// 断点续传控制器，仅在有断点续传需求时才不为空
     /// </summary>
-    private BreakpointResumptionTransmissionManager? BreakPointResumptionTransmissionManager { set; get; }
+    private BreakpointResumptionTransmissionManager? BreakpointResumptionTransmissionManager { set; get; }
     private int _idGenerator;
 
     /// <summary>
@@ -259,7 +259,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             var manager = new BreakpointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, contentLength);
             // 有断点续传情况下，先读取断点续传文件，通过此文件获取到需要下载的内容
             SegmentManager = manager.CreateSegmentManager();
-            BreakPointResumptionTransmissionManager = manager;
+            BreakpointResumptionTransmissionManager = manager;
         }
 
         _progress.Report(new DownloadProgress($"file length = {contentLength}", SegmentManager));
@@ -651,7 +651,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
 
         DownloadDataList.Writer.Complete();
 
-        BreakPointResumptionTransmissionManager?.Dispose();
+        BreakpointResumptionTransmissionManager?.Dispose();
         // 默认下载完成删除断点续传文件
         try
         {
