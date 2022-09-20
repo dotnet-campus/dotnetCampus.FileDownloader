@@ -13,7 +13,7 @@ using MSTest.Extensions.Contracts;
 namespace FileDownloader.Tests
 {
     [TestClass]
-    public class BreakPointResumptionTransmissionManagerTest
+    public class BreakpointResumptionTransmissionManagerTest
     {
         [ContractTestCase]
         public void GetDownloadSegmentList()
