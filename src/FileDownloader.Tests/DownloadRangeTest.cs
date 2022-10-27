@@ -45,7 +45,7 @@ public class DownloadRangeTest
 
             var file = new FileInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
 
-            var segmentFileDownloaderByHttpClient = new SegmentFileDownloaderByHttpClient(url,file);
+            var segmentFileDownloaderByHttpClient = new SegmentFileDownloaderByHttpClient(url, file);
 
             await segmentFileDownloaderByHttpClient.DownloadFileAsync();
         });
