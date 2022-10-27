@@ -143,6 +143,16 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     private int MaxThreadCount { get; } = 10;
 
     /// <summary>
+    /// 用来决定需要多线程下载的资源的最小长度。如果小于此长度的资源，那就不需要多线程下载了
+    /// </summary>
+    private const int MinContentLengthNeedMultiThread = 1000;
+
+    /// <summary>
+    /// 下载资源的最后一部分，用来判断资源是否真的支持分段下载。下载最后一部分的下载长度
+    /// </summary>
+    private const int DownloadLastLength = 100;
+
+    /// <summary>
     /// 网速控制开关
     /// </summary>
     /// <returns></returns>
@@ -269,7 +279,18 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         // 下载第一段
         Download(response, downloadSegment!);
 
-        var supportSegment = await TryDownloadLast(contentLength).ConfigureAwait(false);
+        // 是否此资源支持被分段下载
+        bool supportSegment;
+
+        // 先判断下载的内容的长度，如果下载内容太小了，那就连分段都不用了
+        if (contentLength < MinContentLengthNeedMultiThread)
+        {
+            supportSegment = false;
+        }
+        else
+        {
+            supportSegment = await TryDownloadLast(contentLength).ConfigureAwait(false);
+        }
 
         int threadCount;
 
@@ -668,12 +689,17 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         FileDownloadTask.SetResult(true);
     }
 
+    /// <summary>
+    /// 尝试下载最末尾的部分，通过下载最末尾部分判断此服务是否真的支持分段下载功能
+    /// </summary>
+    /// <param name="contentLength"></param>
+    /// <returns>true:此资源支持分段下载。false:此资源不支持分段下载</returns>
+    /// 有些服务会在 Head 里面骗我说支持，实际上他是不支持的。试试下载最后一段的内容，再判断下载长度，即可知道服务是不是在骗我
     private async ValueTask<bool> TryDownloadLast(long contentLength)
     {
-        // 尝试下载后部分，如果可以下载后续的 100 个字节，那么这个链接支持分段下载
-        const int downloadLength = 100;
+        // 尝试下载后部分，如果可以下载后续的 DownloadLastLength（100） 个字节，那么这个链接支持分段下载
 
-        var startPoint = contentLength - downloadLength;
+        var startPoint = contentLength - DownloadLastLength;
 
         var responseLast = await GetHttpResponseMessageAsync(httpRequestMessage =>
         {
@@ -688,7 +714,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             return false;
         }
 
-        if (responseLast.Content.Headers.ContentLength == downloadLength)
+        if (responseLast.Content.Headers.ContentLength == DownloadLastLength)
         {
             var downloadSegment = new DownloadSegment(startPoint, contentLength);
             SegmentManager.RegisterDownloadSegment(downloadSegment);
