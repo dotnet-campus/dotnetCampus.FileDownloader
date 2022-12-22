@@ -59,7 +59,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         BufferLength = bufferLength;
 
         _shouldDisposeHttpClient = httpClient is null;
-        HttpClient = httpClient ?? new HttpClient();
+        HttpClient = httpClient ?? CreateDefaultHttpClient();
 
         DownloadDataList = Channel.CreateUnbounded<DownloadData>(new UnboundedChannelOptions()
         {
@@ -68,12 +68,77 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         });
     }
 
+    #region HttpClient
+
+    private HttpClient HttpClient { get; }
+
     /// <summary>
     /// 是否需要释放 HttpClient 对象。如果是外部传入的，那就不需要释放，交给外部去进行释放
     /// </summary>
     private readonly bool _shouldDisposeHttpClient;
 
-    private HttpClient HttpClient { get; }
+    private static HttpClient CreateDefaultHttpClient()
+    {
+        var socketsHttpHandler = CreateDefaultSocketsHttpHandler();
+        return new HttpClient(socketsHttpHandler);
+    }
+
+    private static SocketsHttpHandler CreateDefaultSocketsHttpHandler()
+    {
+        var socketsHttpHandler = new SocketsHttpHandler()
+        {
+            // 设置超时时间 30 秒，时间和 .NET Framework 版本保持相同
+            ConnectTimeout = TimeSpan.FromSeconds(30),
+            // 连接池的空闲时间，默认值就是一分钟，如果一分钟没有重复连接，那就释放此连接
+            //PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+            // 设置距离多长时间内创建的连接是可以被复用的，设置为半个钟，超过半个钟需要废弃，重新请求 DNS 等，默认值是无穷。这将会在 DNS 更新时，依然访问之前的地址
+            PooledConnectionLifetime = TimeSpan.FromMinutes(30),
+            // 开启多路复用，预计能减少后台或CDN压力
+            EnableMultipleHttp2Connections = true,
+
+            // 允许重定向，默认是允许
+            //AllowAutoRedirect = true,
+            // 最大重定向次数，默认是 50 次
+            //MaxAutomaticRedirections = 50,
+
+            // ConnectCallback允许自定义创建新连接。每次打开一个新的TCP连接时都会调用它。回调可用于建立进程内传输、控制DNS解析、控制基础套接字的通用或特定于平台的选项，或者仅用于在新连接打开时通知
+            // 每次连接进来时的设置，可以用来动态修改连接的方式，甚至用此方式实现域名备份。当然，现在没有使用此方式做域名备份
+            //ConnectCallback = async (context, token) =>
+            //{
+            // 回调有以下注意事项:
+            // - 传递给它的是确定远程端点的DnsEndPoint和发起创建连接的HttpRequestMessage。
+            // - 由于SocketsHttpHandler提供了连接池，所创建的连接可以用于处理多个后续请求，而不仅仅是初始请求。将返回一个新的流。
+            // - 回调不应该尝试建立TLS会话。这是随后由SocketsHttpHandler处理的。
+
+            //    Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            //    // Turn off Nagle's algorithm since it degrades performance in most HttpClient scenarios.
+            //    socket.NoDelay = true;
+            //    try
+            //    {
+            //        await socket.ConnectAsync(context.DnsEndPoint, token).ConfigureAwait(false);
+            //        // The stream should take the ownership of the underlying socket,
+            //        // closing it when it's disposed.
+            //        return new NetworkStream(socket, ownsSocket: true);
+            //    }
+            //    catch
+            //    {
+            //        socket.Dispose();
+            //        throw;
+            //    }
+            //},
+
+            // PlaintextStreamFilter 允许在新打开的连接上插入一个自定义层。在连接完全建立之后(包括用于安全连接的TLS握手)，但在发送任何HTTP请求之前调用此回调。因此，可以使用它来监听通过安全连接发送的纯文本数据
+            // 过滤所有的通讯内容
+            //PlaintextStreamFilter = (context, token) =>
+            //{
+            //    return ValueTask.FromResult(context.PlaintextStream);
+            //}
+        };
+
+        return socketsHttpHandler;
+    }
+
+    #endregion
 
     /// <summary/>
     ~SegmentFileDownloaderByHttpClient()
@@ -354,7 +419,11 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    protected virtual HttpRequestMessage CreateHttpRequestMessage(string url) => new HttpRequestMessage(HttpMethod.Get, url);
+    protected virtual HttpRequestMessage CreateHttpRequestMessage(string url) => new HttpRequestMessage(HttpMethod.Get, url)
+    {
+        // 优先选用 2.0 版本，如果客户端（用户电脑上）或服务端不支持，会自动降级
+        Version = HttpVersion.Version20,
+    };
 
     /// <summary>
     /// 在 <see cref="HttpRequestMessage"/> 经过了应用设置之后调用，应用的设置包括下载的 Range 等值，调用这个方法之后的下一步将会是使用这个方法的返回值去下载文件
