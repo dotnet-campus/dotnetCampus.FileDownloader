@@ -93,8 +93,10 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             //PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
             // 设置距离多长时间内创建的连接是可以被复用的，设置为半个钟，超过半个钟需要废弃，重新请求 DNS 等，默认值是无穷。这将会在 DNS 更新时，依然访问之前的地址
             PooledConnectionLifetime = TimeSpan.FromMinutes(30),
+#if NET6_0_OR_GREATER
             // 开启多路复用，预计能减少后台或CDN压力
             EnableMultipleHttp2Connections = true,
+#endif
 
             // 允许重定向，默认是允许
             //AllowAutoRedirect = true,
