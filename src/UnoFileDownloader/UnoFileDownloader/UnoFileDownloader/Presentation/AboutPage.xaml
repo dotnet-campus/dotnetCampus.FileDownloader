@@ -39,7 +39,7 @@
       <Button x:Name="GitHubButton"
         Grid.Column="0"
         HorizontalAlignment="Stretch"
-        Click="GitHubButton_Click"
+        Command="{Binding GotoGitHub}"
         Content="GitHub" />
       <Button x:Name="CloseButton"
         x:Uid="AboutPage_CloseButton"

@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 
+using Microsoft.UI.Dispatching;
+
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace UnoFileDownloader.Presentation
@@ -24,9 +26,5 @@ namespace UnoFileDownloader.Presentation
         {
         }
 
-        private void GitHubButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }
