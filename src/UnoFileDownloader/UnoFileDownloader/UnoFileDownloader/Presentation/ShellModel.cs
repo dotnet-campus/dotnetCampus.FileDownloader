@@ -8,7 +8,7 @@ namespace UnoFileDownloader.Presentation
             INavigator navigator)
         {
             _navigator = navigator;
-            _ = Start();
+            //_ = Start(); // 将会导致莫名跳转到 MainPage 界面
         }
 
         public async Task Start()
