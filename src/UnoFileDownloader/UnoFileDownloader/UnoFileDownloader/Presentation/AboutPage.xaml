@@ -15,15 +15,16 @@
     </Grid.RowDefinitions>
     <StackPanel Grid.Row="0" Padding="24,0">
       <TextBlock
-        x:Uid="/AboutPage/GridTitleTextBlock"
+        x:Uid="AboutPage_GridTitleTextBlock"
         Margin="0,0,0,12"
         FontSize="24"
         FontWeight="SemiBold"
+        FontFamily="Microsoft YaHei UI"
         Text="[About NanaGet]" />
       <TextBlock>
         <Run x:Name="Version" />
         <LineBreak />
-        <Run Text="© M2-Team and Contributors. All rights reserved." />
+        <Run Text="© dotnet-campus and Contributors. All rights reserved." />
       </TextBlock>
     </StackPanel>
     <Grid Grid.Row="1" Padding="24">
@@ -41,9 +42,10 @@
         Click="GitHubButton_Click"
         Content="GitHub" />
       <Button x:Name="CloseButton"
-        x:Uid="/AboutPage/CloseButton"
+        x:Uid="AboutPage_CloseButton"
         Grid.Column="2"
         HorizontalAlignment="Stretch"
+        FontFamily="Microsoft YaHei UI"
         Command="{Binding CloseAbout}"
         Content="[Close]" />
     </Grid>
