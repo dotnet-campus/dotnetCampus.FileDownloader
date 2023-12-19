@@ -93,4 +93,8 @@
   <ItemGroup>
     <AdditionalFiles Remove="Presentation\NewTaskPage.xaml" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\dotnetCampus.FileDownloader\dotnetCampus.FileDownloader.csproj" />
+  </ItemGroup>
 </Project>
