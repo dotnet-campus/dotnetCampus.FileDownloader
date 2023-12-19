@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace UnoFileDownloader.Presentation
 {
-    public partial record AboutModel
+    public partial record AboutModel(INavigator Navigator)
     {
+        public void CloseAbout()
+        {
+            _ = Navigator.NavigateBackAsync(this);
+        }
     }
 }

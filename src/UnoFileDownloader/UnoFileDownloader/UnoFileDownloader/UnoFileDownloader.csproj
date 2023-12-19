@@ -76,23 +76,7 @@
     <UpToDateCheckInput Include="**\*.xaml" Exclude="bin\**\*.xaml;obj\**\*.xaml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Presentation\AboutPage.xaml" />
-    <None Remove="Presentation\NewTaskPage.xaml" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Presentation\AboutPage.xaml" />
-    <UpToDateCheckInput Remove="Presentation\NewTaskPage.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Remove="Presentation\AboutPage.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Remove="Presentation\NewTaskPage.xaml" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\dotnetCampus.FileDownloader\dotnetCampus.FileDownloader.csproj" />

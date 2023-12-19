@@ -8,12 +8,12 @@ namespace UnoFileDownloader.Presentation
             INavigator navigator)
         {
             _navigator = navigator;
-            //_ = Start(); // 将会导致莫名跳转到 MainPage 界面
+            _ = Start();
         }
 
         public async Task Start()
         {
-            await _navigator.NavigateViewModelAsync<MainModel>(this);
+            await _navigator.NavigateViewModelAsync<AboutModel>(this);
         }
     }
 }

@@ -58,7 +58,7 @@ namespace UnoFileDownloader
                         //.AddJsonTypeInfo(WeatherForecastContext.Default.IImmutableListWeatherForecast)
                         )
                     .UseHttp((context, services) => services
-                        // Register HttpClient
+                    // Register HttpClient
 #if DEBUG
                     // DelegatingHandler will be automatically injected into Refit Client
                     .AddTransient<DelegatingHandler, DebugHttpHandler>()
@@ -74,17 +74,18 @@ namespace UnoFileDownloader
             MainWindow = builder.Window;
 
 #if DEBUG
-        MainWindow.EnableHotReload();
+            MainWindow.EnableHotReload();
 #endif
 
-            Host = await builder.NavigateAsync<MainPage>();
+            Host = await builder.NavigateAsync<AboutPage>();
         }
 
         private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
         {
             views.Register(
-                new ViewMap(ViewModel: typeof(ShellModel)),
+                new ViewMap(ViewModel: typeof(ShellModel), View: typeof(Shell)),
                 new ViewMap<MainPage, MainModel>(),
+                new ViewMap<AboutPage, AboutModel>(),
                 new DataViewMap<SecondPage, SecondModel, Entity>()
             );
 
@@ -94,6 +95,7 @@ namespace UnoFileDownloader
                     {
                     new RouteMap("Main", View: views.FindByViewModel<MainModel>()),
                     new RouteMap("Second", View: views.FindByViewModel<SecondModel>()),
+                    new RouteMap("About", View: views.FindByViewModel<AboutModel>()),
                     }
                 )
             );

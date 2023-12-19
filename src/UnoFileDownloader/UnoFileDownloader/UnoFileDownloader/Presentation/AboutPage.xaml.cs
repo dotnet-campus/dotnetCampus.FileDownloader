@@ -16,6 +16,22 @@ namespace UnoFileDownloader.Presentation
         public AboutPage()
         {
             this.InitializeComponent();
+
+            Loaded += AboutPage_Loaded;
+        }
+
+        private void AboutPage_Loaded(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void GitHubButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
