@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 using Microsoft.UI.Dispatching;
 
+using UnoFileDownloader.Utils;
+
 namespace UnoFileDownloader.Presentation
 {
-    public partial record AboutModel(INavigator Navigator)
+    public partial record AboutModel(INavigator Navigator, IDispatcherQueueProvider DispatcherQueueProvider)
     {
         public void CloseAbout()
         {
@@ -17,12 +19,12 @@ namespace UnoFileDownloader.Presentation
 
         public void GotoGitHub()
         {
-           var d = Dispatcher;
-
-            _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/dotnet-campus/dotnetCampus.FileDownloader"));
+            Dispatcher.TryEnqueue(() =>
+            {
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/dotnet-campus/dotnetCampus.FileDownloader"));
+            });
         }
 
-        // 这是没有用的，返回的是空
-        protected DispatcherQueue Dispatcher { get; } = DispatcherQueue.GetForCurrentThread();
+        protected DispatcherQueue Dispatcher { get; } = DispatcherQueueProvider.Dispatcher;
     }
 }

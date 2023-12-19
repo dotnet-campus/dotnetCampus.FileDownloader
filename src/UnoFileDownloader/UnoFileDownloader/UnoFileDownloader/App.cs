@@ -1,3 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
+
+using UnoFileDownloader.Utils;
+
 namespace UnoFileDownloader
 {
     public class App : Application
@@ -68,6 +72,10 @@ namespace UnoFileDownloader
                     {
                         // TODO: Register your services
                         //services.AddSingleton<IMyService, MyService>();
+                        services.AddSingleton<IDispatcherQueueProvider>(c =>
+                        {
+                            return new DispatcherQueueProvider(MainWindow!.DispatcherQueue);
+                        });
                     })
                     .UseNavigation(ReactiveViewModelMappings.ViewModelMappings, RegisterRoutes)
                 );
