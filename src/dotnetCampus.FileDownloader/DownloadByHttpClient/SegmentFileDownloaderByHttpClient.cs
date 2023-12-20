@@ -559,6 +559,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             DownloadData data;
             try
             {
+                var canRead = await DownloadDataList.Reader.WaitToReadAsync();
+                if (!canRead)
+                {
+                    // 不能读取了，那就返回吧
+                    return;
+                }
+
                 data = await DownloadDataList.Reader.ReadAsync().ConfigureAwait(false);
                 Interlocked.Decrement(ref _workTaskCount);
             }
