@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" d:DataContext="{d:DesignInstance local:BindableNewTaskModel}">
 
   <Grid>
     <Grid.RowDefinitions>
@@ -38,7 +38,8 @@
               x:Name="DownloadSourceTextBox"
               x:Uid="NewTaskPage_DownloadSourceTextBox"
               BorderThickness="1"
-              PlaceholderText="[Please input the download source here]" />
+              PlaceholderText="[Please input the download source here]"
+              Text="{Binding DownloadSource,Mode=TwoWay}"/>
             <!--<Button
               x:Uid="NewTaskPage_DownloadSourceBrowseButton"
               Grid.Column="1"
@@ -107,7 +108,8 @@
         x:Uid="NewTaskPage_DownloadButton"
         Grid.Column="0"
         HorizontalAlignment="Stretch"
-        Content="[Download]" />
+        Content="[Download]"
+        Command="{Binding StartDownloadAsync}"/>
       <Button x:Name="CancelButton"
         x:Uid="NewTaskPage_CancelButton"
         Grid.Column="2"

@@ -50,19 +50,19 @@ namespace UnoFileDownloader.Business.Models
         ///     下载项被加入的时间
         /// </summary>
         /// 加入时间不可变，因此不带通知
-        public string AddedTime { get; set; } = string.Empty;
+        public string AddedTime { get; init; } = string.Empty;
 
         /// <summary>
         ///     下载链接
         /// </summary>
         /// 下载链接不可变，因此不带通知
-        public string DownloadUrl { get; set; } = string.Empty;
+        public string DownloadUrl { get; init; } = string.Empty;
 
         /// <summary>
         ///     下载的本地文件保存路径
         /// </summary>
         /// 下载的本地文件保存路径不可变，因此不带通知
-        public string FilePath { get; set; } = string.Empty;
+        public string FilePath { get; init; } = string.Empty;
 
         /// <summary>
         ///     当前下载的速度

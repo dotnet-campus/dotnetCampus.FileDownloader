@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
+using UnoFileDownloader.Business;
 using UnoFileDownloader.Utils;
 
 namespace UnoFileDownloader
@@ -76,6 +77,9 @@ namespace UnoFileDownloader
                         {
                             return new DispatcherQueueProvider(MainWindow!.DispatcherQueue);
                         });
+
+                        // 下载文件管理器
+                        services.AddSingleton<DownloadFileListManager>();
                     })
                     .UseNavigation(ReactiveViewModelMappings.ViewModelMappings, RegisterRoutes)
                 );
