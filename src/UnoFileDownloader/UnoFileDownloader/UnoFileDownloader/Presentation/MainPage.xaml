@@ -9,6 +9,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:models="using:UnoFileDownloader.Business.Models"
+      xmlns:converters="using:UnoFileDownloader.Presentation.Converters"
       mc:Ignorable="d"
       Background="{ThemeResource BackgroundBrush}" d:DataContext="{d:DesignInstance local:BindableMainModel}">
 
@@ -19,6 +20,7 @@
       <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
       <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
     </Style>
+    <converters:VisibilityConverter x:Key="CollapsedWhenFalse" Visible="True" Collapsed="False"/>
   </Page.Resources>
   <Grid>
     <Grid.RowDefinitions>
@@ -126,7 +128,7 @@
           <Setter Property="Padding" Value="1,0" />
           <Setter Property="Margin" Value="-1,0,-1,-1" />
           <Setter Property="BorderBrush" Value="Gray" />
-          <Setter Property="BorderThickness" Value="1" />
+          <Setter Property="BorderThickness" Value="0 0 0 1" />
         </Style>
       </ListView.ItemContainerStyle>
       <ListView.ItemTemplate>
@@ -146,8 +148,8 @@
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="200" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="50" />
+                <ColumnDefinition Width="50" />
               </Grid.ColumnDefinitions>
               <TextBlock
                 Grid.Column="0"
@@ -170,7 +172,7 @@
                 Grid.Column="5"
                 Style="{StaticResource TitleBarButtonStyle}"
                 AutomationProperties.Name="[Open Download Item File]"
-                >
+                Visibility="{Binding IsFinished,Converter={StaticResource CollapsedWhenFalse},Mode=OneWay}">
                 <Button.Content>
                   <SymbolIcon Symbol="OpenFile" />
                 </Button.Content>
@@ -180,7 +182,7 @@
                 Grid.Column="6"
                 Style="{StaticResource TitleBarButtonStyle}"
                 AutomationProperties.Name="[Open Contain Folder]"
-                >
+                Visibility="{Binding IsFinished,Converter={StaticResource CollapsedWhenFalse},Mode=OneWay}">
                 <Button.Content>
                   <SymbolIcon Symbol="Folder" />
                 </Button.Content>
