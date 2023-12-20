@@ -17,7 +17,7 @@ namespace UnoFileDownloader.Presentation
         public async Task Start()
         {
             await _downloadFileListManager.InitAsync();
-            await _navigator.NavigateViewModelAsync<NewTaskModel>(this);
+            await _navigator.NavigateViewModelAsync<MainModel>(this);
         }
     }
 }
