@@ -36,7 +36,7 @@
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
       <AutoSuggestBox
-        x:Uid="/MainPage/SearchBox"
+        x:Uid="MainPage_SearchBox"
         Grid.Column="0"
         Margin="4,0"
         HorizontalAlignment="Stretch"
@@ -44,17 +44,18 @@
         PlaceholderText="[Search Downloads]"
         IsEnabled="False"/>
       <Button
-        x:Uid="/MainPage/NewTaskButton"
+        x:Uid="MainPage_NewTaskButton"
         Grid.Column="1"
         Style="{StaticResource TitleBarButtonStyle}"
         AutomationProperties.Name="[New Task Button]"
-        ToolTipService.ToolTip="[New Task]">
+        ToolTipService.ToolTip="[New Task]"
+        Command="{Binding GotToNewTask}">
         <Button.Content>
           <SymbolIcon Symbol="Add" />
         </Button.Content>
       </Button>
       <Button
-        x:Uid="/MainPage/StartAllButton"
+        x:Uid="MainPage_StartAllButton"
         Grid.Column="2"
         Style="{StaticResource TitleBarButtonStyle}"
         AutomationProperties.Name="[Start All Button]"
@@ -65,7 +66,7 @@
         </Button.Content>
       </Button>
       <Button
-        x:Uid="/MainPage/PauseAllButton"
+        x:Uid="MainPage_PauseAllButton"
         Grid.Column="3"
         Style="{StaticResource TitleBarButtonStyle}"
         AutomationProperties.Name="[Pause All Button]"
@@ -76,7 +77,7 @@
         </Button.Content>
       </Button>
       <Button
-        x:Uid="/MainPage/ClearListButton"
+        x:Uid="MainPage_ClearListButton"
         Grid.Column="4"
         Style="{StaticResource TitleBarButtonStyle}"
         AutomationProperties.Name="[Clear List Button]"
@@ -86,34 +87,31 @@
         </Button.Content>
       </Button>
       <Button
-        x:Uid="/MainPage/MoreButton"
+        x:Uid="MainPage_MoreButton"
         Grid.Column="5"
         Style="{StaticResource TitleBarButtonStyle}"
         AutomationProperties.Name="[More Button]"
-        ToolTipService.ToolTip="[More]"
-        IsEnabled="False">
+        ToolTipService.ToolTip="[More]">
         <Button.Content>
           <SymbolIcon Symbol="More" />
         </Button.Content>
-        <!--<Button.Flyout>
+        <Button.Flyout>
           <MenuFlyout Placement="BottomEdgeAlignedRight">
-            <MenuFlyoutItem
-              x:Uid="/MainPage/OpenDownloadsFolderButton"
-              Click="OpenDownloadsFolderButtonClick"
-              Icon="Folder"
-              Text="[Open Downloads Folder]" />
-            <MenuFlyoutItem
-              x:Uid="/MainPage/SettingsButton"
-              Click="SettingsButtonClick"
+            <MenuFlyoutItem Visibility="Collapsed"
+                            x:Uid="MainPage_OpenDownloadsFolderButton"
+                            Icon="Folder"
+                            Text="[Open Downloads Folder]" />
+            <MenuFlyoutItem Visibility="Collapsed"
+              x:Uid="MainPage_SettingsButton"
               Icon="Setting"
               Text="[Settings]" />
             <MenuFlyoutItem
-              x:Uid="/MainPage/AboutButton"
-              Click="AboutButtonClick"
+              x:Uid="MainPage_AboutButton"
               Icon="Help"
-              Text="[About]" />
+              Text="[About]"
+              Command="{Binding GoToAbout}"/>
           </MenuFlyout>
-        </Button.Flyout>-->
+        </Button.Flyout>
       </Button>
     </Grid>
     <ListView

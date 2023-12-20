@@ -24,5 +24,15 @@ namespace UnoFileDownloader.Presentation
             var name = await Name;
             await _navigator.NavigateViewModelAsync<SecondModel>(this, data: new Entity(name!));
         }
+
+        public async Task GotToNewTask()
+        {
+            await _navigator.NavigateViewModelAsync<NewTaskModel>(this);
+        }
+
+        public async Task GoToAbout()
+        {
+            await _navigator.NavigateViewModelAsync<AboutModel>(this);
+        }   
     }
 }
