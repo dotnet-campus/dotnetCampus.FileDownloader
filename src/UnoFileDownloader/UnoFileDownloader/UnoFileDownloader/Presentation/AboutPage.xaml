@@ -21,7 +21,7 @@
         FontWeight="SemiBold"
         Text="[About NanaGet]" />
       <TextBlock>
-        <Run x:Name="Version" />
+        <Run Text="{Binding AppInfo,Mode=OneWay}" />
         <LineBreak />
         <Run Text="© dotnet-campus and Contributors. All rights reserved." />
       </TextBlock>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,9 +13,21 @@ using UnoFileDownloader.Utils;
 
 namespace UnoFileDownloader.Presentation
 {
-    public partial record AboutModel(INavigator Navigator, IDispatcherQueueProvider DispatcherQueueProvider) : INotifyPropertyChanged
+    public partial record AboutModel : INotifyPropertyChanged
     {
-        private string _appInfo = string.Empty;
+        private string _appInfo;
+
+        public AboutModel(INavigator navigator, IDispatcherQueueProvider dispatcherQueueProvider, IStringLocalizer localizer)
+        {
+           Navigator = navigator;
+           DispatcherQueueProvider = dispatcherQueueProvider;
+           Localizer = localizer;
+            Dispatcher = dispatcherQueueProvider.Dispatcher;
+
+            var assemblyVersionAttribute = typeof(App).Assembly.GetAssemblyAttribute<AssemblyVersionAttribute>();
+            var versionText = assemblyVersionAttribute?.Version ?? "1.0.0";
+            _appInfo = $"{localizer["ApplicationName"]} {versionText}";
+        }
 
         public string AppInfo
         {
@@ -46,31 +59,17 @@ namespace UnoFileDownloader.Presentation
             {
                 _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/dotnet-campus/dotnetCampus.FileDownloader"));
             });
-
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    AppInfo = Path.GetRandomFileName();
-                    await Task.Delay(100);
-                }
-            });
         }
 
-        protected DispatcherQueue Dispatcher { get; } = DispatcherQueueProvider.Dispatcher;
+        protected DispatcherQueue Dispatcher { get; }
+        public INavigator Navigator { get; init; }
+        public IDispatcherQueueProvider DispatcherQueueProvider { get; init; }
+        public IStringLocalizer Localizer { get; init; }
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
         }
     }
 }

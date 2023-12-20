@@ -6,6 +6,7 @@
 
     <!-- Ensures the .xr.xml files are generated in a proper layout folder -->
     <GenerateLibraryLayout>true</GenerateLibraryLayout>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
