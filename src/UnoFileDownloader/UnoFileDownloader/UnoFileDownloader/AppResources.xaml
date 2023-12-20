@@ -8,6 +8,7 @@
       ColorOverrideSource="ms-appx:///UnoFileDownloader/Styles/ColorPaletteOverride.xaml"
       FontOverrideSource="ms-appx:///UnoFileDownloader/Styles/MaterialFontsOverride.xaml" />
 
+    <ResourceDictionary Source="ms-appx:///UnoFileDownloader/Styles/AppControlStyle.xaml"/>
   </ResourceDictionary.MergedDictionaries>
   <!-- Add resources here -->
 

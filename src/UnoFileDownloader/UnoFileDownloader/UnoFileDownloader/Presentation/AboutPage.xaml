@@ -19,7 +19,6 @@
         Margin="0,0,0,12"
         FontSize="24"
         FontWeight="SemiBold"
-        FontFamily="Microsoft YaHei UI"
         Text="[About NanaGet]" />
       <TextBlock>
         <Run x:Name="Version" />
@@ -45,7 +44,6 @@
         x:Uid="AboutPage_CloseButton"
         Grid.Column="2"
         HorizontalAlignment="Stretch"
-        FontFamily="Microsoft YaHei UI"
         Command="{Binding CloseAbout}"
         Content="[Close]" />
     </Grid>
