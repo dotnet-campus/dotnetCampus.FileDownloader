@@ -12,9 +12,13 @@ namespace UnoFileDownloader.Presentation
 {
     public partial record AboutModel(INavigator Navigator, IDispatcherQueueProvider DispatcherQueueProvider)
     {
-        public void CloseAbout()
+        public async Task CloseAbout()
         {
-            _ = Navigator.NavigateBackAsync(this);
+            var response = await Navigator.NavigateBackAsync(this);
+            if (response is null)
+            {
+                response = await Navigator.NavigateViewModelAsync<NewTaskModel>(this);
+            }
         }
 
         public void GotoGitHub()

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UnoFileDownloader.Presentation
 {
-    public partial record NewTaskModel
+    public partial record NewTaskModel(INavigator Navigator)
     {
     }
 }

@@ -90,20 +90,25 @@ namespace UnoFileDownloader
 
         private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
         {
-            views.Register(
+            views.Register
+            (
                 new ViewMap(ViewModel: typeof(ShellModel), View: typeof(Shell)),
                 new ViewMap<MainPage, MainModel>(),
                 new ViewMap<AboutPage, AboutModel>(),
+                new ViewMap<NewTaskPage, NewTaskModel>(),
                 new DataViewMap<SecondPage, SecondModel, Entity>()
             );
 
-            routes.Register(
+            // 必须写注册哦，否则无法跳转
+            routes.Register
+            (
                 new RouteMap("", View: views.FindByViewModel<ShellModel>(),
                     Nested: new RouteMap[]
                     {
-                    new RouteMap("Main",   View: views.FindByViewModel<MainModel>()),
-                    new RouteMap("Second", View: views.FindByViewModel<SecondModel>()),
-                    new RouteMap("About",  View: views.FindByViewModel<AboutModel>()),
+                        new RouteMap("Main",   View: views.FindByViewModel<MainModel>()),
+                        new RouteMap("Second", View: views.FindByViewModel<SecondModel>()),
+                        new RouteMap("About",  View: views.FindByViewModel<AboutModel>()),
+                        new RouteMap("NewTask",View: views.FindByViewModel<NewTaskModel>()),
                     }
                 )
             );
