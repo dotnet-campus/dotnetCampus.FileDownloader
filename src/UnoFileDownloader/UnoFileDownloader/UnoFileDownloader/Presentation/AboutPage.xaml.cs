@@ -17,9 +17,15 @@ namespace UnoFileDownloader.Presentation
     {
         public AboutPage()
         {
+            DataContextChanged += AboutPage_DataContextChanged;
             this.InitializeComponent();
 
             Loaded += AboutPage_Loaded;
+
+        }
+
+        private void AboutPage_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+        {
         }
 
         private void AboutPage_Loaded(object sender, RoutedEventArgs e)

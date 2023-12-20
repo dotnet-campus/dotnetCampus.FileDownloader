@@ -84,8 +84,8 @@ namespace UnoFileDownloader
 #if DEBUG
             MainWindow.EnableHotReload();
 #endif
-
-            Host = await builder.NavigateAsync<AboutPage>();
+            
+            Host = await builder.NavigateAsync<Shell>();
         }
 
         private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
@@ -101,9 +101,9 @@ namespace UnoFileDownloader
                 new RouteMap("", View: views.FindByViewModel<ShellModel>(),
                     Nested: new RouteMap[]
                     {
-                    new RouteMap("Main", View: views.FindByViewModel<MainModel>()),
+                    new RouteMap("Main",   View: views.FindByViewModel<MainModel>()),
                     new RouteMap("Second", View: views.FindByViewModel<SecondModel>()),
-                    new RouteMap("About", View: views.FindByViewModel<AboutModel>()),
+                    new RouteMap("About",  View: views.FindByViewModel<AboutModel>()),
                     }
                 )
             );
