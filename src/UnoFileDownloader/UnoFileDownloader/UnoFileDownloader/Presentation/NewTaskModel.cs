@@ -37,7 +37,19 @@ namespace UnoFileDownloader.Presentation
                 FilePath = filePath,
             });
 
-            await Navigator.NavigateViewModelAsync<MainModel>(this);
+            // 似乎 NavigateViewModelAsync 跳转不回去，不知道为什么
+            // await Navigator.NavigateViewModelAsync<MainModel>(this)
+            var response = await Navigator.NavigateBackAsync(this);
+            GC.KeepAlive(response);
+        }
+
+        public async Task CloseNewTask()
+        {
+            var response = await Navigator.NavigateBackAsync(this);
+            if (response is null)
+            {
+                response = await Navigator.NavigateViewModelAsync<MainModel>(this);
+            }
         }
     }
 }

@@ -114,7 +114,8 @@
         x:Uid="NewTaskPage_CancelButton"
         Grid.Column="2"
         HorizontalAlignment="Stretch"
-        Content="[Cancel]" />
+        Content="[Cancel]"
+        Command="{Binding CloseNewTask}"/>
     </Grid>
   </Grid>
 </Page>
