@@ -34,8 +34,10 @@ namespace UnoFileDownloader
 
                         // Uno Platform namespace filter groups
                         // Uncomment individual methods to see more detailed logging
-                        //// Generic Xaml events
-                        //logBuilder.XamlLogLevel(LogLevel.Debug);
+#if DEBUG
+                        // Generic Xaml events
+                        logBuilder.XamlLogLevel(LogLevel.Warning);
+#endif
                         //// Layout specific messages
                         //logBuilder.XamlLayoutLogLevel(LogLevel.Debug);
                         //// Storage messages
