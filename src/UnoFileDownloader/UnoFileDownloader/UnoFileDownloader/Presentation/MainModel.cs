@@ -25,6 +25,12 @@ namespace UnoFileDownloader.Presentation
             Title += $" - {appInfo?.Value?.Environment}";
 
             UpdateDownloadFileInfoViewList();
+            _downloadFileListManager.DownloadFileInfoList.CollectionChanged += DownloadFileInfoList_CollectionChanged;
+        }
+
+        private void DownloadFileInfoList_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            UpdateDownloadFileInfoViewList();
         }
 
         public string? Title { get; }
