@@ -142,100 +142,59 @@
               VerticalAlignment="Stretch">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="4*" />
-                <ColumnDefinition Width="6*" />
-                <ColumnDefinition Width="44" />
-                <ColumnDefinition Width="44" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
               <TextBlock
                 Grid.Column="0"
                 Margin="12,0"
                 VerticalAlignment="Center"
-                Text="{x:Bind FileName, Mode=OneWay}"
+                Text="{x:Bind FileName, Mode=OneTime}"
                 FontFamily="Microsoft YaHei UI"
                 TextTrimming="CharacterEllipsis" />
-              <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <!-- <TextBlock Text="{x:Bind StatusText, Mode=OneWay}" /> -->
-                <!-- <ProgressBar -->
-                <!--   Height="4" -->
-                <!--   BorderThickness="0" -->
-                <!--   Foreground="{x:Bind Status, Converter={StaticResource TaskItemConverter}, ConverterParameter=TaskStatusToProgressBarForegroundColor, Mode=OneWay}" -->
-                <!--   Maximum="{x:Bind TotalBytesToReceive, Converter={StaticResource TaskItemConverter}, ConverterParameter=UInt64ToDouble, Mode=OneWay}" -->
-                <!--   Value="{x:Bind BytesReceived, Converter={StaticResource TaskItemConverter}, ConverterParameter=UInt64ToDouble, Mode=OneWay}" /> -->
-              </StackPanel>
+              <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                         Text="{Binding FileSize,Mode=OneWay}"/>
+              <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                         Text="{Binding DownloadProcess,Mode=OneWay}"></TextBlock>
+              <TextBlock Grid.Column="3" VerticalAlignment="Center"
+                         Text="{Binding DownloadSpeed,Mode=OneWay}"></TextBlock>
+              <TextBlock Grid.Column="4" VerticalAlignment="Center"
+                         Text="{Binding AddedTime,Mode=OneWay}"></TextBlock>
+
               <Button
-                x:Uid="/MainPage/TaskItemRetryButton"
-                Grid.Column="2"
-                VerticalAlignment="Stretch"
-                AutomationProperties.Name="[Retry Button]"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                ToolTipService.ToolTip="[Retry]"
-                Visibility="Collapsed">
+                x:Uid="MainPage_DownloadItemOpenFileButton"
+                Grid.Column="5"
+                Style="{StaticResource TitleBarButtonStyle}"
+                AutomationProperties.Name="[Open Download Item File]"
+                >
                 <Button.Content>
-                  <SymbolIcon Symbol="Refresh" />
+                  <SymbolIcon Symbol="OpenFile" />
                 </Button.Content>
               </Button>
               <Button
-                x:Uid="/MainPage/TaskItemResumeButton"
-                Grid.Column="2"
-                VerticalAlignment="Stretch"
-                AutomationProperties.Name="[Resume Button]"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                ToolTipService.ToolTip="[Resume]"
-                Visibility="Collapsed">
+                x:Uid="MainPage_DownloadItemOpenContainFolderButton"
+                Grid.Column="6"
+                Style="{StaticResource TitleBarButtonStyle}"
+                AutomationProperties.Name="[Open Contain Folder]"
+                >
                 <Button.Content>
-                  <SymbolIcon Symbol="Play" />
+                  <SymbolIcon Symbol="Folder" />
                 </Button.Content>
               </Button>
-              <Button
-                x:Uid="/MainPage/TaskItemPauseButton"
-                Grid.Column="2"
-                VerticalAlignment="Stretch"
-                AutomationProperties.Name="[Pause Button]"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                ToolTipService.ToolTip="[Pause]"
-                Visibility="Collapsed">
-                <Button.Content>
-                  <SymbolIcon Symbol="Pause" />
-                </Button.Content>
-              </Button>
-              <Button
-                x:Uid="/MainPage/TaskItemMoreButton"
-                Grid.Column="3"
-                VerticalAlignment="Stretch"
-                AutomationProperties.Name="[More Button]"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                ToolTipService.ToolTip="[More]" IsEnabled="False">
+              <!--<Button
+                x:Uid="MainPage_More"
+                Grid.Column="7"
+                Style="{StaticResource TitleBarButtonStyle}"
+                AutomationProperties.Name="[More]">
                 <Button.Content>
                   <SymbolIcon Symbol="More" />
                 </Button.Content>
-                <!--<Button.Flyout>
-                  <MenuFlyout Placement="BottomEdgeAlignedRight">
-                    <MenuFlyoutItem
-                      x:Uid="/MainPage/TaskItemCopyLinkButton"
-                      Icon="Link"
-                      Text="[Copy Link]" />
-                    <MenuFlyoutItem
-                        x:Uid="/MainPage/TaskItemOpenFolderButton"
-                        Click="TaskItemOpenFolderButtonClick"
-                        Icon="OpenLocal"
-                        Text="[Open Folder]" />
-                    <MenuFlyoutItem
-                      x:Uid="/MainPage/TaskItemCancelButton"
-                      Icon="Cancel"
-                      Text="[Cancel]"
-                      Visibility="{x:Bind Status, Converter={StaticResource TaskItemConverter}, ConverterParameter=TaskStatusToCancelButtonVisible, Mode=OneWay}" />
-                    <MenuFlyoutItem
-                      x:Uid="/MainPage/TaskItemRemoveButton"
-                      Icon="Delete"
-                      Text="[Remove]"
-                      Visibility="{x:Bind Status, Converter={StaticResource TaskItemConverter}, ConverterParameter=TaskStatusToRemoveButtonVisible, Mode=OneWay}" />
-                  </MenuFlyout>
-                </Button.Flyout>-->
-              </Button>
+              </Button>-->
+             
             </Grid>
           </Grid>
         </DataTemplate>
@@ -243,11 +202,11 @@
     </ListView>
     <TextBlock
       x:Name="TaskListNoItemsTextBlock"
-      x:Uid="/MainPage/TaskListNoItemsTextBlock"
+      x:Uid="MainPage_TaskListNoItemsTextBlock"
       Grid.Row="1"
       Margin="16"
       Text="[No Downloads]"
-      TextAlignment="Center" />
+      TextAlignment="Center"/>
     <TextBlock
       x:Name="GlobalStatusTextBlock"
       Grid.Row="2"
