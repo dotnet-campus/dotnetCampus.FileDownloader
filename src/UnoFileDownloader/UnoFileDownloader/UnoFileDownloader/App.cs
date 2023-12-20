@@ -1,11 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
-using Uno.Extensions.Reactive.Dispatching;
-
 using UnoFileDownloader.Business;
 using UnoFileDownloader.Utils;
-
-using DispatcherQueueProvider = UnoFileDownloader.Utils.DispatcherQueueProvider;
 
 namespace UnoFileDownloader
 {
@@ -96,16 +92,6 @@ namespace UnoFileDownloader
 #endif
             
             Host = await builder.NavigateAsync<Shell>();
-
-            Task.Run(() =>
-            {
-                // 以下方法都不行
-                var queue = Windows.System.DispatcherQueue.GetForCurrentThread();
-                var queue2 = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-
-                var forCurrentThread = DispatcherHelper.GetForCurrentThread();
-                var dispatcher = DispatcherHelper.GetDispatcher();
-            });
         }
 
         private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
