@@ -1,5 +1,5 @@
 using System;
-
+using System.Runtime.InteropServices;
 using GLib;
 
 using Uno.UI.Runtime.Skia.Gtk;
@@ -17,6 +17,9 @@ namespace UnoFileDownloader.Skia.Gtk
             };
 
             var host = new GtkHost(() => new AppHead());
+
+            // 防止虚拟机内闪烁
+            host.RenderSurfaceType = RenderSurfaceType.Software;
 
             host.Run();
         }
