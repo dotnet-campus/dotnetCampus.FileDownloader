@@ -129,7 +129,28 @@
   <data name="Main" xml:space="preserve">
     <value>主界面</value>
   </data>
+  <data name="MainPage_NewTaskButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>新建下载任务</value>
+  </data>
+  <data name="MainPage_SearchBox.PlaceholderText" xml:space="preserve">
+    <value>搜索下载任务</value>
+  </data>
   <data name="MainPage_TaskListNoItemsTextBlock.Text" xml:space="preserve">
     <value>无下载任务</value>
+  </data>
+  <data name="NewTaskPage_CancelButton.Content" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="NewTaskPage_DownloadButton.Content" xml:space="preserve">
+    <value>开始下载</value>
+  </data>
+  <data name="NewTaskPage_DownloadSourceTextBox.PlaceholderText" xml:space="preserve">
+    <value>请在此输入下载 URL 地址</value>
+  </data>
+  <data name="NewTaskPage_DownloadSourceTitle.Text" xml:space="preserve">
+    <value>下载地址</value>
+  </data>
+  <data name="NewTaskPage_GridTitleTextBlock.Text" xml:space="preserve">
+    <value>新建下载任务</value>
   </data>
 </root>
