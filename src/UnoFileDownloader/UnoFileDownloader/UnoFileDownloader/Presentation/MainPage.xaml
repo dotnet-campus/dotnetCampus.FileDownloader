@@ -168,22 +168,24 @@
               <TextBlock Grid.Column="4" VerticalAlignment="Center"
                          Text="{Binding AddedTime,Mode=OneWay}"></TextBlock>
 
-              <Button
+              <Button x:Name="DownloadItemOpenFileButton"
                 x:Uid="MainPage_DownloadItemOpenFileButton"
                 Grid.Column="5"
                 Style="{StaticResource TitleBarButtonStyle}"
                 AutomationProperties.Name="[Open Download Item File]"
-                Visibility="{Binding IsFinished,Converter={StaticResource CollapsedWhenFalse},Mode=OneWay}">
+                Visibility="{Binding IsFinished,Converter={StaticResource CollapsedWhenFalse},Mode=OneWay}"
+                Click="DownloadItemOpenFileButton_OnClick">
                 <Button.Content>
                   <SymbolIcon Symbol="OpenFile" />
                 </Button.Content>
               </Button>
-              <Button
+              <Button x:Name="DownloadItemOpenContainFolderButton"
                 x:Uid="MainPage_DownloadItemOpenContainFolderButton"
                 Grid.Column="6"
                 Style="{StaticResource TitleBarButtonStyle}"
                 AutomationProperties.Name="[Open Contain Folder]"
-                Visibility="{Binding IsFinished,Converter={StaticResource CollapsedWhenFalse},Mode=OneWay}">
+                Visibility="{Binding IsFinished,Converter={StaticResource CollapsedWhenFalse},Mode=OneWay}"
+                Click="DownloadItemOpenContainFolderButton_OnClick">
                 <Button.Content>
                   <SymbolIcon Symbol="Folder" />
                 </Button.Content>

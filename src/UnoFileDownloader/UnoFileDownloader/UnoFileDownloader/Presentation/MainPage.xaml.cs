@@ -42,5 +42,39 @@ namespace UnoFileDownloader.Presentation
             TaskListNoItemsTextBlock.Visibility =
                 ViewModel.DownloadFileInfoViewList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
+
+        private void DownloadItemOpenFileButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var button = (Button) sender;
+            var fileInfo = (DownloadFileInfo) button.DataContext;
+
+            if (!File.Exists(fileInfo.FilePath))
+            {
+                // 文件已经被删除了
+                return;
+            }
+
+            try
+            {
+                // 先实现 Windows 下的打开文件功能。
+                Process.Start(new ProcessStartInfo(fileInfo.FilePath)
+                {
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception exception)
+            {
+                // 忽略吧，可能是需要管理员权限，但是用户取消了
+            }
+        }
+
+        private void DownloadItemOpenContainFolderButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var button = (Button) sender;
+            var fileInfo = (DownloadFileInfo) button.DataContext;
+
+            // 先实现 Windows 下的打开文件夹功能。
+            System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{fileInfo.FilePath}\"");
+        }
     }
 }
