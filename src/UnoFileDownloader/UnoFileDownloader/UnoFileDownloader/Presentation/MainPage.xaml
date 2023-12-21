@@ -45,6 +45,7 @@
         HorizontalAlignment="Stretch"
         VerticalAlignment="Center"
         PlaceholderText="[Search Downloads]"
+        FontFamily="Microsoft YaHei UI"
         IsEnabled="False"/>
       <Button
         x:Uid="MainPage_NewTaskButton"
