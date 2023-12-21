@@ -13,16 +13,16 @@ namespace UnoFileDownloader.Presentation
         private INavigator _navigator;
         private readonly DownloadFileListManager _downloadFileListManager;
 
-        public MainModel(
+        public MainModel
+        (
             IStringLocalizer localizer,
             IOptions<AppConfig> appInfo,
-            INavigator navigator, DownloadFileListManager downloadFileListManager)
+            INavigator navigator,
+            DownloadFileListManager downloadFileListManager
+        )
         {
             _navigator = navigator;
             _downloadFileListManager = downloadFileListManager;
-            Title = localizer["Main"];
-            Title += $" - {localizer["ApplicationName"]}";
-            Title += $" - {appInfo?.Value?.Environment}";
 
             UpdateDownloadFileInfoViewList();
             _downloadFileListManager.DownloadFileInfoList.CollectionChanged += DownloadFileInfoList_CollectionChanged;
@@ -33,18 +33,8 @@ namespace UnoFileDownloader.Presentation
             UpdateDownloadFileInfoViewList();
         }
 
-        public string? Title { get; }
-
         public ObservableCollection<DownloadFileInfo> DownloadFileInfoViewList { get; } =
             new ObservableCollection<DownloadFileInfo>();
-
-        public IState<string> Name => State<string>.Value(this, () => string.Empty);
-
-        public async Task GoToSecond()
-        {
-            var name = await Name;
-            await _navigator.NavigateViewModelAsync<SecondModel>(this, data: new Entity(name!));
-        }
 
         public async Task GotToNewTask()
         {
@@ -54,6 +44,12 @@ namespace UnoFileDownloader.Presentation
         public async Task GoToAbout()
         {
             await _navigator.NavigateViewModelAsync<AboutModel>(this);
+        }
+
+        public async Task CleanDownloadList()
+        {
+            _downloadFileListManager.DownloadFileInfoList.Clear();
+            await _downloadFileListManager.SaveAsync();
         }
 
         private void UpdateDownloadFileInfoViewList()
