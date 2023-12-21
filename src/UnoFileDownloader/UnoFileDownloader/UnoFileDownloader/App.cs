@@ -1,5 +1,7 @@
+using System.Globalization;
+using Windows.UI.ViewManagement;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.UI.Windowing;
 using UnoFileDownloader.Business;
 using UnoFileDownloader.Utils;
 
@@ -90,8 +92,16 @@ namespace UnoFileDownloader
 #if DEBUG
             MainWindow.EnableHotReload();
 #endif
-            
             Host = await builder.NavigateAsync<Shell>();
+
+            // 这个 SupportedCultures 没用，只有 en 一个语言，也不知道哪里配置错了
+            //var localizationService = Host.Services.GetRequiredService<ILocalizationService>();
+            //var supportedCultures = localizationService.SupportedCultures;
+
+            var localizer =(Uno.Extensions.Localization.ResourceLoaderStringLocalizer) Host.Services.GetRequiredService<IStringLocalizer>();
+            string title = localizer["ApplicationName"];
+            
+            MainWindow.Title = title;
         }
 
         private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)
