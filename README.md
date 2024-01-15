@@ -48,3 +48,4 @@ await segmentFileDownloader.DownloadFileAsync();
 
 - [@AduSkin](https://github.com/AduSkin) [AduDownload](https://gitee.com/aduskin/AduDownload)
 - [@maplewei](https://github.com/maplewei)
+- [NanaGet](https://github.com/M2Team/NanaGet)
