@@ -31,6 +31,9 @@
     <PackageReference Include="SkiaSharp.Skottie" />
     <PackageReference Include="Uno.WinUI.DevServer" Condition="'$(Configuration)'=='Debug'" />
     <PackageReference Include="Uno.UI.Adapter.Microsoft.Extensions.Logging" />
+
+    <!-- 打包用的 -->
+    <PackageReference Include="Packaging.DebUOS" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UnoFileDownloader\UnoFileDownloader.csproj" />
