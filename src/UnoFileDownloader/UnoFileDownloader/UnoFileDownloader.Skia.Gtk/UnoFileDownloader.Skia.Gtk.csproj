@@ -4,6 +4,8 @@
     <OutputType Condition="'$(Configuration)'=='Debug'">Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <AppId>com.dotnetcampus.unofiledownloader</AppId>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Package.appxmanifest" />
