@@ -66,13 +66,15 @@ namespace UnoFileDownloader
                         .AddContentSerializer(context)
                         //.AddJsonTypeInfo(WeatherForecastContext.Default.IImmutableListWeatherForecast)
                         )
-                    .UseHttp((context, services) => services
-                    // Register HttpClient
+                    .UseHttp((context, services) =>
+                    {
+                        // Register HttpClient
 #if DEBUG
-                    // DelegatingHandler will be automatically injected into Refit Client
-                    .AddTransient<DelegatingHandler, DebugHttpHandler>()
+                        // DelegatingHandler will be automatically injected into Refit Client
+                        services.AddTransient<DelegatingHandler, DebugHttpHandler>();
 #endif
-                        )
+                    }
+                    )
                     .ConfigureServices((context, services) =>
                     {
                         // TODO: Register your services
