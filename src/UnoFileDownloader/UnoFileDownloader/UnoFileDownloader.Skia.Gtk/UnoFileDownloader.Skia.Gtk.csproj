@@ -5,7 +5,20 @@
     <TargetFramework>net8.0</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
+    <!-- 打出来的 UOS 包的 AppId 和版本号 -->
+    <!-- 其中 AppId 是应用的唯一标识。按照 UOS 的规范，请务必使用厂商的倒置域名+产品名作为应用包名，如 `com.example.demo` 格式，前半部分为厂商域名倒置，后半部分为产品名，只允许小写字母 -->
     <AppId>com.dotnetcampus.unofiledownloader</AppId>
+    <UOSDebVersion>1.0.1</UOSDebVersion>
+    <!-- 应用名，英文名 -->
+    <AppName>UnoFileDownloader</AppName>
+    <!-- 应用名，中文名，可不写。将在开始菜单中显示 -->
+    <AppNameZhCN>下载器</AppNameZhCN>
+    <Png32x32IconFile>Download32x32Icon.png</Png32x32IconFile>
+    <DesktopComment>The file downloader.</DesktopComment>
+    <DesktopCommentZhCN>文件下载器，代码完全开源</DesktopCommentZhCN>
+    <DebControlDescription>The UNO file downloader.</DebControlDescription>
+    <DebControlHomepage>https://github.com/dotnet-campus/dotnetCampus.FileDownloader</DebControlHomepage>
+    <DebControlMaintainer>dotnet-campus</DebControlMaintainer>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Package.appxmanifest" />
