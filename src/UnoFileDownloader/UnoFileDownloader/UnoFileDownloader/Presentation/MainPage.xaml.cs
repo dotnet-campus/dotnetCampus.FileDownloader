@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Uno.Logging;
 
 namespace UnoFileDownloader.Presentation
 {
@@ -24,6 +25,7 @@ namespace UnoFileDownloader.Presentation
             {
 #if DEBUG
                 // 谁，是谁，乱改 DataContext 的类型！
+                // 在 WinUI 项目里面可能进入多次，这是符合预期的，只需要最后一次的 DataContext 是正确的就行了
                 Debugger.Break();
 #endif
             }
@@ -40,6 +42,7 @@ namespace UnoFileDownloader.Presentation
         private void UpdateTaskListNoItemsTextBlock()
         {
             TaskListNoItemsTextBlock.Visibility =
+                // 如果下载列表为空，就显示“没有任务”文本块
                 ViewModel.DownloadFileInfoViewList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
@@ -65,6 +68,7 @@ namespace UnoFileDownloader.Presentation
             catch (Exception exception)
             {
                 // 忽略吧，可能是需要管理员权限，但是用户取消了
+                this.Log().LogWarning(exception, "打开文件失败");
             }
         }
 
