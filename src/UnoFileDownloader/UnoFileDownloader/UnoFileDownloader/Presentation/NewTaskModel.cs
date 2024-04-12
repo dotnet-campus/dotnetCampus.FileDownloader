@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using dotnetCampus.FileDownloader;
@@ -33,6 +34,15 @@ namespace UnoFileDownloader.Presentation
             if (string.IsNullOrEmpty(filePath))
             {
                 filePath = Path.GetFileName(DownloadSource);
+            }
+
+            if (!Path.IsPathFullyQualified(filePath))
+            {
+                var downloadFolder = GetDownloadsWellKnownFolder();
+                if (!string.IsNullOrEmpty(downloadFolder))
+                {
+                    filePath = Path.Join(downloadFolder, filePath);
+                }
             }
 
             filePath = Path.GetFullPath(filePath);
@@ -117,5 +127,38 @@ namespace UnoFileDownloader.Presentation
         }
 
         private ISharedArrayPool SharedArrayPool { get; } = new FileDownloaderSharedArrayPool();
+
+        /// <summary>
+        /// Copy from https://github.com/AvaloniaUI/Avalonia/blob/0bf3ffc05b4ba6ad59de501099f9d9ba39cbd944/src/Avalonia.Base/Platform/Storage/FileIO/BclStorageProvider.cs#L102
+        /// </summary>
+        /// <returns></returns>
+        private static string? GetDownloadsWellKnownFolder()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                return Environment.OSVersion.Version.Major < 6 ? null :
+                    SHGetKnownFolderPath(s_folderDownloads, 0, IntPtr.Zero);
+            }
+
+            if (OperatingSystem.IsLinux())
+            {
+                var envDir = Environment.GetEnvironmentVariable("XDG_DOWNLOAD_DIR");
+                if (envDir != null && Directory.Exists(envDir))
+                {
+                    return envDir;
+                }
+            }
+
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            {
+                return "~/Downloads";
+            }
+
+            return null;
+        }
+
+        private static readonly Guid s_folderDownloads = new Guid("374DE290-123F-4565-9164-39C4925E467B");
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
+        private static extern string SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid id, int flags, IntPtr token);
     }
 }
