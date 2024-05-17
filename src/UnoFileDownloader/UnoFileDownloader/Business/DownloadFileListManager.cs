@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using UnoFileDownloader.Business.Models;
 using UnoFileDownloader.Utils;
 
 namespace UnoFileDownloader.Business

@@ -39,5 +39,8 @@
       ThemeService;
     </UnoFeatures>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\dotnetCampus.FileDownloader\dotnetCampus.FileDownloader.csproj" />
+  </ItemGroup>
 
 </Project>
