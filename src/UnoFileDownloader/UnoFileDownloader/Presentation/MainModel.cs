@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Xml.Linq;
-
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 using Uno.Extensions;
 
 using UnoFileDownloader.Business;
+using UnoFileDownloader.Business.Models;
 using UnoFileDownloader.Utils;
 
 namespace UnoFileDownloader.Presentation

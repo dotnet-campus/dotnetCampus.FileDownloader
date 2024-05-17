@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Localization;
 using Microsoft.UI.Dispatching;
 
 using UnoFileDownloader.Utils;

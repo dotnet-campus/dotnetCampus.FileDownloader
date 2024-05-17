@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using dotnetCampus.FileDownloader;
 using UnoFileDownloader.Business;
+using UnoFileDownloader.Business.Models;
 using UnoFileDownloader.Utils;
 
 namespace UnoFileDownloader.Presentation

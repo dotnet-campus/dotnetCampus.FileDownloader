@@ -35,8 +35,10 @@
       Material;
       Dsp;
       Toolkit;
-      Mvvm;
+      MVUX;
       ThemeService;
+      Localization;
+      Navigation;
     </UnoFeatures>
   </PropertyGroup>
   <ItemGroup>

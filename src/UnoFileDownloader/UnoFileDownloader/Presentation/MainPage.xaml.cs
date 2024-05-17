@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Uno.Logging;
+using UnoFileDownloader.Business.Models;
 
 namespace UnoFileDownloader.Presentation
 {
