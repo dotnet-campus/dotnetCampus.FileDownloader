@@ -13,7 +13,7 @@ namespace UnoFileDownloader.Presentation
             DataContextChanged += MainPage_DataContextChanged;
         }
 
-        public BindableMainModel ViewModel => (BindableMainModel) DataContext;
+        private BindableMainModel ViewModel => (BindableMainModel) DataContext;
 
         private void MainPage_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
         {

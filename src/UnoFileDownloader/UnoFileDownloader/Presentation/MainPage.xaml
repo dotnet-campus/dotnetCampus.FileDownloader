@@ -11,7 +11,7 @@
       xmlns:models="using:UnoFileDownloader.Business.Models"
       xmlns:converters="using:UnoFileDownloader.Presentation.Converters"
       mc:Ignorable="d"
-      Background="{ThemeResource BackgroundBrush}" d:DataContext="{d:DesignInstance local:BindableMainModel}">
+      Background="{ThemeResource BackgroundBrush}">
 
   <Page.Resources>
     <Style x:Key="TitleBarButtonStyle" BasedOn="{StaticResource PrimaryButtonStyle}" TargetType="Button">
