@@ -573,7 +573,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
                     return;
                 }
 
-                data = await DownloadDataList.Reader.ReadAsync().ConfigureAwait(false);
+                if (!DownloadDataList.Reader.TryRead(out data))
+                {
+                    // 居然读取不到数据，那就再次进入循环吧
+                    continue;
+                }
+
                 Interlocked.Decrement(ref _workTaskCount);
             }
             catch (ChannelClosedException)
