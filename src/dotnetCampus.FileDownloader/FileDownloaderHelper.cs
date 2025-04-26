@@ -91,20 +91,15 @@ namespace dotnetCampus.FileDownloader
 #if NETCOREAPP3_1_OR_GREATER
             using var segmentFileDownloader = new InnerSegmentFileDownloaderByHttpClient(url, downloadFile, httpClient: null,
                  logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
-
-            await segmentFileDownloader.DownloadFileAsync();
-
-            // 下载完成了之后，尝试移动文件夹
-            // 优先使用服务器返回的文件名
-            var finallyFileName = segmentFileDownloader.ServerSuggestionFileName;
 #else
             var segmentFileDownloader = new InnerSegmentFileDownloader(url, downloadFile, logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
+#endif
             await segmentFileDownloader.DownloadFileAsync();
 
             // 下载完成了之后，尝试移动文件夹
             // 优先使用服务器返回的文件名
             var finallyFileName = segmentFileDownloader.ServerSuggestionFileName;
-#endif
+
             if (string.IsNullOrEmpty(finallyFileName))
             {
                 finallyFileName = fileName;
