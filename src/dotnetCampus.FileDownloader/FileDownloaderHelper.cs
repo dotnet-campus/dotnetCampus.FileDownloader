@@ -7,6 +7,8 @@ using System.Net;
 
 #if NETCOREAPP3_1_OR_GREATER
 using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Net.Http.Headers;
 #endif
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -168,14 +170,66 @@ namespace dotnetCampus.FileDownloader
                 var response = await base.GetResponseAsync(request);
                 if (string.IsNullOrEmpty(ServerSuggestionFileName))
                 {
-                    if (response.Headers.TryGetValues("Content-Disposition", out var contentDispositionTextEnumerable) && contentDispositionTextEnumerable.FirstOrDefault() is { } contentDispositionText)
-                    {
-                        ServerSuggestionFileName =
-                            WebResponseHelper.GetFileNameFromContentDispositionText(contentDispositionText);
-                    }
+                    ServerSuggestionFileName = TryGetServerSuggestionFileName();
                 }
 
                 return response;
+
+                string? TryGetServerSuggestionFileName()
+                {
+                    var httpContentHeaders = response.Content.Headers;
+
+                    if (httpContentHeaders.ContentDisposition == null)
+                    {
+                        return null;
+                    }
+
+                    // {Last-Modified: Mon, 30 Dec 2024 09:27:04 GMT
+                    // Content-Type: application/octet-stream
+                    // Content-Disposition: attachment; filename*="UTF-8''BaiduNetdisk_txgj1_7.50.0.132.exe"
+                    // Content-Length: 403338840
+                    // }
+                    // 这里拿到的 nameValueHeaderValue 可能就取出
+                    NameValueHeaderValue? nameValueHeaderValue =
+                        httpContentHeaders.ContentDisposition.Parameters.FirstOrDefault(t => t.Name == "filename*");
+                    var fileNameValue = nameValueHeaderValue?.Value;
+                    if (!string.IsNullOrEmpty(fileNameValue))
+                    {
+                        // 额外判断一下 UTF-8 存在的情况
+                        var match = Regex.Match(fileNameValue, @"([\S\s]*)''([\S\s]*)");
+                        if (match.Success)
+                        {
+                            var encodingText = match.Groups[1].Value;
+                            var fileNameText = match.Groups[2].Value;
+                            if (string.Equals("utf-8", encodingText, StringComparison.OrdinalIgnoreCase))
+                            {
+                                // 以下转码用于防止中文名乱码
+                                var unescapeDataString = Uri.UnescapeDataString(fileNameText);
+                                return unescapeDataString;
+                            }
+                        }
+                        else
+                        {
+                            // 匹配不上，那就应该是整个都是文件名了
+                            return fileNameValue;
+                        }
+                    }
+
+                    var fileName = httpContentHeaders.ContentDisposition.FileName;
+                    if (!string.IsNullOrEmpty(fileName))
+                    {
+                        return fileName;
+                    }
+
+                    if (response.Headers.TryGetValues("Content-Disposition", out var contentDispositionTextEnumerable) && contentDispositionTextEnumerable.FirstOrDefault() is { } contentDispositionText)
+                    {
+                        // 正常不会放在这里的，都是在 Content 的 Header 里面的
+                        return
+                            WebResponseHelper.GetFileNameFromContentDispositionText(contentDispositionText);
+                    }
+
+                    return null;
+                }
             }
         }
 #else

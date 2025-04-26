@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using CommandLine;
@@ -21,20 +22,29 @@ namespace dotnetCampus.FileDownloader.Tool
 
                      // https://www.speedtest.cn/
                      var url =
-                          "https://speedtest1.gd.chinamobile.com.prod.hosts.ooklaserver.net:8080/download?size=25000000&r=0.2978374611691549";
+                         "https://node-103-27-27-20.speedtest.cn:51090/download?size=25000000&r=0.625866791098137";
                      url =
-                         "https://download.jetbrains.8686c.com/resharper/ReSharperUltimate.2020.1.3/JetBrains.ReSharperUltimate.2020.1.3.exe";
+                         "https://download.jetbrains.com/resharper/dotUltimate.2025.1/JetBrains.dotUltimate.2025.1.exe";
                      //var md5 = "7d6bbeb6617a7c0b7e615098fca1b167";// resharper
 
                      //url = "http://localhost:5000";
-                     url =
-                         "https://dscache.tencent-cloud.cn/upload//ES_686_194-4f155229efeef75bb9c9a3995060c766dc0eac28.png";
 
-                     var file = new FileInfo(@"File.txt");
+                     // 这里的 gitdl.cn 是 iFileProxy 离线下载工具的地址，这是一个非常好的工具。开源地址： https://git.linxi.info/xianglin_admin/iFileProxy
+                     url = "https://gitdl.cn/https://github.com/srwi/EverythingToolbar/releases/download/1.5.2/EverythingToolbar-1.5.2.msi";
+
+                     //url =
+                     //    "https://down.pc.yyb.qq.com/pcyyb/packing/14e1e37f997f49a58d560ab97fa335aa/pcyyb_2702800040_installer.exe";
+                     //url = "https://pm.myapp.com/invc/xfspeed/qqpcmgr/download/QQPCDownload320001.exe";
+                     //// 这个地址带了 Content-Disposition 头，文件名是从这个头中获取的
+                     url =
+                         "https://sw.pcmgr.qq.com/2f472366ca30d8ac1ad4acb64c77d2ad/680c8f51/spcmgr/download/BaiduNetdisk_txgj1_7.50.0.132.exe";
+                     //url = "https://pc-package.wpscdn.cn/wps/download/W.P.S.60.1955.exe";
+
+                     var downloadFolder = new DirectoryInfo(@"DownloadFolder");
 
                      var progress = new Progress<DownloadProgress>();
 
-                     await FileDownloaderHelper.DownloadFileAsync(url, file, progress:progress);
+                     await FileDownloaderHelper.DownloadFileToFolderAsync(url, downloadFolder, progress:progress);
 #endif
                      await Task.Delay(100);
                  });

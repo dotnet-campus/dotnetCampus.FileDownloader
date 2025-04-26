@@ -136,6 +136,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             //{
             //    return ValueTask.FromResult(context.PlaintextStream);
             //}
+
+            // 忽略证书错误
+            //SslOptions =
+            //{
+            //    RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
+            //}
         };
 
         return socketsHttpHandler;
