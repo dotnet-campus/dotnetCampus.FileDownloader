@@ -327,8 +327,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             return;
         }
 
-        FileStream = File.Create();
+        FileStream = File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read/*允许边下边播*/);
+        if (FileStream.Length == 0)
+        {
+            // 如果是刚刚创建的，则预先分配空间。实际测试下载器预先分配空间能够获取更好的机械硬盘性能
         FileStream.SetLength(contentLength);
+        }
         FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
 
         if (BreakpointResumptionTransmissionRecordFile is null)
