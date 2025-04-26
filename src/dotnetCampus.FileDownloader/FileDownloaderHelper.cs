@@ -4,6 +4,10 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+
+#if NETCOREAPP3_1_OR_GREATER
+using System.Net.Http;
+#endif
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Threading;
@@ -58,7 +62,7 @@ namespace dotnetCampus.FileDownloader
             int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null)
         {
 #if !NETFRAMEWORK
-            // 也许会在非 Windows 下系统使用
+            // 也许会在非 Windows 下系统使用。但本方法没有测试过非 Windows 的情况，且文件命名规范都按照 Windows 的来，于是就决定不支持非 Windows 上跑的情况
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 throw new PlatformNotSupportedException($"当前方法仅供 Windows 系统使用");
@@ -73,12 +77,24 @@ namespace dotnetCampus.FileDownloader
             var fileName = FileNameHelper.GuessFileNameFromUrl(url, fallbackName: Path.GetRandomFileName());
 
             var downloadFile = new FileInfo(Path.Combine(tempFolder.FullName, fileName));
+
+#if NETCOREAPP3_1_OR_GREATER
+           using var segmentFileDownloader = new InnerSegmentFileDownloaderByHttpClient(url, downloadFile, httpClient: null,
+                logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
+
+           await segmentFileDownloader.DownloadFileAsync();
+
+            // 下载完成了之后，尝试移动文件夹
+            // 优先使用服务器返回的文件名
+            var finallyFileName = segmentFileDownloader.ServerSuggestionFileName;
+#else
             var segmentFileDownloader = new InnerSegmentFileDownloader(url, downloadFile, logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
             await segmentFileDownloader.DownloadFileAsync();
 
             // 下载完成了之后，尝试移动文件夹
             // 优先使用服务器返回的文件名
             var finallyFileName = segmentFileDownloader.ServerSuggestionFileName;
+#endif
             if (string.IsNullOrEmpty(finallyFileName))
             {
                 finallyFileName = fileName;
@@ -96,7 +112,7 @@ namespace dotnetCampus.FileDownloader
             if (finallyFile.Exists)
             {
                 // 重新加个名字，理论上这个名字不会重叠
-                finallyFile = new FileInfo(Path.Combine(finallyFile.Directory.FullName,
+                finallyFile = new FileInfo(Path.Combine(finallyFile.Directory!.FullName,
                     Path.GetFileNameWithoutExtension(finallyFile.FullName) + Path.GetRandomFileName() +
                     finallyFile.Extension));
             }
@@ -117,6 +133,44 @@ namespace dotnetCampus.FileDownloader
             return finallyFile;
         }
 
+#if NETCOREAPP3_1_OR_GREATER
+
+        class InnerSegmentFileDownloaderByHttpClient
+        (
+            string url,
+            FileInfo file,
+            HttpClient? httpClient = null,
+            ILogger<SegmentFileDownloader>? logger = null,
+            IProgress<DownloadProgress>? progress = null,
+            ISharedArrayPool? sharedArrayPool = null,
+            int bufferLength = UInt16.MaxValue,
+            TimeSpan? stepTimeOut = null,
+            FileInfo? breakpointResumptionTransmissionRecordFile = null
+        )
+            : SegmentFileDownloaderByHttpClient(url, file, httpClient, logger, progress, sharedArrayPool, bufferLength,
+                stepTimeOut, breakpointResumptionTransmissionRecordFile)
+        {
+            /// <summary>
+            /// 服务器端返回的文件名
+            /// </summary>
+            public string? ServerSuggestionFileName { get; private set; }
+
+            protected override async Task<HttpResponseMessage> GetResponseAsync(HttpRequestMessage request)
+            {
+                var response = await base.GetResponseAsync(request);
+                if (string.IsNullOrEmpty(ServerSuggestionFileName))
+                {
+                    if (response.Headers.TryGetValues("Content-Disposition", out var contentDispositionTextEnumerable) && contentDispositionTextEnumerable.FirstOrDefault() is { } contentDispositionText)
+                    {
+                        ServerSuggestionFileName =
+                            WebResponseHelper.GetFileNameFromContentDispositionText(contentDispositionText);
+                    }
+                }
+
+                return response;
+            }
+        }
+#else
         class InnerSegmentFileDownloader : SegmentFileDownloader
         {
             /// <param name="url">下载链接，不对下载链接是否有效进行校对</param>
@@ -145,6 +199,7 @@ namespace dotnetCampus.FileDownloader
                 return response;
             }
         }
+#endif
 
         /// <summary>
         /// 为文件名提供辅助方法。

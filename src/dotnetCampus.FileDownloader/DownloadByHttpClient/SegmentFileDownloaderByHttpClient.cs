@@ -16,6 +16,7 @@ using dotnetCampus.Threading;
 
 using Microsoft.Extensions.Logging;
 
+// ReSharper disable once CheckNamespace
 namespace dotnetCampus.FileDownloader;
 
 /// <summary>
