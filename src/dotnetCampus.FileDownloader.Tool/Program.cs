@@ -26,14 +26,15 @@ namespace dotnetCampus.FileDownloader.Tool
                          "https://download.jetbrains.8686c.com/resharper/ReSharperUltimate.2020.1.3/JetBrains.ReSharperUltimate.2020.1.3.exe";
                      //var md5 = "7d6bbeb6617a7c0b7e615098fca1b167";// resharper
 
-                     url = "http://localhost:5000";
+                     //url = "http://localhost:5000";
+                     url =
+                         "https://dscache.tencent-cloud.cn/upload//ES_686_194-4f155229efeef75bb9c9a3995060c766dc0eac28.png";
 
                      var file = new FileInfo(@"File.txt");
 
                      var progress = new Progress<DownloadProgress>();
 
-                     var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
-                     await segmentFileDownloader.DownloadFileAsync();
+                     await FileDownloaderHelper.DownloadFileAsync(url, file, progress:progress);
 #endif
                      await Task.Delay(100);
                  });
@@ -76,7 +77,7 @@ namespace dotnetCampus.FileDownloader.Tool
 
                 var file = new FileInfo(output);
                 var url = option.Url;
-                var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress);
+                using var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, file, httpClient:null, logger, progress);
 
                 await segmentFileDownloader.DownloadFileAsync();
 

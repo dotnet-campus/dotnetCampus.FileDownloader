@@ -12,7 +12,9 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Threading;
 using System.Threading.Tasks;
+
 using dotnetCampus.FileDownloader.Utils;
+
 using Microsoft.Extensions.Logging;
 
 namespace dotnetCampus.FileDownloader
@@ -34,14 +36,20 @@ namespace dotnetCampus.FileDownloader
         /// <param name="bufferLength">缓存的数组长度，默认是 65535 的长度</param>
         /// <param name="stepTimeOut">每一步 每一分段下载超时时间 默认 10 秒</param>
         /// <returns></returns>
-        public static Task DownloadFileAsync(string url, FileInfo file,
+        public static async Task DownloadFileAsync(string url, FileInfo file,
             ILogger<SegmentFileDownloader>? logger = null,
             IProgress<DownloadProgress>? progress = null, ISharedArrayPool? sharedArrayPool = null,
             int bufferLength = ushort.MaxValue, TimeSpan? stepTimeOut = null)
         {
-            var segmentFileDownloader = new SegmentFileDownloader(url, file, logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
+#if NETCOREAPP3_1_OR_GREATER
+            using var segmentFileDownloaderByHttpClient = new SegmentFileDownloaderByHttpClient(url, file, httpClient: null, logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
+            await segmentFileDownloaderByHttpClient.DownloadFileAsync();
+#else
+            var segmentFileDownloader =
+ new SegmentFileDownloader(url, file, logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
 
-            return segmentFileDownloader.DownloadFileAsync();
+            await segmentFileDownloader.DownloadFileAsync();
+#endif
         }
 
         /// <summary>
@@ -79,10 +87,10 @@ namespace dotnetCampus.FileDownloader
             var downloadFile = new FileInfo(Path.Combine(tempFolder.FullName, fileName));
 
 #if NETCOREAPP3_1_OR_GREATER
-           using var segmentFileDownloader = new InnerSegmentFileDownloaderByHttpClient(url, downloadFile, httpClient: null,
-                logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
+            using var segmentFileDownloader = new InnerSegmentFileDownloaderByHttpClient(url, downloadFile, httpClient: null,
+                 logger, progress, sharedArrayPool, bufferLength, stepTimeOut);
 
-           await segmentFileDownloader.DownloadFileAsync();
+            await segmentFileDownloader.DownloadFileAsync();
 
             // 下载完成了之后，尝试移动文件夹
             // 优先使用服务器返回的文件名
