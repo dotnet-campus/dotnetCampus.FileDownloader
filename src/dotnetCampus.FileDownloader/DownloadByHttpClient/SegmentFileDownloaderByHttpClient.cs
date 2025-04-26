@@ -330,7 +330,6 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         FileStream = File.Create();
         FileStream.SetLength(contentLength);
         FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
-        FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
         if (BreakpointResumptionTransmissionRecordFile is null)
         {
@@ -345,6 +344,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             SegmentManager = manager.CreateSegmentManager();
             BreakpointResumptionTransmissionManager = manager;
         }
+        // 由于 BreakpointResumptionTransmissionManager 也在监控 StepWriteFinished 事件，如果这里的事件加等更快执行，则会导致数据已经还给了池，被其他地方使用，在 BreakpointResumptionTransmissionManager 存在线程安全
+        FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
         _progress.Report(new DownloadProgress($"file length = {contentLength}", SegmentManager));
 

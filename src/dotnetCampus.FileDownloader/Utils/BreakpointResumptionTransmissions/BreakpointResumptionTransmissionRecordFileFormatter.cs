@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
@@ -87,6 +88,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         {
             // 用于调试读取失败时，读取到哪个内容
             var originPosition = stream.Position;
+            _ = originPosition;
 
             var readCount = stream.Read(buffer, 0, buffer.Length);
             if (readCount != buffer.Length)
@@ -132,6 +134,8 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         //var headerByteList = System.Text.Encoding.ASCII.GetBytes("DCFBPRTI");
         // var headerByteList = new byte[] { 68, 67, 70, 66, 80, 82, 84, 73 };
         //return BitConverter.ToInt64(headerByteList)
+        // 由于这个类还想支持 NET45 等，就不用 MemoryMarshal 了
+        //return MemoryMarshal.Read<long>("DCFBPRTI"u8);
         return 5283938767475196740;
     }
 
