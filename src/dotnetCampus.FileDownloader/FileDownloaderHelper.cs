@@ -196,6 +196,7 @@ namespace dotnetCampus.FileDownloader
                     if (!string.IsNullOrEmpty(fileNameValue))
                     {
                         // 额外判断一下 UTF-8 存在的情况
+                        fileNameValue = fileNameValue.Trim('"');
                         var match = Regex.Match(fileNameValue, @"([\S\s]*)''([\S\s]*)");
                         if (match.Success)
                         {
