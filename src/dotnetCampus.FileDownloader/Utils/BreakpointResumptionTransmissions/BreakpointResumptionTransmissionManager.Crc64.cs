@@ -6,22 +6,22 @@ using System.Buffers.Binary;
 namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 internal partial class BreakpointResumptionTransmissionManager
 {
-    // Copy From dotnet runtime: \src\libraries\System.IO.Hashing\src\System\IO\Hashing\Crc32.cs
+    // Copy From dotnet runtime: \src\libraries\System.IO.Hashing\src\System\IO\Hashing\Crc64.cs
     // Licensed to the .NET Foundation under one or more agreements.
     // The .NET Foundation licenses this file to you under the MIT license.
-    class Crc32
+    class Crc64
     {
-        private const uint InitialState = 0xFFFF_FFFFu;
-        private const int Size = sizeof(uint);
+        private const ulong InitialState = 0UL;
+        private const int Size = sizeof(ulong);
 
-        private uint _crc = InitialState;
+        private ulong _crc = InitialState;
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="Crc32"/> class.
+        ///   Initializes a new instance of the <see cref="Crc64"/> class.
         /// </summary>
-        public Crc32()
+        public Crc64()
         {
-            _crcLookup = GenerateReflectedTable(0xEDB88320u);
+            _crcLookup = GenerateTable(0x42F0E1EBA9EA3693);
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ internal partial class BreakpointResumptionTransmissionManager
         ///   processed for the current hash computation.
         /// </summary>
         /// <param name="source">The data to process.</param>
-        public uint Append(ReadOnlySpan<byte> source)
+        public ulong Append(ReadOnlySpan<byte> source)
         {
             _crc = Update(_crc, source);
             return _crc;
@@ -51,7 +51,7 @@ internal partial class BreakpointResumptionTransmissionManager
         protected void GetCurrentHashCore(Span<byte> destination)
         {
             // The finalization step of the CRC is to perform the ones' complement.
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, ~_crc);
+            BinaryPrimitives.WriteUInt64BigEndian(destination, _crc);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ internal partial class BreakpointResumptionTransmissionManager
         /// </summary>
         protected void GetHashAndResetCore(Span<byte> destination)
         {
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, ~_crc);
+            BinaryPrimitives.WriteUInt64BigEndian(destination, _crc);
             _crc = InitialState;
         }
 
@@ -134,19 +134,19 @@ internal partial class BreakpointResumptionTransmissionManager
 
         private int StaticHash(ReadOnlySpan<byte> source, Span<byte> destination)
         {
-            uint crc = InitialState;
+            ulong crc = InitialState;
             crc = Update(crc, source);
-            BinaryPrimitives.WriteUInt32LittleEndian(destination, ~crc);
+            BinaryPrimitives.WriteUInt64BigEndian(destination, crc);
             return Size;
         }
 
-        private uint Update(uint crc, ReadOnlySpan<byte> source)
+        private  ulong Update(ulong crc, ReadOnlySpan<byte> source)
         {
             for (int i = 0; i < source.Length; i++)
             {
-                byte idx = (byte) crc;
+                ulong idx = (crc >> 56);
                 idx ^= source[i];
-                crc = _crcLookup[idx] ^ (crc >> 8);
+                crc = _crcLookup[idx] ^ (crc << 8);
             }
 
             return crc;
@@ -156,25 +156,25 @@ internal partial class BreakpointResumptionTransmissionManager
         // While this implementation is based on the standard CRC-32 polynomial,
         // x32 + x26 + x23 + x22 + x16 + x12 + x11 + x10 + x8 + x7 + x5 + x4 + x2 + x1 + x0,
         // this version uses reflected bit ordering, so 0x04C11DB7 becomes 0xEDB88320
-        private readonly uint[] _crcLookup;
+        private readonly ulong[] _crcLookup;
 
-        private static uint[] GenerateReflectedTable(uint reflectedPolynomial)
+        private static ulong[] GenerateTable(ulong polynomial)
         {
-            uint[] table = new uint[256];
+            ulong[] table = new ulong[256];
 
             for (int i = 0; i < 256; i++)
             {
-                uint val = (uint) i;
+                ulong val = (ulong) i << 56;
 
                 for (int j = 0; j < 8; j++)
                 {
-                    if ((val & 0b0000_0001) == 0)
+                    if ((val & 0x8000_0000_0000_0000) == 0)
                     {
-                        val >>= 1;
+                        val <<= 1;
                     }
                     else
                     {
-                        val = (val >> 1) ^ reflectedPolynomial;
+                        val = (val << 1) ^ polynomial;
                     }
                 }
 

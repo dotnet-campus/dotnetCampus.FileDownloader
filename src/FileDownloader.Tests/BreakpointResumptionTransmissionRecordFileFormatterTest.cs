@@ -40,6 +40,7 @@ namespace FileDownloader.Tests
                 Assert.IsNotNull(result);
 
                 Assert.AreEqual(downloadLength, result.DownloadLength);
+                Assert.IsNotNull(result.DownloadedInfo);
                 Assert.AreEqual(downloadedInfo.Count, result.DownloadedInfo.Count);
 
                 for (int i = 0; i < downloadedInfo.Count; i++)

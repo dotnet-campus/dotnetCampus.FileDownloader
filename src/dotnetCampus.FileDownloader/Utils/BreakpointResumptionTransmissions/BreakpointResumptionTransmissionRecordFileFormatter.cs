@@ -25,11 +25,12 @@ class BreakpointResumptionTransmissionRecordFileFormatter
             return null;
         }
 
-        // 预期在 Header 之后是下载文件的长度
+        // 预期在 Header 之后是下载文件的长度。下载文件的长度包含两个部分内容：1. 文件长度标识（DataType.DownloadFileLength） 2. 文件长度
+        // 读取文件长度标识
         (success, data) = await ReadInner();
         if (!success || data != (long) DataType.DownloadFileLength)
         {
-            // 证明文件组织形式错误了，没有读取到下载文件的长度
+            // 证明文件组织形式错误了，没有读取到下载文件的长度的标识
             return null;
         }
 
@@ -37,9 +38,11 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         (success, data) = await ReadInner();
         if (!success)
         {
-            // 没有读取到下载的文件长度，返回空即可
+            // 没有读取到下载的文件长度，返回空即可，证明此记录内容不正确
             return null;
         }
+
+        // 文件长度之后的内容是分块下载的内容。分块下载的内容是一个个的 DataRange 结构体
         var downloadLength = data;
 
         List<DataRange> downloadedInfo = new();
@@ -88,7 +91,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
                 // 数据错误，没有记录全一条信息，重新建立记录文件
                 break;
             }
-            var checksum = data;
+            var checksum = (ulong) data;
 
             downloadedInfo.Add(new DataRange(startPoint, length, checksum));
         }

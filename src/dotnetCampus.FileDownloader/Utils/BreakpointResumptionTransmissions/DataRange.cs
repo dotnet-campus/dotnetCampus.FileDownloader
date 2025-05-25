@@ -5,7 +5,7 @@ namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
 {
-    public DataRange(long startPoint, long length, long checksum)
+    public DataRange(long startPoint, long length, ulong checksum)
     {
         StartPoint = startPoint;
         Length = length;
@@ -16,7 +16,7 @@ readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
 
     public long Length { get; }
 
-    public long Checksum { get; }
+    public ulong Checksum { get; }
 
     public long LastPoint => StartPoint + Length;
 

@@ -93,6 +93,8 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
                 item.SegmentManager = segmentManager;
                 item.Number = i;
             }
+
+            return segmentManager;
         }
         else
         {
@@ -103,8 +105,6 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
             Formatter.Write(BinaryWriter, new BreakpointResumptionTransmissionInfo(DownloadLength));
             return new SegmentManager(DownloadLength);
         }
-
-        return new SegmentManager(DownloadLength);
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
     /// <param name="downloadedInfo"></param>
     /// <param name="downloadFileStream"></param>
     /// <returns></returns>
-    internal List<DownloadSegment> GetDownloadSegmentList(List<DataRange> downloadedInfo, FileStream downloadFileStream)
+    private List<DownloadSegment> GetDownloadSegmentList(List<DataRange> downloadedInfo, FileStream downloadFileStream)
     {
         downloadedInfo.Sort(new DataRangeComparer());
         var list = downloadedInfo;
@@ -152,8 +152,8 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
                 var buffer = SharedArrayPool.Rent(BufferLength);
                 try
                 {
-                    var crc32 = new Crc32();
-                    uint checksum = 0;
+                    var crc64 = new Crc64();
+                    ulong checksum = 0;
                     var remainLength = current.Length;
                     while (remainLength > 0)
                     {
@@ -164,7 +164,7 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
                             return false;
                         }
 
-                        checksum = crc32.Append(buffer.AsSpan(0, read));
+                        checksum = crc64.Append(buffer.AsSpan(0, read));
                         remainLength -= readLength;
                     }
 
@@ -181,7 +181,8 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
 
             var currentDownloadSegment = new DownloadSegment(current.StartPoint, current.StartPoint + current.Length)
             {
-                DownloadedLength = current.Length,
+                // 已经下载的长度。如果校验下载失败，则长度是 0 否则为记录的长度
+                DownloadedLength = isDownloaded ? current.Length : 0,
                 LoadingState = isDownloaded ? DownloadingState.Finished : DownloadingState.Pause,
             };
             downloadSegmentList.Add(currentDownloadSegment);
@@ -253,7 +254,7 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
             throw new InvalidOperationException("必须在调用 CreateSegmentManagerAsync 完成之后才能进入 RecordDownloaded 方法");
         }
 
-        var crc32 = new Crc32();
+        var crc32 = new Crc64();
         var checksum = crc32.Append(args.Data.AsSpan(args.DataOffset, args.DataLength));
 
         Formatter.AppendDataRange(BinaryWriter, new DataRange(args.FileStartPoint, args.DataLength, checksum));

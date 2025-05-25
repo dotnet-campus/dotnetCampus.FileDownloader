@@ -48,8 +48,19 @@ namespace dotnetCampus.FileDownloader
         /// 当前的信息，仅用于调试
         /// </summary>
         public string? Message { get; set; }
+
+        /// <summary>
+        /// 最后的下载状态更新时间
+        /// </summary>
+        /// todo 改名 LastDownloadTime 或 LastUpdateTime
         public DateTime LastDownTime { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// 下载状态
+        /// </summary>
+        /// todo 改名 DownloadingState
         public DownloadingState LoadingState { get; set; } = DownloadingState.Pause;
+
         /// <summary>
         /// 需要下载到的点
         /// </summary>
@@ -98,13 +109,24 @@ namespace dotnetCampus.FileDownloader
         /// </summary>
         public SegmentManager? SegmentManager { set; get; }
     }
+
     /// <summary>
     /// 下载状态
     /// </summary>
     public enum DownloadingState
     {
+        /// <summary>
+        /// 运行中
+        /// </summary>
+        /// todo 改名 Running 
         Runing = 1,
+        /// <summary>
+        /// 暂停
+        /// </summary>
         Pause = 0,
+        /// <summary>
+        /// 完成
+        /// </summary>
         Finished = -1
     }
 }
