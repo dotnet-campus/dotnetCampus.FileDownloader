@@ -331,7 +331,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         if (FileStream.Length == 0)
         {
             // 如果是刚刚创建的，则预先分配空间。实际测试下载器预先分配空间能够获取更好的机械硬盘性能
-        FileStream.SetLength(contentLength);
+            FileStream.SetLength(contentLength);
         }
         FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
 
@@ -343,9 +343,9 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         else
         {
             // 有断点续传
-            var manager = new BreakpointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, contentLength);
+            var manager = new BreakpointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, SharedArrayPool, contentLength, BufferLength);
             // 有断点续传情况下，先读取断点续传文件，通过此文件获取到需要下载的内容
-            SegmentManager = manager.CreateSegmentManager();
+            SegmentManager = await manager.CreateSegmentManagerAsync(FileStream);
             BreakpointResumptionTransmissionManager = manager;
         }
         // 由于 BreakpointResumptionTransmissionManager 也在监控 StepWriteFinished 事件，如果这里的事件加等更快执行，则会导致数据已经还给了池，被其他地方使用，在 BreakpointResumptionTransmissionManager 存在线程安全

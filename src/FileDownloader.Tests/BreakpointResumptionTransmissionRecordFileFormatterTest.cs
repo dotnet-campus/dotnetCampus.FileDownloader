@@ -15,7 +15,7 @@ namespace FileDownloader.Tests
         [ContractTestCase]
         public void Format()
         {
-            "写入断点续传信息之后，可以读取数据".Test(() =>
+            "写入断点续传信息之后，可以读取数据".Test(async () =>
             {
                 var formatter = new BreakpointResumptionTransmissionRecordFileFormatter();
 
@@ -25,9 +25,9 @@ namespace FileDownloader.Tests
                 var downloadLength = 1024;
                 var downloadedInfo = new List<DataRange>()
                 {
-                    new DataRange(0, 10),
-                    new DataRange(10,20),
-                    new DataRange(100,2)
+                    new DataRange(0, 10,0),
+                    new DataRange(10,20,0),
+                    new DataRange(100,2,0)
                 };
 
                 var info = new BreakpointResumptionTransmissionInfo(downloadLength, downloadedInfo);
@@ -35,7 +35,7 @@ namespace FileDownloader.Tests
 
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
-                var result = formatter.Read(memoryStream);
+                var result = await formatter.ReadAsync(memoryStream);
 
                 Assert.IsNotNull(result);
 

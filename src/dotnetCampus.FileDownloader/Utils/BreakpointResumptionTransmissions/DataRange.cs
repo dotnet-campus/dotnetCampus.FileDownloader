@@ -5,15 +5,18 @@ namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
 {
-    public DataRange(long startPoint, long length)
+    public DataRange(long startPoint, long length, long checksum)
     {
         StartPoint = startPoint;
         Length = length;
+        Checksum = checksum;
     }
 
     public long StartPoint { get; }
 
     public long Length { get; }
+
+    public long Checksum { get; }
 
     public long LastPoint => StartPoint + Length;
 
@@ -38,32 +41,33 @@ readonly struct DataRange : IComparer<DataRange>, IEquatable<DataRange>
         return x.StartPoint.CompareTo(y.StartPoint);
     }
 
-    public static bool TryMerge(DataRange a, DataRange b, out DataRange newDataRange)
-    {
-        newDataRange = default;
-        if (a.StartPoint > b.StartPoint)
-        {
-            var t = a;
-            a = b;
-            b = t;
-        }
+    // 由于加入了 Checksum 属性，因此无法执行合并逻辑
+    //public static bool TryMerge(DataRange a, DataRange b, out DataRange newDataRange)
+    //{
+    //    newDataRange = default;
+    //    if (a.StartPoint > b.StartPoint)
+    //    {
+    //        var t = a;
+    //        a = b;
+    //        b = t;
+    //    }
 
-        if (a.Equals(b))
-        {
-            newDataRange = a;
-            return true;
-        }
+    //    if (a.Equals(b))
+    //    {
+    //        newDataRange = a;
+    //        return true;
+    //    }
 
-        if (a.StartPoint <= b.StartPoint && a.LastPoint >= b.StartPoint)
-        {
-            var lastPoint = Math.Max(a.LastPoint, b.LastPoint);
-            var length = lastPoint - a.StartPoint;
-            newDataRange = new DataRange(a.StartPoint, length);
-            return true;
-        }
+    //    if (a.StartPoint <= b.StartPoint && a.LastPoint >= b.StartPoint)
+    //    {
+    //        var lastPoint = Math.Max(a.LastPoint, b.LastPoint);
+    //        var length = lastPoint - a.StartPoint;
+    //        newDataRange = new DataRange(a.StartPoint, length);
+    //        return true;
+    //    }
 
-        return false;
-    }
+    //    return false;
+    //}
 
     public bool Equals(DataRange other)
     {
