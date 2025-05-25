@@ -59,7 +59,7 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
 
         if (info is not null && info.DownloadLength == DownloadLength && info.DownloadedInfo is not null && info.DownloadedInfo.Count > 0)
         {
-            var downloadSegmentList = GetDownloadSegmentList(info.DownloadedInfo, downloadFileStream);
+            var downloadSegmentList = await GetDownloadSegmentList(info.DownloadedInfo, downloadFileStream);
 
             var segmentManager = new SegmentManager(downloadSegmentList);
             for (var i = 0; i < downloadSegmentList.Count; i++)
@@ -113,7 +113,7 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
     /// <param name="downloadedInfo"></param>
     /// <param name="downloadFileStream"></param>
     /// <returns></returns>
-    private List<DownloadSegment> GetDownloadSegmentList(List<DataRange> downloadedInfo, FileStream downloadFileStream)
+    private async Task<List<DownloadSegment>> GetDownloadSegmentList(List<DataRange> downloadedInfo, FileStream downloadFileStream)
     {
         downloadedInfo.Sort(new DataRangeComparer());
         var list = downloadedInfo;
@@ -140,7 +140,7 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
             }
 
             // 需要对原文件进行校验，确保下载下去的和断点续传记录的相同
-            bool IsDownloaded()
+            async Task<bool> IsDownloaded()
             {
                 var endPoint = current.StartPoint + current.Length;
                 if (downloadFileStream.Length < endPoint)
@@ -149,35 +149,13 @@ internal partial class BreakpointResumptionTransmissionManager : IDisposable
                 }
 
                 downloadFileStream.Seek(current.StartPoint, SeekOrigin.Begin);
-                var buffer = SharedArrayPool.Rent(BufferLength);
-                try
-                {
-                    var crc64 = new Crc64();
-                    ulong checksum = 0;
-                    var remainLength = current.Length;
-                    while (remainLength > 0)
-                    {
-                        var readLength = (int) Math.Min(BufferLength, remainLength);
-                        var read = downloadFileStream.Read(buffer, 0, readLength);
-                        if (read != readLength)
-                        {
-                            return false;
-                        }
 
-                        checksum = crc64.Append(buffer.AsSpan(0, read));
-                        remainLength -= readLength;
-                    }
-
-                    return checksum == current.Checksum;
-                }
-                finally
-                {
-                    SharedArrayPool.Return(buffer);
-                }
+                return await CrcHelper.CheckCrcAsync(downloadFileStream, current.Checksum, current.Length, SharedArrayPool,
+                     BufferLength);
             }
 
             // 如果判断当前不是下载完成的内容，则配置状态不是 Finished 而是需要下载 
-            var isDownloaded = IsDownloaded();
+            var isDownloaded = await IsDownloaded();
 
             var currentDownloadSegment = new DownloadSegment(current.StartPoint, current.StartPoint + current.Length)
             {

@@ -2,6 +2,8 @@
 
 using System;
 using System.Buffers.Binary;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 internal partial class BreakpointResumptionTransmissionManager
@@ -182,6 +184,38 @@ internal partial class BreakpointResumptionTransmissionManager
             }
 
             return table;
+        }
+    }
+
+    static class CrcHelper
+    {
+        public static async Task<bool> CheckCrcAsync(Stream stream, ulong expectedCrc, long checkLength, ISharedArrayPool sharedArrayPool, int bufferLength)
+        {
+            var buffer = sharedArrayPool.Rent(bufferLength);
+            try
+            {
+                var crc64 = new Crc64();
+                ulong checksum = 0;
+                var remainLength = checkLength;
+                while (remainLength > 0)
+                {
+                    var readLength = (int) Math.Min(bufferLength, remainLength);
+                    var read = await stream.ReadAsync(buffer, 0, readLength);
+                    if (read != readLength)
+                    {
+                        return false;
+                    }
+
+                    checksum = crc64.Append(buffer.AsSpan(0, read));
+                    remainLength -= readLength;
+                }
+
+                return checksum == expectedCrc;
+            }
+            finally
+            {
+                sharedArrayPool.Return(buffer);
+            }
         }
     }
 }
