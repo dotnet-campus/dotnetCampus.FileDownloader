@@ -44,7 +44,7 @@ namespace dotnetCampus.FileDownloader.Tool
 
                      var progress = new Progress<DownloadProgress>();
 
-                     await FileDownloaderHelper.DownloadFileToFolderAsync(url, downloadFolder, progress:progress);
+                     await FileDownloaderHelper.DownloadFileToFolderAsync(url, downloadFolder, progress: progress);
 #endif
                      await Task.Delay(100);
                  });
@@ -87,7 +87,7 @@ namespace dotnetCampus.FileDownloader.Tool
 
                 var file = new FileInfo(output);
                 var url = option.Url;
-                using var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, file, httpClient:null, logger, progress);
+                using var segmentFileDownloader = new SegmentFileDownloaderByHttpClient(url, file, httpClient: null, logger, progress);
 
                 await segmentFileDownloader.DownloadFileAsync();
 

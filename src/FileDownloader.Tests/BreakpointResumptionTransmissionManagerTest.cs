@@ -85,7 +85,7 @@ namespace FileDownloader.Tests
 
                 void FillErrorBuffer(DebugRange range)
                 {
-                    Random.Shared.NextBytes(buffer.AsSpan(range.Start,range.Length));
+                    Random.Shared.NextBytes(buffer.AsSpan(range.Start, range.Length));
                 }
             });
 
