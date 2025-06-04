@@ -16,6 +16,7 @@ using dotnetCampus.Threading;
 
 using Microsoft.Extensions.Logging;
 
+// ReSharper disable once CheckNamespace
 namespace dotnetCampus.FileDownloader;
 
 /// <summary>
@@ -61,7 +62,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         _shouldDisposeHttpClient = httpClient is null;
         HttpClient = httpClient ?? CreateDefaultHttpClient();
 
-        DownloadDataList = Channel.CreateUnbounded<DownloadData>(new UnboundedChannelOptions()
+        DownloadDataChannel = Channel.CreateUnbounded<DownloadData>(new UnboundedChannelOptions()
         {
             SingleReader = false,
             AllowSynchronousContinuations = true,
@@ -135,6 +136,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             //{
             //    return ValueTask.FromResult(context.PlaintextStream);
             //}
+
+            // 忽略证书错误
+            //SslOptions =
+            //{
+            //    RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => true
+            //}
         };
 
         return socketsHttpHandler;
@@ -163,12 +170,12 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     /// </summary>
     public string Url { get; }
 
-    private Channel<DownloadData> DownloadDataList { get; }
+    private Channel<DownloadData> DownloadDataChannel { get; }
 
     /// <summary>
-    /// 被加入到 <see cref="DownloadDataList"/> 的下载数量
+    /// 被加入到 <see cref="DownloadDataChannel"/> 的下载数量
     /// </summary>
-    private int _workTaskCount;
+    private int _workingTaskCount;
 
     /// <summary>
     /// 下载的文件
@@ -233,7 +240,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         {
             LogDebugInternal("Start ControlSwitch");
             var (segment, runCount, maxReportTime) = SegmentManager.GetMaxWaitReportTimeDownloadSegmentStatus();
-            var waitCount = _workTaskCount;
+            var waitCount = _workingTaskCount;
 
             LogDebugInternal("ControlSwitch 当前等待数量：{0},待命最大响应时间：{1},运行数量：{2},运行线程{3}", waitCount, maxReportTime, runCount, _threadCount);
 
@@ -320,10 +327,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             return;
         }
 
-        FileStream = File.Create();
-        FileStream.SetLength(contentLength);
+        FileStream = File.Open(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read/*允许边下边播*/);
+        if (FileStream.Length == 0)
+        {
+            // 如果是刚刚创建的，则预先分配空间。实际测试下载器预先分配空间能够获取更好的机械硬盘性能
+            FileStream.SetLength(contentLength);
+        }
         FileWriter = new RandomFileWriterWithOrderFirst(FileStream);
-        FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
         if (BreakpointResumptionTransmissionRecordFile is null)
         {
@@ -333,11 +343,13 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         else
         {
             // 有断点续传
-            var manager = new BreakpointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, contentLength);
+            var manager = new BreakpointResumptionTransmissionManager(BreakpointResumptionTransmissionRecordFile, FileWriter, SharedArrayPool, contentLength, BufferLength);
             // 有断点续传情况下，先读取断点续传文件，通过此文件获取到需要下载的内容
-            SegmentManager = manager.CreateSegmentManager();
+            SegmentManager = await manager.CreateSegmentManagerAsync(FileStream);
             BreakpointResumptionTransmissionManager = manager;
         }
+        // 由于 BreakpointResumptionTransmissionManager 也在监控 StepWriteFinished 事件，如果这里的事件加等更快执行，则会导致数据已经还给了池，被其他地方使用，在 BreakpointResumptionTransmissionManager 存在线程安全
+        FileWriter.StepWriteFinished += (sender, args) => SharedArrayPool.Return(args.Data);
 
         _progress.Report(new DownloadProgress($"file length = {contentLength}", SegmentManager));
 
@@ -559,15 +571,20 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
             DownloadData data;
             try
             {
-                var canRead = await DownloadDataList.Reader.WaitToReadAsync();
+                var canRead = await DownloadDataChannel.Reader.WaitToReadAsync();
                 if (!canRead)
                 {
                     // 不能读取了，那就返回吧
                     return;
                 }
 
-                data = await DownloadDataList.Reader.ReadAsync().ConfigureAwait(false);
-                Interlocked.Decrement(ref _workTaskCount);
+                if (!DownloadDataChannel.Reader.TryRead(out data))
+                {
+                    // 居然读取不到数据，那就再次进入循环吧
+                    continue;
+                }
+
+                Interlocked.Decrement(ref _workingTaskCount);
             }
             catch (ChannelClosedException)
             {
@@ -712,8 +729,8 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
     private async void Download(HttpResponseMessage? httpResponseMessage, DownloadSegment downloadSegment)
     {
         LogDebugInternal("[Download] Enqueue Download. {0}", downloadSegment);
-        await DownloadDataList.Writer.WriteAsync(new DownloadData(httpResponseMessage, downloadSegment)).ConfigureAwait(false);
-        Interlocked.Increment(ref _workTaskCount);
+        await DownloadDataChannel.Writer.WriteAsync(new DownloadData(httpResponseMessage, downloadSegment)).ConfigureAwait(false);
+        Interlocked.Increment(ref _workingTaskCount);
     }
 
     private void Download(DownloadSegment? downloadSegment)
@@ -748,7 +765,7 @@ public class SegmentFileDownloaderByHttpClient : IDisposable
         await FileWriter.DisposeAsync().ConfigureAwait(false);
         await FileStream.DisposeAsync().ConfigureAwait(false);
 
-        DownloadDataList.Writer.Complete();
+        DownloadDataChannel.Writer.Complete();
 
         BreakpointResumptionTransmissionManager?.Dispose();
         // 默认下载完成删除断点续传文件

@@ -17,7 +17,7 @@ namespace dotnetCampus.FileDownloader.WPF
         /// 读取本地存储的下载列表
         /// </summary>
         /// <returns></returns>
-        public async Task<List<DownloadFileInfo>> ReadDownloadedFileListAsync()
+        public async Task<List<DownloadFileInfo>?> ReadDownloadedFileListAsync()
         {
             var file = GetStorageFilePath();
 

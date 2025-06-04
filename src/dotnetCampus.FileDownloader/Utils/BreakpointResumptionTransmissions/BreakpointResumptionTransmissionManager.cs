@@ -1,22 +1,29 @@
-﻿using System;
+﻿#if NETCOREAPP3_1_OR_GREATER
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
 /// <summary>
 /// 断点续传管理
 /// </summary>
-internal class BreakpointResumptionTransmissionManager : IDisposable
+internal partial class BreakpointResumptionTransmissionManager : IDisposable
 {
-    public BreakpointResumptionTransmissionManager(FileInfo breakpointResumptionTransmissionRecordFile, IRandomFileWriter fileWriter, long contentLength)
+    public BreakpointResumptionTransmissionManager(FileInfo breakpointResumptionTransmissionRecordFile, IRandomFileWriter fileWriter, ISharedArrayPool sharedArrayPool, long contentLength, int bufferLength = ushort.MaxValue)
     {
         BreakpointResumptionTransmissionRecordFile = breakpointResumptionTransmissionRecordFile;
         DownloadLength = contentLength;
+        BufferLength = bufferLength;
+        SharedArrayPool = sharedArrayPool;
 
         fileWriter.StepWriteFinished += (sender, args) => RecordDownloaded(args);
     }
+
+    public ISharedArrayPool SharedArrayPool { get; }
 
     public FileInfo BreakpointResumptionTransmissionRecordFile { get; }
 
@@ -25,29 +32,34 @@ internal class BreakpointResumptionTransmissionManager : IDisposable
     /// </summary>
     public long DownloadLength { get; }
 
+    public int BufferLength { get; }
+
     /// <summary>
     /// 创建分段下载数据
     /// </summary>
+    /// <param name="downloadFileStream">正在被下载的文件的 FileStream 内容，用于断点续传校验内容</param>
     /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public SegmentManager CreateSegmentManager()
+    public async Task<SegmentManager> CreateSegmentManagerAsync(FileStream downloadFileStream)
     {
         // 如果存在断点续传记录文件，那将从此文件读取断点续传信息
         // 如果读取的信息有误，或者是校验失败等
         // 那就重新下载
 
         // 还没有准备去释放
-        FileStream = new FileStream(BreakpointResumptionTransmissionRecordFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+        FileStream = new FileStream(BreakpointResumptionTransmissionRecordFile.FullName, FileMode.OpenOrCreate,
+            FileAccess.ReadWrite, FileShare.Read, bufferSize: 4096,
+            // 配置 WriteThrough 要求立即写入磁盘
+            FileOptions.WriteThrough);
         BinaryWriter = new BinaryWriter(FileStream);
 
         // 进行一些初始化逻辑
         Formatter = new BreakpointResumptionTransmissionRecordFileFormatter();
 
-        var info = Formatter.Read(FileStream);
+        var info = await Formatter.ReadAsync(FileStream);
 
         if (info is not null && info.DownloadLength == DownloadLength && info.DownloadedInfo is not null && info.DownloadedInfo.Count > 0)
         {
-            var downloadSegmentList = GetDownloadSegmentList(info.DownloadedInfo);
+            var downloadSegmentList = await GetDownloadSegmentList(info.DownloadedInfo, downloadFileStream);
 
             var segmentManager = new SegmentManager(downloadSegmentList);
             for (var i = 0; i < downloadSegmentList.Count; i++)
@@ -81,6 +93,8 @@ internal class BreakpointResumptionTransmissionManager : IDisposable
                 item.SegmentManager = segmentManager;
                 item.Number = i;
             }
+
+            return segmentManager;
         }
         else
         {
@@ -91,16 +105,15 @@ internal class BreakpointResumptionTransmissionManager : IDisposable
             Formatter.Write(BinaryWriter, new BreakpointResumptionTransmissionInfo(DownloadLength));
             return new SegmentManager(DownloadLength);
         }
-
-        return new SegmentManager(DownloadLength);
     }
 
     /// <summary>
     /// 通过断点续传的信息获取下载的内容
     /// </summary>
     /// <param name="downloadedInfo"></param>
+    /// <param name="downloadFileStream"></param>
     /// <returns></returns>
-    internal List<DownloadSegment> GetDownloadSegmentList(List<DataRange> downloadedInfo)
+    private async Task<List<DownloadSegment>> GetDownloadSegmentList(List<DataRange> downloadedInfo, FileStream downloadFileStream)
     {
         downloadedInfo.Sort(new DataRangeComparer());
         var list = downloadedInfo;
@@ -108,7 +121,7 @@ internal class BreakpointResumptionTransmissionManager : IDisposable
         var downloadSegmentList = new List<DownloadSegment>();
         for (var i = 0; i < list.Count; i++)
         {
-            var current = list[i];
+            DataRange current = list[i];
 
             if (i == 0)
             {
@@ -126,10 +139,29 @@ internal class BreakpointResumptionTransmissionManager : IDisposable
                 }
             }
 
+            // 需要对原文件进行校验，确保下载下去的和断点续传记录的相同
+            async Task<bool> IsDownloaded()
+            {
+                var endPoint = current.StartPoint + current.Length;
+                if (downloadFileStream.Length < endPoint)
+                {
+                    return false;
+                }
+
+                downloadFileStream.Seek(current.StartPoint, SeekOrigin.Begin);
+
+                return await CrcHelper.CheckCrcAsync(downloadFileStream, current.Checksum, current.Length, SharedArrayPool,
+                     BufferLength);
+            }
+
+            // 如果判断当前不是下载完成的内容，则配置状态不是 Finished 而是需要下载 
+            var isDownloaded = await IsDownloaded();
+
             var currentDownloadSegment = new DownloadSegment(current.StartPoint, current.StartPoint + current.Length)
             {
-                DownloadedLength = current.Length,
-                LoadingState = DownloadingState.Finished,
+                // 已经下载的长度。如果校验下载失败，则长度是 0 否则为记录的长度
+                DownloadedLength = isDownloaded ? current.Length : 0,
+                LoadingState = isDownloaded ? DownloadingState.Finished : DownloadingState.Pause,
             };
             downloadSegmentList.Add(currentDownloadSegment);
 
@@ -197,10 +229,13 @@ internal class BreakpointResumptionTransmissionManager : IDisposable
 
         if (Formatter is null || FileStream is null || BinaryWriter is null)
         {
-            throw new InvalidOperationException("必须在调用 CreateSegmentManager 完成之后才能进入 RecordDownloaded 方法");
+            throw new InvalidOperationException("必须在调用 CreateSegmentManagerAsync 完成之后才能进入 RecordDownloaded 方法");
         }
 
-        Formatter.AppendDataRange(BinaryWriter, new DataRange(args.FileStartPoint, args.DataLength));
+        var crc32 = new Crc64();
+        var checksum = crc32.Append(args.Data.AsSpan(args.DataOffset, args.DataLength));
+
+        Formatter.AppendDataRange(BinaryWriter, new DataRange(args.FileStartPoint, args.DataLength, checksum));
     }
 
     public void Dispose()
@@ -213,3 +248,4 @@ internal class BreakpointResumptionTransmissionManager : IDisposable
 
     private bool _isDisposed;
 }
+#endif

@@ -150,6 +150,8 @@ namespace FileDownloader.Tests
         }
     }
 
+#pragma warning disable SYSLIB0014 //  warning SYSLIB0014: “WebRequest.WebRequest()”已过时:“WebRequest, HttpWebRequest, ServicePoint, and WebClient are obsolete. Use HttpClient instead.”
+    // 这里就是专门测试旧代码的，忽略即可
     class FakeHttpWebRequest : WebRequest
     {
         public FakeHttpWebRequest(FakeWebResponse fakeWebResponse)
@@ -192,4 +194,6 @@ namespace FileDownloader.Tests
             return Stream;
         }
     }
+#pragma warning restore SYSLIB0014
+
 }

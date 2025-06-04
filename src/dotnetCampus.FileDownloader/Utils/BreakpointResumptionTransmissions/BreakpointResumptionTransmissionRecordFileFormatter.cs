@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 
@@ -10,12 +12,12 @@ namespace dotnetCampus.FileDownloader.Utils.BreakpointResumptionTransmissions;
 /// 文件格式：【文件头】【下载文件的下载长度】【各个已下载的数据段信息】
 class BreakpointResumptionTransmissionRecordFileFormatter
 {
-    public BreakpointResumptionTransmissionInfo? Read(Stream stream)
+    public async Task<BreakpointResumptionTransmissionInfo?> ReadAsync(Stream stream)
     {
         var header = GetHeader();
         // 设计上刚好可以复用 buffer 的值去进行读取
         var buffer = new byte[sizeof(long)];
-        (var success, var data) = Read();
+        var (success, data) = await ReadInner();
         if (!success || data != header)
         {
             // 如果读取不到 Header 的长度的内容，那返回空即可，让上层业务处理
@@ -23,21 +25,24 @@ class BreakpointResumptionTransmissionRecordFileFormatter
             return null;
         }
 
-        // 预期在 Header 之后是下载文件的长度
-        (success, data) = Read();
+        // 预期在 Header 之后是下载文件的长度。下载文件的长度包含两个部分内容：1. 文件长度标识（DataType.DownloadFileLength） 2. 文件长度
+        // 读取文件长度标识
+        (success, data) = await ReadInner();
         if (!success || data != (long) DataType.DownloadFileLength)
         {
-            // 证明文件组织形式错误了，没有读取到下载文件的长度
+            // 证明文件组织形式错误了，没有读取到下载文件的长度的标识
             return null;
         }
 
         // 获取需要下载的文件长度
-        (success, data) = Read();
+        (success, data) = await ReadInner();
         if (!success)
         {
-            // 没有读取到下载的文件长度，返回空即可
+            // 没有读取到下载的文件长度，返回空即可，证明此记录内容不正确
             return null;
         }
+
+        // 文件长度之后的内容是分块下载的内容。分块下载的内容是一个个的 DataRange 结构体
         var downloadLength = data;
 
         List<DataRange> downloadedInfo = new();
@@ -45,12 +50,13 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         // 后续的信息就需要循环读取
         while (success)
         {
-            // 后续的信息一个信息由三个 Int64 组成
+            // 后续的信息一个信息由四个 Int64 组成
             // 第一个是 DataType
             // 第二个是 起始点
             // 第三个是 长度
+            // 第四个是 校验信息
             // 每段下载完成写入文件，将会记录写入的起始点和长度，通过起始点和长度 的列表可以算出当前还有哪些内容还没下载完成。如此即可实现断点续传功能
-            (success, data) = Read();
+            (success, data) = await ReadInner();
             if (!success)
             {
                 // 读取完成
@@ -59,43 +65,53 @@ class BreakpointResumptionTransmissionRecordFileFormatter
             if (data != (long) DataType.DownloadedInfo)
             {
                 // 记录里面包含错误的数据，立刻返回
-                // 如果在有错误的数据情况下，还不重新建立记录文件，那将会导致后续下载记录的内容被无效
-                return null;
+                // 如果在有错误的数据情况下，如果还不重新建立记录文件，那将会导致后续下载记录的内容被无效
+                break;
             }
 
-            (success, data) = Read();
+            (success, data) = await ReadInner();
             if (!success)
             {
                 // 数据错误，没有记录全一条信息，重新建立记录文件
-                return null;
+                break;
             }
-
             var startPoint = data;
-            (success, data) = Read();
+
+            (success, data) = await ReadInner();
             if (!success)
             {
                 // 数据错误，没有记录全一条信息，重新建立记录文件
-                return null;
+                break;
             }
             var length = data;
-            downloadedInfo.Add(new DataRange(startPoint, length));
+
+            (success, data) = await ReadInner();
+            if (!success)
+            {
+                // 数据错误，没有记录全一条信息，重新建立记录文件
+                break;
+            }
+            var checksum = (ulong) data;
+
+            downloadedInfo.Add(new DataRange(startPoint, length, checksum));
         }
 
         return new BreakpointResumptionTransmissionInfo(downloadLength, downloadedInfo);
 
-        (bool success, long data) Read()
+        async Task<(bool success, long data)> ReadInner()
         {
             // 用于调试读取失败时，读取到哪个内容
             var originPosition = stream.Position;
+            _ = originPosition;
 
-            var readCount = stream.Read(buffer, 0, buffer.Length);
+            var readCount = await stream.ReadAsync(buffer, 0, buffer.Length);
             if (readCount != buffer.Length)
             {
                 return (false, default(long));
             }
 
-            var data = BitConverter.ToInt64(buffer, 0);
-            return (true, data);
+            var value = BitConverter.ToInt64(buffer, 0);
+            return (true, value);
         }
     }
 
@@ -123,6 +139,7 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         binaryWriter.Write((long) DataType.DownloadedInfo);
         binaryWriter.Write(dataRange.StartPoint);
         binaryWriter.Write(dataRange.Length);
+        binaryWriter.Write(dataRange.Checksum);
     }
 
     private static long GetHeader()
@@ -132,6 +149,8 @@ class BreakpointResumptionTransmissionRecordFileFormatter
         //var headerByteList = System.Text.Encoding.ASCII.GetBytes("DCFBPRTI");
         // var headerByteList = new byte[] { 68, 67, 70, 66, 80, 82, 84, 73 };
         //return BitConverter.ToInt64(headerByteList)
+        // 由于这个类还想支持 NET45 等，就不用 MemoryMarshal 了
+        //return MemoryMarshal.Read<long>("DCFBPRTI"u8);
         return 5283938767475196740;
     }
 
